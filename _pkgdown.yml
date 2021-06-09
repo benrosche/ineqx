@@ -1,0 +1,26 @@
+title: ineqx
+url: https://benrosche.github.io/ineqx/
+template:
+  params:
+    bootswatch: flatly
+    ganalytics: UA-56931813-1
+navbar:
+  type: inverse
+  left:
+    - icon: fa-home
+      href: index.html
+    - text: "Model structure"
+      href: articles/model.html
+    - text: "Package installation"
+      href: articles/installation.html
+    - text: "Package functions"
+      href: reference/index.html
+    - text: Examples
+      href: articles/examples.html
+  right:
+    - text: "news"
+      href: news/index.html
+    - text: "faq"
+      href: articles/faq.html
+    - icon: fab fa-github
+      href: https://github.com/benrosche/ineqx/
