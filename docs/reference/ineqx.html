@@ -178,23 +178,23 @@
     </tr>
     <tr>
       <th>ystat</th>
-      <td><p>"Var" or "CV2"</p></td>
+      <td><p>Character string. Either "Var" or "CV2". Choose to analyze the effect of x on the variance or squared coefficient of variation</p></td>
     </tr>
     <tr>
       <th>controls</th>
-      <td><p>Character vector with additional control variables</p></td>
+      <td><p>Character vector with additional control variables. E.g. c("age", "sex", ...)</p></td>
     </tr>
     <tr>
       <th>groupvar</th>
-      <td><p>To create within/between division</p></td>
+      <td><p>Grouping variable to decompose variance into within- and between-group components.</p></td>
     </tr>
     <tr>
       <th>timevar</th>
-      <td><p>To analyze change over time</p></td>
+      <td><p>Time variable to analyze change over time</p></td>
     </tr>
     <tr>
       <th>cf</th>
-      <td><p>Either Flase or numeric time</p></td>
+      <td><p>Number. Reference time.</p></td>
     </tr>
     <tr>
       <th>dat</th>
@@ -204,7 +204,10 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Returns a list: dW, dB, dD, dT</p>
+    <p>List with six elements: pred_mu, pred_sigma, dW, dB, dD, dT. See details.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The main function of <code>ineqx</code>. [...]</p>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Benjamin Rosche &lt;benjamin.rosche@gmail.com&gt;</p>
@@ -212,7 +215,7 @@
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>incdat</span><span class='op'>)</span>
 <span class='va'>decomp1</span> <span class='op'>&lt;-</span> <span class='fu'>ineqx</span><span class='op'>(</span><span class='va'>child</span>, <span class='va'>inc</span>, ystat<span class='op'>=</span><span class='st'>"CV2"</span>, groupvar<span class='op'>=</span><span class='va'>SES</span>, timevar<span class='op'>=</span><span class='va'>year</span>, cf<span class='op'>=</span><span class='fl'>1</span>, <span class='va'>incdat</span><span class='op'>)</span>
-</div><div class='co'>#&gt; <span class='error'>Error in dplyr::rename(., x = {    {        x    }}, y = {    {        y    }}, group = {    {        groupvar    }}, time = {    {        timevar    }}): </span>object 'child' not found</div><div class='input'>
+</div><div class='co'>#&gt; <span class='error'>Error in dplyr::rename(., x = {    {        x    }}, y = {    {        y    }}, group = {    {        groupvar    }}, time = {    {        timevar    }}): </span>argument "dat" is missing, with no default</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

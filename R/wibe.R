@@ -4,13 +4,13 @@
 #'
 #' @param dat Dataframe
 #' @param y Dependent variable
-#' @param groupvar To create within/between division
-#' @param timevar To analyze change over time
-#' @param smoothDat TRUE|FALSE. Smooth data?
-#' @param rel FALSE or numeric time
-#' @param long TRUE|FALSE. Long instead of wide output
+#' @param groupvar Grouping variable to decompose variance into within- and between-group components
+#' @param timevar Time variable to analyze change over time
+#' @param smoothDat Logical. Should data be smoothed?
+#' @param rel Number or FALSE. Should values be reported relative to specified time?
+#' @param long Logical. Should output be in long format?
 #'
-#' @return Returns a list with two elements - "by group and time" and "by time"
+#' @return List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.
 #'
 #' @examples data(incdat)
 #' wibe1 <- wibe(dat, y=inc, groupvar=SES, timevar=year)
@@ -18,7 +18,7 @@
 #' @export wibe
 #' @author Benjamin Rosche <benjamin.rosche@@gmail.com>
 
-wibe <- function(dat, y=NULL, groupvar=NULL, timevar=NULL, smoothDat=F, rel=F, long=F) {
+wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, rel=F, long=F) {
 
   # dat <- incdat; timevar <- substitute(year); groupvar <- substitute(SES); y <- substitute(inc); rel <- F; smoothDat <- F
 

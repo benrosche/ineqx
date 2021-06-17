@@ -11,10 +11,10 @@ LazyData: true
 Depends: 
     tidyr,
     dplyr,
+    zeallot,
     ggplot2,
     ggpubr,
     cowplot,
-    ggeffects,
     gamlss
 URL: http://benrosche.com/projects/ineqx/
 BugReports: https://github.com/benrosche/ineqx/issues

@@ -176,29 +176,29 @@
     </tr>
     <tr>
       <th>groupvar</th>
-      <td><p>To create within/between division</p></td>
+      <td><p>Grouping variable to decompose variance into within- and between-group components</p></td>
     </tr>
     <tr>
       <th>timevar</th>
-      <td><p>To analyze change over time</p></td>
+      <td><p>Time variable to analyze change over time</p></td>
     </tr>
     <tr>
       <th>smoothDat</th>
-      <td><p>TRUE|FALSE. Smooth data?</p></td>
+      <td><p>Logical. Should data be smoothed?</p></td>
     </tr>
     <tr>
       <th>rel</th>
-      <td><p>FALSE or numeric time</p></td>
+      <td><p>Number or FALSE. Should values be reported relative to specified time?</p></td>
     </tr>
     <tr>
       <th>long</th>
-      <td><p>TRUE|FALSE. Long instead of wide output</p></td>
+      <td><p>Logical. Should output be in long format?</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Returns a list with two elements - "by group and time" and "by time"</p>
+    <p>List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.</p>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Benjamin Rosche &lt;benjamin.rosche@gmail.com&gt;</p>

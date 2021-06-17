@@ -179,15 +179,51 @@
     </tr>
     <tr>
       <th>type</th>
-      <td><p>dMuSigma2|dB|dW|dD|dO|dT</p></td>
+      <td><p>Character string. Plot type. Choose from: dMuSigma, dB, dW, dD, dO, dT</p></td>
     </tr>
     <tr>
       <th>yint</th>
-      <td><p>1 or 2. 1: ..., 2: ...</p></td>
+      <td><p>Either 1 or 2. Choose reported effect value. 1: Effect in units of ystat. 2: Effect as change in percent since 'cf' (reference time)</p></td>
+    </tr>
+    <tr>
+      <th>xlab</th>
+      <td><p>Character string. x-axis label.</p></td>
+    </tr>
+    <tr>
+      <th>ylab</th>
+      <td><p>Vector of length 2 with character strings. y-axis label. c("y1lab", "y2lab")</p></td>
+    </tr>
+    <tr>
+      <th>llab</th>
+      <td><p>Vector of length equal to the number of levels of groupvar. Group labels. c("grouplbl1", "grouplbl2", "grouplbl3", ...)</p></td>
+    </tr>
+    <tr>
+      <th>titl</th>
+      <td><p>Character string of length 2. Plot titles. c("titl1", "titl2")</p></td>
+    </tr>
+    <tr>
+      <th>xlim</th>
+      <td><p>Sequence of numbers.breaks at x-axis. seq(2000,2020, 5)</p></td>
+    </tr>
+    <tr>
+      <th>hline</th>
+      <td><p>Number or FALSE. Horizontal line at specified value.</p></td>
+    </tr>
+    <tr>
+      <th>se</th>
+      <td><p>Logical. Display standard errors?</p></td>
+    </tr>
+    <tr>
+      <th>lowess</th>
+      <td><p>Logical. Display lowess smoother?</p></td>
+    </tr>
+    <tr>
+      <th>legend</th>
+      <td><p>Logical. Display legend?</p></td>
     </tr>
     <tr>
       <th>sav</th>
-      <td></td>
+      <td><p>Logical. Save as .png in working directory?</p></td>
     </tr>
     </table>
 
@@ -201,13 +237,8 @@
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>incdat</span><span class='op'>)</span>
 <span class='va'>i1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ineqx.html'>ineqx</a></span><span class='op'>(</span><span class='va'>incdat</span>, <span class='va'>by</span>, <span class='va'>inc</span>, groupvar <span class='op'>=</span> <span class='va'>SES</span>, timevar <span class='op'>=</span> <span class='va'>year</span><span class='op'>)</span>
-</div><div class='co'>#&gt; GAMLSS-RS iteration 1: Global Deviance = 89527.04 
-#&gt; GAMLSS-RS iteration 2: Global Deviance = 89526.69 
-#&gt; GAMLSS-RS iteration 3: Global Deviance = 89526.69 
-#&gt; new prediction 
-#&gt; New way of prediction in pb()  (starting from GAMLSS version 5.0-3) </div><div class='co'>#&gt; Could not compute variance-covariance matrix of predictions. No confidence intervals are returned.</div><div class='co'>#&gt; new prediction 
-#&gt; New way of prediction in pb()  (starting from GAMLSS version 5.0-3) </div><div class='co'>#&gt; Could not compute variance-covariance matrix of predictions. No confidence intervals are returned.</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>i1</span>, type<span class='op'>=</span><span class='st'>"dMuSigma2"</span><span class='op'>)</span>
-</div><div class='co'>#&gt; <span class='error'>Error in plot.ineqx(i1, type = "dMuSigma2"): </span>object 'out' not found</div><div class='input'>
+</div><div class='co'>#&gt; <span class='error'>Error in dplyr::rename(., x = {    {        x    }}, y = {    {        y    }}, group = {    {        groupvar    }}, time = {    {        timevar    }}): </span>argument "dat" is missing, with no default</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>i1</span>, type<span class='op'>=</span><span class='st'>"dMuSigma2"</span><span class='op'>)</span>
+</div><div class='co'>#&gt; <span class='error'>Error in plot(i1, type = "dMuSigma2"): </span>object 'i1' not found</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

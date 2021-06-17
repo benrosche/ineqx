@@ -1,52 +1,61 @@
+
+library(plyr)
 library(dplyr)
 library(tidyr)
-library(plyr)
+library(haven)
 
-crDat <- function(N.obs, T.obs, LP_mu, LP_sigma, sav=F) {
+setwd("C:/Users/benja/OneDrive - Cornell University/GitHub/ineqx")
 
-  N <- tibble() %>% expand(year=1:T.obs) %>% mutate(SES1=N.obs/3, SES2=N.obs/3, SES3=N.obs/3)
+crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, seed=T, sav=F) {
+
+  if(seed==T) set.seed(1)
+
+  # Dataframe with number of observations per wave
+
+  N <-
+    tibble() %>%
+    tidyr::expand(year=1:N.T)
+
+  for(i in 1:N.G) {
+    N <-
+      N %>%
+      dplyr::mutate("G{i}" := eval(parse(text=LP_n[i])))
+
+  }
 
   # Create data structure ------------------------------------------------------------------------ #
 
-  d <- list()
-  for(i in 1:T.obs) {
-    d[[i]] <-
-      tibble() %>% expand(id=1:(N %>% dplyr::filter(year==i) %>% .$SES1), child=0:1, SES=1, year=i) %>%
-      add_row(tibble() %>% expand(id=1:(N %>% dplyr::filter(year==i) %>% .$SES2), child=0:1, SES=2, year=i)) %>%
-      add_row(tibble() %>% expand(id=1:(N %>% dplyr::filter(year==i) %>% .$SES3), child=0:1, SES=3, year=i))
+  d <- replicate(N.T, vector("list", N.G), simplify = FALSE)
+
+  for(i in 1:N.T) { # per wave
+
+    for(j in 1:N.G) { # per group
+
+      d[[i]][[j]] <- tibble() %>% tidyr::expand(id=1:(N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()), year=i, group=j, x=0:1)
+
+    }
+
   }
 
-  dat <- ldply(d)
+  # Create dataframe from list of lists
+  dat <- ldply(d, .fun = ldply)
 
   n <- dim(dat)[1]
 
   # Create income -------------------------------------------------------------------------------- #
 
-  incdat <- dat %>% mutate(inc=rnorm(n, eval(parse(text=LP_mu)), eval(parse(text=LP_sigma)))) %>% tibble()
+  incdat <-
+    dat %>%
+    tibble() %>%
+    dplyr::mutate(
+      z = rpois(n, 2),
+      inc = rnorm(n, eval(parse(text=LP_mu)), eval(parse(text=LP_sigma))),
+      lninc = log(inc-(min(inc)-1)*(min(inc)<0)),
+      w = 1/n
+    )
 
-  if(sav==T) save(incdat, file = "data/incdat.RData")
+  if(sav=="R") save(incdat, file = "data/incdat.RData") else if (sav=="Stata") write_dta(incdat, path = "data/incdat.dta")
 
   return(incdat)
 
 }
-
-# Good example dat for dB:
-# incdat <-
-#   crDat(
-#     N.obs=1000,
-#     T.obs=5,
-#     LP_mu="10*(SES==1)+20*(SES==2)+30*(SES==3)+100*(SES==1)*child+150*(SES==2)*child+200*(SES==3)*child+10*(SES==3)*child*year",
-#     LP_sigma="10+20*(SES==1)*child+20*(SES==2)*child+30*(SES==3)*child+2*(SES==3)*child*year",
-#     sav = T
-#   )
-
-
-# Good example dat for dW:
-# incdat <-
-#   crDat(
-#     N.obs=1000,
-#     T.obs=5,
-#     LP_mu="10*(SES==1)+20*(SES==2)+30*(SES==3)+100*(SES==1)*child+150*(SES==2)*child+200*(SES==3)*child",
-#     LP_sigma="10+20*(SES==1)*child+20*(SES==2)*child+30*(SES==3)*child+20*(SES==3)*child*year",
-#     sav = T
-#   )

@@ -23,11 +23,29 @@
 \arguments{
 \item{ineqx.out}{ineqx.out object from ineqx()}
 
-\item{type}{dMuSigma2|dB|dW|dD|dO|dT}
+\item{type}{Character string. Plot type. Choose from: dMuSigma, dB, dW, dD, dO, dT}
 
-\item{yint}{1 or 2. 1: ..., 2: ...}
+\item{yint}{Either 1 or 2. Choose reported effect value. 1: Effect in units of ystat. 2: Effect as change in percent since 'cf' (reference time)}
 
-\item{sav}{}
+\item{xlab}{Character string. x-axis label.}
+
+\item{ylab}{Vector of length 2 with character strings. y-axis label. c("y1lab", "y2lab")}
+
+\item{llab}{Vector of length equal to the number of levels of groupvar. Group labels. c("grouplbl1", "grouplbl2", "grouplbl3", ...)}
+
+\item{titl}{Character string of length 2. Plot titles. c("titl1", "titl2")}
+
+\item{xlim}{Sequence of numbers.breaks at x-axis. seq(2000,2020, 5)}
+
+\item{hline}{Number or FALSE. Horizontal line at specified value.}
+
+\item{se}{Logical. Display standard errors?}
+
+\item{lowess}{Logical. Display lowess smoother?}
+
+\item{legend}{Logical. Display legend?}
+
+\item{sav}{Logical. Save as .png in working directory?}
 }
 \value{
 Returns a ggplot2 object
