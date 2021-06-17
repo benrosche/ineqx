@@ -5,32 +5,32 @@
 \title{Descriptive within/between decomposition}
 \usage{
 wibe(
-  dat,
   y = NULL,
   groupvar = NULL,
   timevar = NULL,
+  dat,
   smoothDat = F,
   rel = F,
   long = F
 )
 }
 \arguments{
-\item{dat}{Dataframe}
-
 \item{y}{Dependent variable}
 
-\item{groupvar}{To create within/between division}
+\item{groupvar}{Grouping variable to decompose variance into within- and between-group components}
 
-\item{timevar}{To analyze change over time}
+\item{timevar}{Time variable to analyze change over time}
 
-\item{smoothDat}{TRUE|FALSE. Smooth data?}
+\item{dat}{Dataframe}
 
-\item{rel}{FALSE or numeric time}
+\item{smoothDat}{Logical. Should data be smoothed?}
 
-\item{long}{TRUE|FALSE. Long instead of wide output}
+\item{rel}{Number or FALSE. Should values be reported relative to specified time?}
+
+\item{long}{Logical. Should output be in long format?}
 }
 \value{
-Returns a list with two elements - "by group and time" and "by time"
+List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.
 }
 \description{
 [...]

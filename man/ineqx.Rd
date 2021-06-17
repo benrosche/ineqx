@@ -7,37 +7,42 @@
 ineqx(
   x,
   y,
+  xpv = c(0, 1),
   ystat = "CV2",
   controls = NULL,
   groupvar = NULL,
   timevar = NULL,
-  timesp = T,
-  cf = 1,
+  cf = NULL,
   dat
 )
 }
 \arguments{
-\item{x}{Explanatory variable}
+\item{x}{Character string. Explanatory variable. c.x or i.x. c2.x will specify quadratic polynomials for x.}
 
-\item{y}{Dependent variable}
+\item{y}{Character string. Dependent variable. Can only be c.x}
 
-\item{ystat}{"Var" or "CV2"}
+\item{xpv}{Numeric vector of length 2. Choose the values of x that are used for prediction, e.g. c(0,1)}
 
-\item{controls}{Character vector with additional control variables}
+\item{ystat}{Character string. Either "Var" or "CV2". Choose to analyze the effect of x on the variance or squared coefficient of variation}
 
-\item{groupvar}{To create within/between division}
+\item{controls}{Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)}
 
-\item{timevar}{To analyze change over time}
+\item{groupvar}{Character string. Must be i.x. Grouping variable to decompose variance into within- and between-group components.}
 
-\item{cf}{Either Flase or numeric time}
+\item{timevar}{Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.}
+
+\item{cf}{Number. Reference time.}
 
 \item{dat}{Dataframe}
 }
 \value{
-Returns a list: dW, dB, dD, dT
+List with six elements: pred_mu, pred_sigma, dW, dB, dD, dT. See details.
 }
 \description{
 The ineqx package implements Rosche (2021). [...]
+}
+\details{
+The main function of \code{ineqx}. [...]
 }
 \examples{
 data(incdat)
