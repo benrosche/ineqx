@@ -21,6 +21,7 @@ dat.PD1 <-
     LP_n     = c("300", "600", "100"),
     LP_mu    = "1000*(group==1) + 41000*(group==2) + 41000*(group==3) - 40000 * (group==2) * (year>1) + 240000 * (group==3) * (year>1)",
     LP_sigma = "1",
+    X_type = "within",
     sav = F
   )
 
@@ -68,36 +69,39 @@ wibe(dat.PD2, y=lninc, groupvar=group, timevar=year, long=F)[[2]] %>% dplyr::sel
 # Check dW + dB
 # ------------------------------------------------------------------------------------------------ #
 
-dat.dWB <-
+dat.dWB1 <-
   crDat(
     N.T=10,
     N.G=3,
     LP_n     = c("500", "500", "500"),
     LP_mu="10+100*(group==1)*x+150*(group==2)*x+20*(group==3)*x*year",
     LP_sigma="1+10*(group==1)*x+10*(group==2)*x+10*(group==3)*x+10*(group==3)*x*year",
+    X_type = "within",
     sav = F
   )
 
 ggplot(data=
-         wibe(dat.dB %>% dplyr::filter(x==1), y=inc, groupvar=group, timevar=year, long=T)[[2]] %>% filter(variable %in% c("CV2B", "CV2W", "CV2T")),
+         wibe(dat.dWB1 %>% dplyr::filter(x==1), y=inc, groupvar=group, timevar=year, long=T)[[2]] %>% filter(variable %in% c("CV2B", "CV2W", "CV2T")),
        aes(x=year, y=value, group=variable, color=factor(variable))) +
   geom_line() +
   labs(x="", color="")
 
-ineqx.dWB1 <- ineqx(x="c.x", y="c.inc",   ystat="CV2", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB)
-ineqx.dWB2 <- ineqx(x="c.x", y="c.inc",   ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB)
-ineqx.dWB3 <- ineqx(x="c.x", y="c.lninc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB)
+ineqx.dWB1 <- ineqx(x="c.x", y="c.inc",   ystat="CV2", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB1)
+ineqx.dWB2 <- ineqx(x="c.x", y="c.inc",   ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB1)
+ineqx.dWB3 <- ineqx(x="c.x", y="c.lninc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB1)
 
-ineqx.dW1$dT[[1]]
+plot(ineqx.dWB1, type="dMuP")
+plot(ineqx.dWB1, type="dSigmaP")
 
 plot(ineqx.dWB1, type="dPA")
 plot(ineqx.dWB2, type="dPA")
-plot(ineqx.dW3, type="dPA")
+plot(ineqx.dWB3, type="dPA")
+
+ineqx.dWB3$dT[[1]]
 
 # Comments:
 # - ineqx() perfectly recovers changes due to dW and dB
 # - We can see that variance, log-variance, and CV2 all predict a different trajectory of inequality
-
 
 # ------------------------------------------------------------------------------------------------ #
 # Check dD + dO
@@ -113,6 +117,7 @@ dat.dD1 <-
     LP_mu    = " 100*(group==1) +        100*(group==2) +       100*(group==3) +       1000*(group==2)*(year>1) +
                 -100*(group==1)*(x==1) + 300*(group==2)*(x==1) +  100*(group==3)*(x==1)",
     LP_sigma = "10",
+    X_type = "within",
     seed=T,
     sav = "R"
   )
@@ -150,7 +155,7 @@ ineqx.dD11$dB[[1]]
 
 # Var
 
-ineqx.dD12 <- ineqx(x="i.x", y="c.inc",   ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dD1)
+ineqx.dD12 <- ineqx(x="i.x", y="c.inc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dD1)
 
 ineqx.dD12$dW[[1]]
 # -> unaffected
@@ -184,3 +189,41 @@ plot(ineqx.dD12, type="dPA")
 # dT+dO == total effect in the sense, the change of inequality at x=0 plus the changes from x=0 to x=1
 # Comment:
 # -> I don't think we can call dD "characteristic effect" since it is not the quantitative change of X but of n and mu
+
+# ------------------------------------------------------------------------------------------------ #
+# Check x_type == "between"
+# ------------------------------------------------------------------------------------------------ #
+
+dat.dWB2 <-
+  crDat(
+    N.T=5,
+    N.G=3,
+    LP_n     = c("1000", "1000", "1000"),
+    LP_mu="10+100*(group==1)*x+150*(group==2)*x+20*(group==3)*x*year",
+    LP_sigma="10+10*(group==1)*x*year",
+    X_type = "between",
+    sav = F
+  )
+
+ineqx.dWB2 <- ineqx(x="c.x", xpv = c(0,1), y="c.inc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB2)
+
+plot(ineqx.dWB2, type="dMuP")
+plot(ineqx.dWB2, type="dSigmaP")
+
+plot(ineqx.dWB2, type="dPA")
+
+ineqx.dWB2$dT[[1]]
+
+# Comments:
+# - Why does the number of rows in dT[[1]] depend on xpv?
+# - When sigma is constant, plot(ineqx.dWB2, type="dPA") is very close
+# - When sigma has a structure, plot(ineqx.dWB2, type="dPA") is off
+# - I wonder whether the effect on inequality depends on the distribution of X, which would be the characteristics effect.
+#   Figure out whether I could include this somehow! Maybe Yun 2006 can help...
+
+# 2do list (see Trello) -------------------------------------------------------------------------- #
+
+# 1. x_type == between
+# 2. cf+1
+# 3. gender dynamics
+# 4. SE
