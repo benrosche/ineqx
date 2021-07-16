@@ -23,7 +23,7 @@
 \arguments{
 \item{ineqx.out}{ineqx.out object from ineqx()}
 
-\item{type}{Character string. Plot type. Choose from: dMuSigma, dB, dW, dD, dO, dT}
+\item{type}{Character string. Plot type. Choose from: dMuP, dMuT, dSigmaP, dSigmaT, dWP, dWT, dBP, dBT, dDP, dDT, dO, dT, dPA}
 
 \item{yint}{Either 1 or 2. Choose reported effect value. 1: Effect in units of ystat. 2: Effect as change in percent since 'cf' (reference time)}
 

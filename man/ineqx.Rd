@@ -5,10 +5,11 @@
 \title{Variance function regression + decomposition of the variance and sq. coefficient of variation}
 \usage{
 ineqx(
-  x,
+  x = NULL,
   y,
   xpv = c(0, 1),
   ystat = "CV2",
+  weights = NULL,
   controls = NULL,
   groupvar = NULL,
   timevar = NULL,
@@ -31,7 +32,7 @@ ineqx(
 
 \item{timevar}{Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.}
 
-\item{cf}{Number. Reference time.}
+\item{cf}{Number. Counterfactual reference point.}
 
 \item{dat}{Dataframe}
 }
