@@ -28,38 +28,37 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
 
   # dat = incdat %>% na.omit(); x="c2.child"; xpv=c(0,1); y="c.inc"; ystat="Var"; weights=NULL; controls="c.z"; groupvar="i.SES"; timevar="c.year"; cf=1
   # dat = dat.ineqx; x="c.x"; xpv=c(0,1); y="c.fearnings_wk"; ystat="CV2"; groupvar="f_SES"; timevar="c.year"; cf=27; controls=c("i.mother", "i.byear", "c2.age", "c2.famsize", "i.married", "i.race", "i.w_edu")
-  # dat = dat1; x="c3.x"; xpv=c(0,1); y="inc"; ystat="Var"; groupvar="i.group"; timevar="i.year"; cf=1; controls=NULL; weights=NULL
+  # dat = dat1; x="c.x"; xpv=c(0,1); y="inc"; ystat="CV2"; groupvar="i.group"; timevar="i.year"; cf=1; controls=NULL; weights=NULL
 
   # ---------------------------------------------------------------------------------------------- #
   # Dissect input
   # ---------------------------------------------------------------------------------------------- #
 
-  # Should the effect of X be analyzed?
+  # X
   if(!is.null(x)) {
     c(x, xcont, xpoly) %<-% dissectVar(x, cicheck="ci")
-    form_x <- if(xcont) paste0("I(x^", 1:xpoly, ")", collapse = " + ") else paste0("as.factor(x)")
-    form_x <- paste0("(", form_x, ") *")
+    form_x <- if(xcont & xpoly==1) "x * " else if(xcont & xpoly>1) paste0("bs(x, df=", xpoly, ") * ") else "as.factor(x) * "
   } else form_x <- ""
 
   # Y
   y <- dissectVar(y, cicheck = "c")[[1]]
 
-  # Weights
-  if(!is.null(weights)) w <- as.symbol(weights) else w <- NULL
-
   # Controls
   if(!is.null(controls)) {
     ctrl_list <- lapply(controls, FUN=function(x) dissectVar(x))
-    form_ctrl <- paste0(lapply(ctrl_list, FUN=function(x) { if(x[[2]]) paste0("I(", x[[1]], "^", 1:x[[3]], ")", collapse = " + ") else paste0("as.factor(", x[[1]], ")") }), collapse = " + ")
+    form_ctrl <- paste0(lapply(ctrl_list, FUN=function(x) { if(x$xcont & x$xpoly==1) paste0(x$var) else if (x$xcont & x$xpoly>1) paste0("bs(", x$var, ", df=", x$xpoly, ")") else paste0("as.factor(", x$var, ")") }), collapse = " + ")
     form_ctrl <- paste0(" + ", form_ctrl)
   } else form_ctrl <- ""
+
+  # Timevar
+  c(timevar, timecont, timepoly) %<-% dissectVar(timevar, cicheck = "ci")
+  form_time <- if(timecont & timepoly==1) "time" else if(timecont & timepoly>1) paste0("bs(time, df=", time_list[[3]], ")") else "as.factor(time)"
 
   # Groupvar
   groupvar <- dissectVar(groupvar, cicheck = "i")[[1]]
 
-  # Timevar
-  time_list <- dissectVar(timevar, cicheck = "ci")
-  timevar <- time_list[[1]]
+  # Weights
+  if(!is.null(weights)) w <- as.symbol(weights) else w <- NULL
 
   # Check variables and values
   if(!is.null(x)) if(!as.character(x) %in% names(dat)) stop(paste0(x, " not in dataset"))
@@ -77,16 +76,19 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
   # Variance function regression
   # ---------------------------------------------------------------------------------------------- #
 
-  # Create formulas
-  form_time <- if(time_list[[2]] & time_list[[3]]==1) "time" else if(time_list[[2]] & time_list[[3]]>1) paste0("bs(time, df=", time_list[[3]], ")") else "as.factor(time)"
-  form_mu   <- paste0("y ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) # x group time x#group x#time group#time x#group#time
-  form_sigma <- paste0(" ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) # "
-
   message("Running variance function regression ...")
-  vfr <- gamlss(formula       = as.formula(form_mu),
-                sigma.formula = as.formula(form_sigma),
-                weights = w,
-                data = dat)
+
+  # coefficients can change across time
+  vfr1 <- gamlss(formula       = as.formula( paste0("y ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) ), # x group time x#group x#time group#time x#group#time
+                 sigma.formula = as.formula( paste0( " ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) ),
+                 weights = w,
+                 data = dat)
+
+  # coefficients are constant across time
+  vfr2 <- gamlss(formula       = as.formula( paste0("y ~ ", form_x, "as.factor(group)", form_ctrl) ), # x group x#group
+                 sigma.formula = as.formula( paste0( " ~ ", form_x, "as.factor(group)", form_ctrl) ),
+                 weights = w,
+                 data = dat %>% dplyr::filter(time==!!cf))
 
   # ---------------------------------------------------------------------------------------------- #
   # Compute average marginal effects
@@ -95,8 +97,8 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
   message("Computing average marginal effects ...")
   # 2do: add SE with predict(,se.fit = T)
 
-  AME_mu    <- calcAME({{ x }}, xpv, {{ groupvar }}, {{ timevar }}, what="mu", vfr, dat)
-  AME_sigma <- calcAME({{ x }}, xpv, {{ groupvar }}, {{ timevar }}, what="sigma", vfr, dat)
+  AME_mu    <- calcAME({{ x }}, xpv, {{ groupvar }}, {{ timevar }}, what="mu", vfr1, vfr2, dat)
+  AME_sigma <- calcAME({{ x }}, xpv, {{ groupvar }}, {{ timevar }}, what="sigma", vfr1, vfr2, dat)
 
   # Rename variables again
 

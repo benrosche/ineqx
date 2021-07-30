@@ -6,7 +6,7 @@ library(haven)
 
 setwd("C:/Users/benja/OneDrive - Cornell University/GitHub/ineqx")
 
-crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, seed=T, sav=F) {
+crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, X_const=F, seed=T, sav=F) {
 
   # Arguments ------------------------------------------------------------------------------------ #
   # N.T      = Number of time points
@@ -17,6 +17,7 @@ crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, seed=T, sav=F) {
   # LP_sigma = Linear predictor for standard deviation
   # X_type   = {"between", "within"}. If "between", causal effect is across ids. If "within",
   #            causal effect is within ids.
+  # X_const  = {T|F} If True, distribution of X does not change across waves
   # seed     = {T|F}
   # sav      = {T|F}
   # ---------------------------------------------------------------------------------------------- #
@@ -42,15 +43,25 @@ crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, seed=T, sav=F) {
 
   d <- replicate(N.T, vector("list", N.G), simplify = FALSE)
 
-  for(i in 1:N.T) { # per wave
+  for(j in 1:N.G) { # per group
 
-    for(j in 1:N.G) { # per group
+    # distribution of x constant across waves
+    if(isTRUE(X_const)) {
+      l <- N %>% dplyr::filter(year==1) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
+      x <- rpois(l, 2)
+    }
+
+    for(i in 1:N.T) { # per wave
 
       if(X_type=="between") {
 
-        l <- N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
+        # distribution of x changes across waves
+        if(isFALSE(X_const)) {
+          l <- N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
+          x <- rpois(l, 2)
+        }
 
-        d[[i]][[j]] <- tibble() %>% tidyr::expand(id=1:l, year=i, group=j) %>% dplyr::mutate(x=rpois(l, 2), z=rpois(l, 0.1*x)) # treatment x, confounder z
+        d[[i]][[j]] <- tibble() %>% tidyr::expand(id=1:l, year=i, group=j) %>% dplyr::mutate(x=!!x, z=rpois(l, 0.1*x)) # treatment x, confounder z
 
       } else if(X_type=="within") {
 
