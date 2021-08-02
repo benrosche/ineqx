@@ -75,7 +75,7 @@ calcAME <- function(x=NULL, xpv, groupvar, timevar, what, vfr1, vfr2, dat) {
       group_by(time) %>%
       dplyr::summarise(across(everything(), ~ mean(.))) %>%
       ungroup() %>%
-      dplyr::select(-x) %>%
+      dplyr::select(-x, -group) %>%
       dplyr::rename(
         !!enquo(timevar) := time
       )
@@ -159,7 +159,7 @@ dW <- function(x, y, xpv, ystat, groupvar, timevar, cf, smoothDat=F, AME_mu, AME
 
   sigma.CX <- AME_sigma %>% dplyr::filter(time==!!cf) %>% .$sigma.CX
 
-  sigma.CL <- AME_sigma %>% dplyr::filter(time==!!cf) %>% .$sigma.CS
+  sigma.CL <- AME_sigma %>% dplyr::filter(time==!!cf) %>% .$sigma.CL
 
   # Create counterfactual dataset -------------------------------------------------------------- #
 
@@ -197,7 +197,7 @@ dW <- function(x, y, xpv, ystat, groupvar, timevar, cf, smoothDat=F, AME_mu, AME
       group_by(time) %>% # so that ~ fcts are executed by year
       nest() %>%
       dplyr::mutate(dW = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="CX", partial = T))) %>%
-      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="CL", partial = T))) %>%
+      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="CBL", partial = T))) %>%
       dplyr::mutate(dI = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="I", partial = T))) %>%
       dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x, ystat=paste0(ystat, "W"), partial = T))) %>%
       unnest(cols = c(data, dW, dX, dI, dD)) %>%
@@ -210,7 +210,7 @@ dW <- function(x, y, xpv, ystat, groupvar, timevar, cf, smoothDat=F, AME_mu, AME
       group_by(time) %>%
       nest() %>%
       dplyr::mutate(dW = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="CX", partial = F))) %>%
-      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="CL", partial = F))) %>%
+      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="CBL", partial = F))) %>%
       dplyr::mutate(dI = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "W"), what="I", partial = F))) %>%
       dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x, ystat=paste0(ystat, "W"), partial = F))) %>%
       unnest(cols = c(data, dW, dX, dI, dD)) %>%
@@ -358,10 +358,10 @@ dB <- function(x, y, xpv, ystat="CV2", groupvar, timevar, cf, smoothDat=F, AME_m
       dat.f_cf %>%
       group_by(time) %>%
       nest() %>%
-      dplyr::mutate(dB = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "B"), what = "CX", partial = T))) %>%
-      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "B"), what = "CB", partial = T))) %>%
-      dplyr::mutate(dI = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "B"), what = "I", partial = T))) %>%
-      dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x, ystat=paste0(ystat, "B"), partial = T))) %>%
+      dplyr::mutate(dB = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "B"), what = "CX", partial = F))) %>%
+      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "B"), what = "CB", partial = F))) %>%
+      dplyr::mutate(dI = purrr::map(.x = data, ~ dYdX(.x, ystat=paste0(ystat, "B"), what = "I", partial = F))) %>%
+      dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x, ystat=paste0(ystat, "B"), partial = F))) %>%
       unnest(cols = c(data, dB, dX, dI, dD)) %>%
       dplyr::filter(row_number()==1) %>%
       ungroup() %>%
@@ -543,13 +543,13 @@ dYdX <- function(dat, ystat, what, partial=F) {
       beta.star    <- 0 # beta.cf
       beta.star[i] <- 0 # beta.f[i]
 
-      if(wb=="W") lambda.star    <- lambda.cf
-      if(wb=="W") lambda.star[i] <- lambda.f[i]
+      if(wb=="W") lambda.star    <- 0 #lambda.cf
+      if(wb=="W") lambda.star[i] <- 0 #lambda.f[i]
 
     } else {
 
       beta.star <- 0 #beta.f
-      if(wb=="W") lambda.star <- lambda.f
+      if(wb=="W") lambda.star <- 0 #lambda.f
 
     }
 
@@ -580,10 +580,24 @@ dYdX <- function(dat, ystat, what, partial=F) {
 
     } else if(ystat=="CV2W") {
 
-      dydx_t1 <- CV2W(n.cf, mu.cf + beta.star, sigma.cf + lambda.star) - CV2W(n.cf, mu.cf, sigma.cf)
-      dydx_t0 <- CV2W(n.cf, mu.cf + beta.cf, sigma.cf + lambda.cf)     - CV2W(n.cf, mu.cf, sigma.cf)
 
-      delta[i] <- dydx_t1 - dydx_t0
+      if(what=="CX") {
+
+        delta[i] <- CV2W(n.f, mu.CX.f, sigma.CX.f) - CV2W(n.cf, mu.CX.cf, sigma.CX.cf)
+
+      } else if(what=="CBL") {
+
+        delta[i] <- CV2W(n.f, mu.CB.f, sigma.CL.f) - CV2W(n.cf, mu.CB.cf, sigma.CL.cf)
+
+      } else if(what=="I") {
+
+        delta[i] <- CV2W(n.f, mu.f, sigma.f) - CV2W(n.cf, mu.cf, sigma.cf) - (CV2W(n.f, mu.CX.f, sigma.CX.f)  - CV2W(n.cf, mu.CX.cf, sigma.CX.cf) + CV2W(n.f, mu.CB.f, sigma.CL.f)  - CV2W(n.cf, mu.CB.cf, sigma.CL.cf))
+
+      }
+
+      # STOPPED HERE; between part works; within does not.
+      # the problem is that changes in the between part will affect the within part because x has its own distribution
+
 
     } else if(ystat=="VarW") {
 
