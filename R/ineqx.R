@@ -26,7 +26,7 @@
 
 ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NULL, groupvar=NULL, timevar=NULL, cf=NULL, dat) {
 
-  # dat = incdat %>% na.omit(); x="c2.child"; xpv=c(0,1); y="c.inc"; ystat="Var"; weights=NULL; controls="c.z"; groupvar="i.SES"; timevar="c.year"; cf=1
+  # dat = incdat %>% na.omit(); x="i.x"; xpv=c(0,1); y="c.inc"; ystat="Var"; controls=NULL; weights=NULL; groupvar="i.group"; timevar="c.year"; cf=0
   # dat = dat.ineqx; x="c.x"; xpv=c(0,1); y="c.fearnings_wk"; ystat="CV2"; groupvar="f_SES"; timevar="c.year"; cf=27; controls=c("i.mother", "i.byear", "c2.age", "c2.famsize", "i.married", "i.race", "i.w_edu")
   # dat = dat1; x="c3.x"; xpv=c(0,1); y="inc"; ystat="Var"; groupvar="i.group"; timevar="i.year"; cf=1; controls=NULL; weights=NULL
 
@@ -34,12 +34,16 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
   # Dissect input
   # ---------------------------------------------------------------------------------------------- #
 
-  # Should the effect of X be analyzed?
+  # X
   if(!is.null(x)) {
     c(x, xcont, xpoly) %<-% dissectVar(x, cicheck="ci")
     form_x <- if(xcont) paste0("I(x^", 1:xpoly, ")", collapse = " + ") else paste0("as.factor(x)")
     form_x <- paste0("(", form_x, ") *")
-  } else form_x <- ""
+    nox <- F
+  } else {
+    form_x <- ""
+    nox <- T
+  }
 
   # Y
   y <- dissectVar(y, cicheck = "c")[[1]]
@@ -60,15 +64,16 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
   # Timevar
   time_list <- dissectVar(timevar, cicheck = "ci")
   timevar <- time_list[[1]]
+  form_time <- if(time_list[[2]] & time_list[[3]]==1) "time" else if(time_list[[2]] & time_list[[3]]>1) paste0("bs(time, df=", time_list[[3]], ")") else "as.factor(time)"
 
   # Check variables and values
-  if(!is.null(x)) if(!as.character(x) %in% names(dat)) stop(paste0(x, " not in dataset"))
+  if(!nox) if(!as.character(x) %in% names(dat)) stop(paste0(x, " not in dataset"))
   if(!as.character(y) %in% names(dat)) stop(paste0(y, " not in dataset"))
   if(!as.character(groupvar) %in% names(dat)) stop(paste0(groupvar, " not in dataset"))
   if(!as.character(timevar) %in% names(dat)) stop(paste0(timevar, " not in dataset"))
   if(!is.null(weights)) if(!as.character(weights) %in% names(dat)) stop(paste0(weights, " not in dataset"))
   if(!is.null(controls)) lapply(ctrl_list, FUN=function(x) { if(!as.character(x[[1]]) %in% names(dat)) stop(paste0(x[[1]], " not in dataset")) } )
-  if(!cf %in% (dat[timevar] %>% unique() %>% unlist() %>% as.vector())) stop(paste0("cf not observed in ", timevar))
+  if(length(cf) <= 2) if(!cf[1] %in% (dat[timevar] %>% unique() %>% unlist() %>% as.vector())) stop(paste0("cf not observed in ", timevar))
 
   # Rename variables in dat
   dat <- dat %>% dplyr::rename(x={{ x }}, y={{ y }}, w = {{ w }}, group={{ groupvar }}, time={{ timevar }})
@@ -77,14 +82,9 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
   # Variance function regression
   # ---------------------------------------------------------------------------------------------- #
 
-  # Create formulas
-  form_time <- if(time_list[[2]] & time_list[[3]]==1) "time" else if(time_list[[2]] & time_list[[3]]>1) paste0("bs(time, df=", time_list[[3]], ")") else "as.factor(time)"
-  form_mu   <- paste0("y ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) # x group time x#group x#time group#time x#group#time
-  form_sigma <- paste0(" ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) # "
-
   message("Running variance function regression ...")
-  vfr <- gamlss(formula       = as.formula(form_mu),
-                sigma.formula = as.formula(form_sigma),
+  vfr <- gamlss(formula       = as.formula( paste0("y ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) ), # x group time x#group x#time group#time x#group#time
+                sigma.formula = as.formula( paste0( " ~ ", form_x, "(as.factor(group) * ", form_time, ")", form_ctrl) ),
                 weights = w,
                 data = dat)
 
@@ -95,21 +95,8 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
   message("Computing average marginal effects ...")
   # 2do: add SE with predict(,se.fit = T)
 
-  AME_mu    <- calcAME({{ x }}, xpv, {{ groupvar }}, {{ timevar }}, what="mu", vfr, dat)
-  AME_sigma <- calcAME({{ x }}, xpv, {{ groupvar }}, {{ timevar }}, what="sigma", vfr, dat)
-
-  # Rename variables again
-
-  if(!is.null(x)) dat <- dat %>% dplyr::rename(!!enquo(x) := x)
-  if(!is.null(weights)) dat <- dat %>% dplyr::rename(!!enquo(w) := w)
-
-  dat <-
-    dat %>%
-    dplyr::rename(
-      !!enquo(y) := y,
-      !!enquo(groupvar) := group,
-      !!enquo(timevar) := time
-    )
+  AME_mu    <- calcAME(nox, xpv, what="mu", vfr, dat)
+  AME_sigma <- calcAME(nox, xpv, what="sigma", vfr, dat)
 
   # ---------------------------------------------------------------------------------------------- #
   # Decomposition
@@ -117,15 +104,67 @@ ineqx <- function(x=NULL, y, xpv=c(0,1), ystat="CV2", weights=NULL, controls=NUL
 
   message("Performing decomposition ...")
 
-  # Output
-  dW.out <- dW({{ x }}, {{ y }}, xpv, ystat, {{ groupvar }}, {{ timevar }}, cf=cf, smoothDat=F, AME_mu, AME_sigma, dat)
-  dB.out <- dB({{ x }}, {{ y }}, xpv, ystat, {{ groupvar }}, {{ timevar }}, cf=cf, smoothDat=F, AME_mu, dat)
-  dD.out <- if(!is.null(x)) dD(dW.out, dB.out, dO=T) else dD(dW.out, dB.out, dO=F)
-  dT.out <- dT(dW.out, dB.out, {{ x }}, cf, ystat)
+  # Decompose data at @xpv[1] (pre-treatment) and @xpv[2] (post-treatment)
+  if(!is.null(x)) {
+    wibe.xpv1 <- wibe("y", "group", "time", dat %>% dplyr::filter(x == xpv[1]), smoothDat = F, rel = F)[[1]] # @xpv[1]
+    wibe.xpv2 <- wibe("y", "group", "time", dat %>% dplyr::filter(x == xpv[2]), smoothDat = F, rel = F)[[2]] # @xpv[2]
+  } else {
+    wibe.xpv1 <- wibe("y", "group", "time", dat, smoothDat = F, rel = F)[[1]]
+    wibe.xpv2 <- wibe("y", "group", "time", dat, smoothDat = F, rel = F)[[2]]
+  }
+
+  # Gather factual and counterfactual data
+  dat.f_cf <- createCF("x", "y", ystat, "group", "time", cf, wibe.xpv1, AME_mu, AME_sigma, dat)
+
+  # Calculate impact ----------------------------------------------------------------------------- #
+
+  # Within
+  dW.out <-
+    calcImpact(nox, paste0(ystat, "W"), dat.f_cf) %>%
+    purrr::map(
+      .f = function(x) {
+        x %>%
+          inner_join(wibe.xpv2 %>% dplyr::select(time, paste0(ystat, c("W","T"))), by=c("time")) %>%
+          dplyr::rename(dW=dX) %>%
+          ungroup()
+      })
+
+
+  # Between
+  dB.out <-
+    calcImpact(nox, paste0(ystat, "B"), dat.f_cf) %>%
+    purrr::map(
+      .f = function(x) {
+        x %>%
+          inner_join(wibe.xpv2 %>% dplyr::select(time, paste0(ystat, c("B","T"))), by=c("time")) %>%
+          dplyr::rename(dB=dX) %>%
+          ungroup()
+      })
+
+  # Demographic
+  dD.out <- dD(nox, dW.out, dB.out)
+
+  # Total
+  dT.out <- dT(nox, dW.out, dB.out, ystat, cf)
 
   # ---------------------------------------------------------------------------------------------- #
-  # Return
+  # Rename variables again and return output
   # ---------------------------------------------------------------------------------------------- #
+
+  # Rename
+
+  rnm <- function(input, timevar, groupvar) {
+    return(list(input[[1]] %>% dplyr::rename(!!enquo(timevar) := time, !!enquo(groupvar) := group), input[[2]] %>% dplyr::rename(!!enquo(timevar) := time)))
+  }
+
+  AME_mu    <- rnm(AME_mu, {{ timevar }}, {{ groupvar }})
+  AME_sigma <- rnm(AME_sigma, {{ timevar }}, {{ groupvar }})
+  dW.out <- rnm(dW.out, {{ timevar }}, {{ groupvar }})
+  dB.out <- rnm(dB.out, {{ timevar }}, {{ groupvar }})
+  dD.out <- rnm(dD.out, {{ timevar }}, {{ groupvar }})
+  dT.out <- dT.out %>% purrr::map(.f=function(x) x %>% dplyr::rename(!!enquo(timevar) := time))
+
+  # Return
 
   vars <-  rlang::enexprs(x, y, groupvar, timevar, ystat, cf) %>% as.character()
   names(vars) <- c("x", "y", "groupvar", "timevar", "ystat", "cf")
