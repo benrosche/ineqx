@@ -20,24 +20,35 @@
 
 wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, rel=F, long=F) {
 
-  # dat <- incdat; timevar <- substitute(year); groupvar <- substitute(SES); y <- substitute(inc); rel <- F; smoothDat <- F
+  # dat <- incdat; timevar <- "i.year"; groupvar <- "i.group"; y <- "inc"; rel <- F; smoothDat <- F
 
   # ============================================================================================== #
-  # Checks
+  # Dissect input
   # ============================================================================================== #
 
   if(isTRUE(rel)) stop("rel must be numeric")
-  if(is.null(rlang::enexpr(y) )) stop("Outcome must be specified.")
 
+  # Y
+  y <- dissectVar(y, cicheck="c")[[1]]
+
+  # Group
   if(is.null(rlang::enexpr(groupvar))) {
     dat <- dat %>% dplyr::mutate(group=1)
     groupvar <- substitute(group)
   }
+  groupvar <- dissectVar(groupvar, cicheck="i")[[1]]
 
+  # Time
   if(is.null(rlang::enexpr(timevar))) {
     dat <- dat %>% dplyr::mutate(time=1)
     timevar <- substitute(time)
   }
+  timevar <- dissectVar(timevar, cicheck="i")[[1]]
+
+  # Check whether variables are in the dataset
+  if(!as.character(y) %in% names(dat)) stop(paste0(y, " not in dataset"))
+  if(!as.character(groupvar) %in% names(dat)) stop(paste0(groupvar, " not in dataset"))
+  if(!as.character(timevar) %in% names(dat)) stop(paste0(timevar, " not in dataset"))
 
   # ============================================================================================== #
   # Rename
