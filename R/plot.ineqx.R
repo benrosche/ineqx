@@ -33,7 +33,8 @@ plot.ineqx <- function(ineqx.out, type, yint=1, xlab=NULL, ylab=NULL, llab=NULL,
 
   # Checks
   if(class(ineqx.out)!="ineqx") stop("Must be given an ineqx.out object.")
-  if(!stringr::str_detect(type, "dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dDP|dDT|dT|dPA")) stop("type must be dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dDP|dDT|dT|dPA")
+  if(is.null(ineqx.out$vars["timevar"])) stop("For plotting, ineqx() must include a timevar.")
+  if(!stringr::str_detect(type, "dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dDP|dDT|dT|dTS|dPA")) stop("type must be dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dDP|dDT|dT|dTS|dPA")
   if(isTRUE(hline)) stop("hline must be a value, e.g. 0.")
 
   # Call function according to plot type
@@ -45,7 +46,7 @@ plot.ineqx <- function(ineqx.out, type, yint=1, xlab=NULL, ylab=NULL, llab=NULL,
 
     out <- plot_dWBD(ineqx.out, type=type, yint=yint, xlab=xlab, ylab=ylab, llab=llab, titl=titl, xlim=xlim, hline=hline, se=se, lowess=lowess, legend=legend, sav=sav)
 
-  } else if(type=="dT") {
+  } else if(type %in% c("dT", "dTS")) {
 
     out <- plot_dT(ineqx.out, type=type, yint=yint, xlab=xlab, ylab=ylab, titl=titl, xlim=xlim, hline=hline, se=se, lowess=lowess, legend=legend, sav=sav)
 
@@ -82,67 +83,29 @@ plot_dMuSigma <- function(ineqx.out, type=type, xlab=NULL, ylab=NULL, llab=NULL,
   timevar <- ineqx.out$vars["timevar"]
   ystat <- ineqx.out$vars["ystat"]
 
-  if(type == "dMuP") {
+  # ggplot variables
+  if(is.null(titl)) titl <- ""
+  if(is.null(xlab)) xlab <- ""
+  if(startsWith(type, "dMu")) {
+    p1.dat <- ineqx.out$dMu
+    if(is.null(ylab)) ylab <- "Mu"
+  } else if(startsWith(type, "dSigma")) {
+    p1.dat <- ineqx.out$dSigma
+    if(is.null(ylab)) ylab <- "Sigma"
+  }
 
-    # Plot dMu by group and time
-
-    p1 <-
-      ggplot(data=ineqx.out$dMu[[1]], aes(x=get(timevar), y=beta, color=as.factor(get(groupvar)))) +
-      geom_line(alpha=1) +
-      geom_point(alpha=1) +
-      ggpubr_ineqx +
-      labs(title=ifelse(is.null(titl), "", titl[1]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), "Mu", ylab[1])) +
-      NULL
-
-  } else if (type == "dMuT") {
-
-    # Plot dMu by time
-
-    p1 <-
-      ggplot(data=ineqx.out$dMu[[2]], aes(x=get(timevar), y=beta)) +
-      geom_line(alpha=1) +
-      geom_point(alpha=1) +
-      ggpubr_ineqx +
-      labs(title=ifelse(is.null(titl), "", titl[1]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), "Mu", ylab[1])) +
-      NULL
-
-    } else if (type == "dSigmaP") {
-
-    # Plot dSigma2 by group and time
-
-    p1 <-
-      ggplot(data=ineqx.out$dSigma[[1]], aes(x=get(timevar), y=lambda, color=as.factor(get(groupvar)))) +
-      geom_line(alpha=1) +
-      geom_point(alpha=1) +
-      ggpubr_ineqx +
-      labs(title=ifelse(is.null(titl), "", titl[2]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), "Sigma", ylab[2])) +
-      NULL
-
-  } else if (type == "dSigmaT") {
-
-    # Plot dSigma2 by time
-
-    p1 <-
-      ggplot(data=ineqx.out$dSigma[[2]], aes(x=get(timevar), y=lambda)) +
-      geom_line(alpha=1) +
-      geom_point(alpha=1) +
-      ggpubr_ineqx +
-      labs(title=ifelse(is.null(titl), "", titl[2]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), "Sigma", ylab[2])) +
-      NULL
-
-  } else p1 <- NULL
+  # Plot
+  if(endsWith(type, "P")) p1 <- ggplot(data=p1.dat[[1]], aes(x=get(timevar), y=effect, color=as.factor(get(groupvar))))
+  if(endsWith(type, "T")) p1 <- ggplot(data=p1.dat[[2]], aes(x=get(timevar), y=effect))
+  p1 <-
+    p1 +
+    geom_line(alpha=1) + geom_point(alpha=1) +
+    ggpubr_ineqx +
+    labs(title=ifelse(is.null(titl), "", titl[1]),
+         color="",
+         x=ifelse(is.null(xlab), "", xlab),
+         y=ifelse(is.null(ylab), "Mu", ylab[1])) +
+    NULL
 
   # Additions
   if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
@@ -238,7 +201,7 @@ plot_dWBD <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, llab=N
   if(yint==1) {
     p1 <- p1 + geom_line(aes(y={{ typevar }}))
   } else if(yint==2) {
-    p1 <- p1 + geom_line(aes(y= ( 1 + {{ typevar }} / ( {{ ystatvar }} - {{ typevar }} )) * 100))
+    p1 <- p1 + geom_line(aes(y= (1 + {{ typevar }} / ( {{ ystatvar }} - {{ typevar }} )) * 100))
   }
 
   if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
@@ -287,94 +250,99 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
 
   # Plot total ----------------------------------------------------------------------------------- #
 
-  p1a <-
-    ggplot(data=
-             total %>%
-             pivot_longer(c("dW", "dB", "dD", "dT"), names_to = "delta", values_to = "value"),
-           aes(
-             x=time,
-             color=factor(delta,
-                          levels=c("dW", "dB", "dD", "dT"),
-                          labels = c("within", "between", "demographic", "total")),
-             size=factor(delta,
-                         levels=c("dW", "dB", "dD", "dT"),
-                         labels = c("within", "between", "demographic", "total"))
-           )) +
-    ggpubr_ineqx +
-    scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "#000000")) +
-    scale_size_manual(values = c(1,1,1,1.3)) +
-    labs(title=ifelse(is.null(titl), "", titl[1]),
-         color="",
-         size="",
-         x=ifelse(is.null(xlab), "", xlab),
-         y=ifelse(is.null(ylab), "dT", ylab[1])) +
-    NULL
+  if(type=="dT") {
 
-  if(yint==1) {
-    p1a <- p1a + geom_line(aes(y=value))
-  } else if(yint==2) {
-    ystatvar <- as.symbol(paste0(ystat, substr(type, 2,2)))
-    p1a <- p1a + geom_line(aes(y= ( 1 + value / ( {{ ystatvar }} - value )) * 100))
+    p1 <-
+      ggplot(data=
+               total %>%
+               pivot_longer(c("dW", "dB", "dD", "dT"), names_to = "delta", values_to = "value"),
+             aes(
+               x=time,
+               color=factor(delta,
+                            levels=c("dW", "dB", "dD", "dT"),
+                            labels = c("within", "between", "demographic", "total")),
+               size=factor(delta,
+                           levels=c("dW", "dB", "dD", "dT"),
+                           labels = c("within", "between", "demographic", "total"))
+             )) +
+      ggpubr_ineqx +
+      scale_color_manual(values = c("#F8766D", "#00BA38", "#619CFF", "#000000")) +
+      scale_size_manual(values = c(1,1,1,1.3)) +
+      labs(title=ifelse(is.null(titl), "", titl[1]),
+           color="",
+           size="",
+           x=ifelse(is.null(xlab), "", xlab),
+           y=ifelse(is.null(ylab), "dT", ylab[1])) +
+      NULL
+
+    if(yint==1) {
+      p1 <- p1 + geom_line(aes(y=value))
+    } else if(yint==2) {
+      ystatvar <- as.symbol(paste0(ystat, substr(type, 2,2)))
+      p1 <- p1 + geom_line(aes(y= (1 + value / ( {{ ystatvar }} - value )) * 100))
+    }
+
+    if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
+    if(!isFALSE(hline)) p1 <- p1 + geom_hline(yintercept = hline, col="red")
+
   }
-
-  if(!is.null(xlim))  p1a <- p1a + scale_x_continuous(breaks = xlim)
-  if(!isFALSE(hline)) p1a <- p1a + geom_hline(yintercept = hline, col="red")
 
   # Plot shares ---------------------------------------------------------------------------------- #
 
-  # Effect of X?
-  xnotNULL <- ("dO" %in% names(ineqx.out$dT[[1]]))
+  if(type=="dTS") {
 
-  if(xnotNULL) {
+    # Effect of X?
+    xnotNULL <- ("dO" %in% names(ineqx.out$dT[[1]]))
 
-    p1b <-
-      ggplot(data=shares,
-             aes(
-               x=time,
-               y=share*100,
-               color=factor(d,
-                            levels=c("dW", "dB", "dD", "dO"),
-                            labels = c("within", "between", "demographic", "unrelated to x"))
-             ))
+    if(xnotNULL) {
 
-  } else {
+      p1 <-
+        ggplot(data=shares,
+               aes(
+                 x=time,
+                 y=share*100,
+                 color=factor(d,
+                              levels=c("dW", "dB", "dD", "dO"),
+                              labels = c("within", "between", "demographic", "unrelated to x"))
+               ))
 
-    p1b <-
-      ggplot(data=shares,
-             aes(
-               x=time,
-               y=share*100,
-               color=factor(d,
-                            levels=c("dW", "dB", "dD"),
-                            labels = c("within", "between", "demographic"))
-             ))
+    } else {
+
+      p1 <-
+        ggplot(data=shares,
+               aes(
+                 x=time,
+                 y=share*100,
+                 color=factor(d,
+                              levels=c("dW", "dB", "dD"),
+                              labels = c("within", "between", "demographic"))
+               ))
+
+    }
+
+    p1 <-
+      p1 +
+      geom_line(size=1) +
+      ggpubr_ineqx +
+      labs(title=ifelse(is.null(titl), "", titl[2]),
+           color="",
+           size="",
+           x=ifelse(is.null(xlab), "", xlab),
+           y=ifelse(is.null(ylab), "%", ylab[2])) +
+      NULL
+
+    if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
+    if(!isFALSE(hline)) p1 <- p1 + geom_hline(yintercept = hline, col="red")
+    if(lowess==T)       p1 <- p1 + geom_smooth(method = "loess", se=F, size = 1.5)
 
   }
 
-  p1b <-
-    p1b +
-    geom_line(size=1) +
-    ggpubr_ineqx +
-    labs(title=ifelse(is.null(titl), "", titl[2]),
-         color="",
-         size="",
-         x=ifelse(is.null(xlab), "", xlab),
-         y=ifelse(is.null(ylab), "%", ylab[2])) +
-    NULL
+  # Save? ---------------------------------------------------------------------------------------- #
 
-  if(!is.null(xlim))  p1b <- p1b + scale_x_continuous(breaks = xlim)
-  if(!isFALSE(hline)) p1b <- p1b + geom_hline(yintercept = hline, col="red")
-  if(lowess==T)       p1b <- p1b + geom_smooth(method = "loess", se=F, size = 1.5)
-
-  # Combine plots -------------------------------------------------------------------------------- #
-
-  p1 <- plot_grid(p1a, p1b, align = 'v', nrow = 1, labels = "AUTO")
-
-  # Save?
   if(sav==T) {
     ggsave(
       "./output/graphs/dT.png",
-      p1a,
+      p1,
       width = 12,
       height = 4,
       units='in',

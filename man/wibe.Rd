@@ -10,7 +10,7 @@ wibe(
   timevar = NULL,
   dat,
   smoothDat = F,
-  rel = F,
+  ref = F,
   long = F
 )
 }
@@ -25,7 +25,7 @@ wibe(
 
 \item{smoothDat}{Logical. Should data be smoothed?}
 
-\item{rel}{Number or FALSE. Should values be reported relative to specified time?}
+\item{ref}{Number or FALSE. Should values be reported in reference to a specific time?}
 
 \item{long}{Logical. Should output be in long format?}
 }

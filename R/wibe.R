@@ -7,7 +7,7 @@
 #' @param groupvar Grouping variable to decompose variance into within- and between-group components
 #' @param timevar Time variable to analyze change over time
 #' @param smoothDat Logical. Should data be smoothed?
-#' @param rel Number or FALSE. Should values be reported relative to specified time?
+#' @param ref Number or FALSE. Should values be reported in reference to a specific time?
 #' @param long Logical. Should output be in long format?
 #'
 #' @return List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.
@@ -18,15 +18,15 @@
 #' @export wibe
 #' @author Benjamin Rosche <benjamin.rosche@@gmail.com>
 
-wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, rel=F, long=F) {
+wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, long=F) {
 
-  # dat <- incdat; timevar <- "i.year"; groupvar <- "i.group"; y <- "inc"; rel <- F; smoothDat <- F
+  # dat <- incdat; timevar <- "i.year"; groupvar <- "i.group"; y <- "inc"; ref <- F; smoothDat <- F
 
   # ============================================================================================== #
   # Dissect input
   # ============================================================================================== #
 
-  if(isTRUE(rel)) stop("rel must be numeric")
+  if(isTRUE(ref)) stop("ref must be numeric")
 
   # Y
   y <- dissectVar(y, cicheck="c")[[1]]
@@ -131,21 +131,21 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, rel=F, l
   # Prepare output
   # ============================================================================================== #
 
-  if(!isFALSE(rel)) {
+  if(!isFALSE(ref)) {
 
-    # Relative to year == rel
+    # Relative to year == ref
 
     dat.between <-
       dat.between %>%
       group_by(group) %>%
       mutate(
-        mu1= mu[time==rel],
+        mu1= mu[time==ref],
         mu = (mu - mu1)/mu1*100+100,
-        sigma1 = sigma[time==rel],
+        sigma1 = sigma[time==ref],
         sigma  = (sigma - sigma1)/sigma1*100+100,
-        sigma21 = sigma2[time==rel],
+        sigma21 = sigma2[time==ref],
         sigma2  = (sigma2 - sigma21)/sigma21*100+100,
-        CV21 = CV2[time==rel],
+        CV21 = CV2[time==ref],
         CV2  = (CV2 - CV21)/CV21*100+100
       ) %>%
       ungroup() %>%
@@ -154,14 +154,14 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, rel=F, l
     dat.total <-
       dat.total %>%
       mutate(
-        VarB=(VarB-VarB[time==rel])/VarB[time==rel]*100+100,
-        VarW=(VarW-VarW[time==rel])/VarW[time==rel]*100+100,
-        VarT=(VarT-VarT[time==rel])/VarT[time==rel]*100+100,
-        VarWBRatio=(VarWBRatio-VarWBRatio[time==rel])/VarWBRatio[time==rel]*100+100,
-        CV2B=(CV2B-CV2B[time==rel])/CV2B[time==rel]*100+100,
-        CV2W=(CV2W-CV2W[time==rel])/CV2W[time==rel]*100+100,
-        CV2T=(CV2T-CV2T[time==rel])/CV2T[time==rel]*100+100,
-        CV2WBRatio=(CV2WBRatio-CV2WBRatio[time==rel])/CV2WBRatio[time==rel]*100+100
+        VarB=(VarB-VarB[time==ref])/VarB[time==ref]*100+100,
+        VarW=(VarW-VarW[time==ref])/VarW[time==ref]*100+100,
+        VarT=(VarT-VarT[time==ref])/VarT[time==ref]*100+100,
+        VarWBRatio=(VarWBRatio-VarWBRatio[time==ref])/VarWBRatio[time==ref]*100+100,
+        CV2B=(CV2B-CV2B[time==ref])/CV2B[time==ref]*100+100,
+        CV2W=(CV2W-CV2W[time==ref])/CV2W[time==ref]*100+100,
+        CV2T=(CV2T-CV2T[time==ref])/CV2T[time==ref]*100+100,
+        CV2WBRatio=(CV2WBRatio-CV2WBRatio[time==ref])/CV2WBRatio[time==ref]*100+100
       )
 
   }
