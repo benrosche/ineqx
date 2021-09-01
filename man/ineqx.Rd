@@ -6,33 +6,41 @@
 \usage{
 ineqx(
   x = NULL,
+  t = NULL,
   y,
-  xpv = c(0, 1),
   ystat = "CV2",
-  weights = NULL,
-  controls = NULL,
   groupvar = NULL,
   timevar = NULL,
-  cf = NULL,
+  ref = NULL,
+  controls = NULL,
+  weights = NULL,
+  AME_mu = NULL,
+  AME_sigma = NULL,
   dat
 )
 }
 \arguments{
-\item{x}{Character string. Explanatory variable. c.x or i.x. c2.x will specify quadratic polynomials for x.}
+\item{x}{Character string. Treatment variable. Values must be binary (0/1)}
+
+\item{t}{Character string. Before/after variable. Values must be binary (0/1)}
 
 \item{y}{Character string. Dependent variable. Can only be c.x}
 
-\item{xpv}{Numeric vector of length 2. Choose the values of x that are used for prediction, e.g. c(0,1)}
-
 \item{ystat}{Character string. Either "Var" or "CV2". Choose to analyze the effect of x on the variance or squared coefficient of variation}
-
-\item{controls}{Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)}
 
 \item{groupvar}{Character string. Must be i.x. Grouping variable to decompose variance into within- and between-group components.}
 
 \item{timevar}{Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.}
 
-\item{cf}{Number. Counterfactual reference point.}
+\item{ref}{Number, vector, or list. Counterfactual reference point. See details.}
+
+\item{controls}{Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)}
+
+\item{weights}{Character string. Weight variable.}
+
+\item{AME_mu}{Dataframe with average marginal effects (Mu)}
+
+\item{AME_sigma}{Dataframe with average marginal effects (Sigma)}
 
 \item{dat}{Dataframe}
 }
@@ -44,10 +52,18 @@ The ineqx package implements Rosche (2021). [...]
 }
 \details{
 The main function of \code{ineqx}. [...]
+
+\bold{Counterfactual reference point (ref)}
+
+\code{ref} can either be a number, c(number, "variable name"), or list(n=c(...), mu=c(...), sigma=c(...), beta=c(...), lambda=c(...)). [...]
+
+\bold{Return}
+
+...
 }
 \examples{
 data(incdat)
-decomp1 <- ineqx(child, inc, ystat="CV2", groupvar=SES, timevar=year, cf=1, incdat)
+decomp1 <- ineqx()
 
 }
 \author{

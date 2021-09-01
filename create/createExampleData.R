@@ -6,23 +6,23 @@ library(haven)
 
 setwd("C:/Users/benja/OneDrive - Cornell University/GitHub/ineqx")
 
-crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, X_const=F, seed=T, sav=F) {
+crDat <- function(N.T, N.G, LP_n, LP_x, LP_mu, LP_sigma, X_const=F, seed=T, sav=F) {
 
   # Arguments ------------------------------------------------------------------------------------ #
   # N.T      = Number of time points
   # N.G      = Number of groups
-  # LP_n     = "Linear predictor" for n. This can be just numbers as characters
+  # LP_n     = "Linear predictor" for n per group. This can be just numbers as characters
   #            LP_n = c("300", "300", "300") or functions LP_n = c("300-10*year", "300", "300")
+  # LP_x     = Proportion of X=0 as "linear predictor". E.g., LP_x = c("0.1+0.1*i", "0.5", "0.9-0.1*i")
   # LP_mu    = Linear predictor for mean, e.g.
   # LP_sigma = Linear predictor for standard deviation
-  # X_type   = {"between", "within"}. If "between", causal effect is across ids. If "within",
-  #            causal effect is within ids.
   # X_const  = {T|F} If True, distribution of X does not change across waves
+  # X_ctrl   = c([0-1],[0-1],[0-1]); proportion of data that is control per group
   # seed     = {T|F}
   # sav      = {T|F}
   # ---------------------------------------------------------------------------------------------- #
 
-  # N.T=5; N.G=3; LP_n = c("300", "300", "300"); LP_mu = "10*(group==1)*x + 20*(group==2)*x + 30*(group==3)*x + z"; LP_sigma = "1"; seed=F; sav=F; X_type="between"
+  # N.T=5; N.G=3; LP_n = c("10", "10", "10"); LP_x <- c("0.5-0.1*i", "0.5", "0.5"); LP_mu = "10*(group==1)*x + 20*(group==2)*x + 30*(group==3)*x + z"; LP_sigma = "1"; X_const = F; seed=F; sav=F;
 
   if(seed==T) set.seed(1)
 
@@ -36,7 +36,6 @@ crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, X_const=F, seed=T, sa
     N <-
       N %>%
       dplyr::mutate("G{i}" := eval(parse(text=LP_n[i])))
-
   }
 
   # Create data structure ------------------------------------------------------------------------ #
@@ -45,28 +44,16 @@ crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, X_const=F, seed=T, sa
 
   for(j in 1:N.G) { # per group
 
-    # distribution of x constant across waves
-    if(isTRUE(X_const)) {
-      l <- N %>% dplyr::filter(year==1) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
-      x <- rpois(l, 2)
-    }
+    for(i in 1:N.T) { # per time
 
-    for(i in 1:N.T) { # per wave
+      N.ij <- N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
 
-      if(X_type=="between") {
-
-        # distribution of x changes across waves
-        if(isFALSE(X_const)) {
-          l <- N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
-          x <- rpois(l, 2)
-        }
-
-        d[[i]][[j]] <- tibble() %>% tidyr::expand(id=1:l, year=i, group=j) %>% dplyr::mutate(x=!!x, z=rpois(l, 0.1*x)) # treatment x, confounder z
-
-      } else if(X_type=="within") {
-
-        d[[i]][[j]] <- tibble() %>% tidyr::expand(id=1:(N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()), year=i, group=j, x=0:1)
-
+      if(X_const) d[[i]][[j]] <- d[[1]][[j]] %>% dplyr::mutate(year=i)
+      else {
+        d[[i]][[j]] <-
+          tibble() %>%
+          tidyr::expand(id=1:N.ij, year=i, group=j, x=1, t=0:3) %>% # t=0:1
+          dplyr::mutate(x=case_when(id %in% sample(1:N.ij, N.ij*eval(parse(text=LP_x[j]))) & x==1 ~ 0, TRUE ~ as.double(x)))
       }
 
     }
@@ -93,3 +80,19 @@ crDat <- function(N.T, N.G, LP_n, LP_mu, LP_sigma, X_type, X_const=F, seed=T, sa
   return(incdat)
 
 }
+
+incdat <-
+  crDat(5, 3, c("1000", "1000", "1000"), c("0.5-0.1*i", "0.5", "0.5"), "10+10*(group==1)*x*t + 20*(group==2)*x*t + 30*(group==3)*x*t", "1", X_const=F, seed=F, sav=F) %>%
+  dplyr::mutate(z=runif(5*3*4*1000), z=case_when(t==0 ~ 0, TRUE ~ z)) %>%
+  group_by(year, group, id) %>%
+  dplyr::arrange(z, .by_group = T) %>%
+  dplyr::filter(row_number()<=2) %>%
+  ungroup() %>%
+  dplyr::select(-z)
+
+library(ineqx)
+
+t1 <- ineqx(x="i.x", t="i.t", y="inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", ref=1, dat=incdat)
+plot(t1, type = "dPA")
+
+

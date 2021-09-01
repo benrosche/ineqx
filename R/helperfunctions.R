@@ -4,92 +4,26 @@
 
 dissectVar <- function(x, cicheck="ci") {
 
-  if(cicheck=="ci" & !grepl("(c|i).?\\.", x)) stop(paste0(x," must be specified as either c.", x, " (continuous) or i.", x, " (categorical)."))
-  if(cicheck=="i"  & grepl("(c).?\\.", x)) stop(paste0(x," must be i.", as.symbol(sub("(c|i).?\\.", "", x)), " (categorical)"))
-  if(cicheck=="c"  & grepl("(i).?\\.", x)) stop(paste0(x," must be c.", as.symbol(sub("(c|i).?\\.", "", x)), " (continuous)"))
+  if(!is.null(x)) {
 
-  xpoly <- suppressWarnings(as.numeric(substr(x, 2,2)))
-  if(is.na(xpoly)) xpoly <- 1
+    if(cicheck=="ci" & !grepl("(c|i).?\\.", x)) stop(paste0(x," must be specified as either c.", x, " (continuous) or i.", x, " (categorical)."))
+    if(cicheck=="i"  & grepl("(c).?\\.", x)) stop(paste0(x," must be i.", as.symbol(sub("(c|i).?\\.", "", x)), " (categorical)"))
+    if(cicheck=="c"  & grepl("(i).?\\.", x)) stop(paste0(x," must be c.", as.symbol(sub("(c|i).?\\.", "", x)), " (continuous)"))
 
-  xcont <- grepl("c.?\\.", x)
+    xpoly <- suppressWarnings(as.numeric(substr(x, 2,2)))
+    if(is.na(xpoly)) xpoly <- 1
 
-  x <- as.symbol(sub("(c|i).?\\.", "", x))
+    xcont <- grepl("c.?\\.", x)
 
-  return(list("var"=x, "xcont"=xcont, "xpoly"=xpoly))
+    x <- as.symbol(sub("(c|i).?\\.", "", x))
 
-}
-
-# ================================================================================================ #
-# Function calcAME
-# ================================================================================================ #
-
-calcAME <- function(nox, xpv, what, vfr, dat) {
-
-  if(!nox) {
-
-    # Data with x = xpv[1] and x = xpv[2]
-    newdat.a <- dat %>% dplyr::mutate(x=xpv[1])
-    newdat.b <- dat %>% dplyr::mutate(x=xpv[2])
-
-    # Predictions from variance function regression
-    if(what=="mu") {
-      pred <-
-        dat %>%
-        dplyr::select(time, group, x) %>%
-        dplyr::mutate(pa=predict(vfr, what = "mu", type = "response", newdata = newdat.a, data = dat)) %>%
-        dplyr::mutate(pb=predict(vfr, what = "mu", type = "response", newdata = newdat.b, data = dat))
-    } else if(what=="sigma") {
-      pred <-
-        dat %>%
-        dplyr::select(time, group, x) %>%
-        dplyr::mutate(pa=predict(vfr, what = "sigma", type = "response", newdata = newdat.a, data = dat)) %>%
-        dplyr::mutate(pb=predict(vfr, what = "sigma", type = "response", newdata = newdat.b, data = dat))
-    }
-
-    # Calculate Average Marginal Effects
-
-    AME <- list()
-
-    # Summarize by group and time
-    AME[[1]] <-
-      pred %>%
-      group_by(time, group, x) %>%
-      dplyr::summarise(pa=mean(pa), pb=mean(pb), beta=pb-pa) %>%
-      dplyr::filter(row_number()==1) %>%
-      ungroup() %>%
-      dplyr::select(-x, -pa, -pb)
-
-    # Summarize by time
-    AME[[2]] <-
-      pred %>%
-      group_by(time, x) %>%
-      dplyr::summarise(pa=mean(pa), pb=mean(pb), beta=pb-pa) %>%
-      dplyr::filter(row_number()==1) %>%
-      ungroup() %>%
-      dplyr::select(-x, -pa, -pb)
+    return(list("var"=x, "xcont"=xcont, "xpoly"=xpoly, "nox"=F))
 
   } else {
 
-    AME <- list()
-
-    AME[[1]] <-
-      dat %>%
-      dplyr::select(time, group) %>%
-      group_by(time, group) %>%
-      dplyr::summarise(beta=0)
-
-    AME[[2]] <-
-      dat %>%
-      dplyr::select(time) %>%
-      group_by(time) %>%
-      dplyr::summarise(beta=0)
+    return(list("var"=NULL, "xcont"=NULL, "xpoly"=NULL, "nox"=T))
 
   }
-
-  # Rename beta to lambda if what is sigma
-  if(what=="sigma") AME <- lapply(AME, FUN=function(x) x %>% dplyr::rename(lambda=beta))
-
-  return(AME)
 
 }
 
@@ -98,11 +32,11 @@ calcAME <- function(nox, xpv, what, vfr, dat) {
 # Function createCF
 # ================================================================================================ #
 
-createCF <- function(x, y, ystat, groupvar, timevar, cf, wibe.xpv1, AME_mu, AME_sigma, dat) {
+createCF <- function(groupvar, timevar, ref, wibe.xpv0, AME_mu, AME_sigma, dat) {
 
   # ---------------------------------------------------------------------------------------------- #
   # Function arguments
-  # cf = 1987 | cf = c(1987, "w") | cf=list(n=c(), mu=c(), sigma=c(), beta=c(), lambda=c())
+  # ref = 1987 | ref = c(1987, "effect1") | ref=list(n=c(), mu=c(), sigma=c(), beta=c(), lambda=c())
   # ---------------------------------------------------------------------------------------------- #
 
   # Levels of group and time var
@@ -112,39 +46,38 @@ createCF <- function(x, y, ystat, groupvar, timevar, cf, wibe.xpv1, AME_mu, AME_
   # Take subset of dat that has the same time window as effectDat
   dat <- dat %>% filter(between(time, min(time_levels), max(time_levels)))
 
+  # If notime, we take 0 as manual reference
+  if(wibe.xpv0 %>% .$time %>% unique() %>% length() == 1) {
+    ref <- list(n=wibe.xpv0 %>% .$n, mu=wibe.xpv0 %>% .$mu, sigma=wibe.xpv0 %>% .$sigma, beta=c(0,0,0), lambda=c(0,0,0))
+  }
+
   # Counterfactual reference --------------------------------------------------------------------- #
 
-  if(length(cf)==5) {
+  if(length(ref)==5) {
 
-    # manual values
+    refm <- TRUE # manual values
 
-    n <- cf$n
-    mu <- cf$mu
-    sigma <- cf$sigma
-    beta <- cf$beta
-    lambda <- cf$lambda
+    n <- ref$n
+    mu <- ref$mu
+    sigma <- ref$sigma
+    beta <- ref$beta
+    lambda <- ref$lambda
 
-  } else if(length(cf)==2) {
+    ref <- c(0, "effect")
 
-    # values from time point, gender specific
+  } else if(between(length(ref),1,2)) {
 
-    n <- wibe.xpv1 %>% dplyr::filter(time==!!cf[1]) %>% .$n
-    mu <- wibe.xpv1 %>% dplyr::filter(time==!!cf[1]) %>% .$mu
-    sigma <- wibe.xpv1 %>% dplyr::filter(time==!!cf[1]) %>% .$sigma
-    beta <- AME_mu[[1]] %>% dplyr::filter(time==!!cf[1]) %>% dplyr::select(!!cf[2]) %>% unlist()
-    lambda <- AME_sigma[[1]] %>% dplyr::filter(time==!!cf[1]) %>% dplyr::select(!!cf[2]) %>% unlist()
+    refm <- FALSE # values from reference time
 
-  }  else if(length(cf)==1) {
+    if(length(ref)==1) ref <- c(ref, "effect")
 
-    # values from time point
+    n <- wibe.xpv0 %>% dplyr::filter(time==!!ref[1]) %>% .$n
+    mu <- wibe.xpv0 %>% dplyr::filter(time==!!ref[1]) %>% .$mu
+    sigma <- wibe.xpv0 %>% dplyr::filter(time==!!ref[1]) %>% .$sigma
+    beta <- AME_mu[[1]] %>% dplyr::filter(time==!!ref[1]) %>% dplyr::select(!!ref[2]) %>% unlist()
+    lambda <- AME_sigma[[1]] %>% dplyr::filter(time==!!ref[1]) %>% dplyr::select(!!ref[2]) %>% unlist()
 
-    n <- wibe.xpv1 %>% dplyr::filter(time==!!cf) %>% .$n
-    mu <- wibe.xpv1 %>% dplyr::filter(time==!!cf) %>% .$mu
-    sigma <- wibe.xpv1 %>% dplyr::filter(time==!!cf) %>% .$sigma
-    beta <- AME_mu[[1]] %>% dplyr::filter(time==!!cf) %>% .$beta %>% as.vector()
-    lambda <- AME_sigma[[1]] %>% dplyr::filter(time==!!cf) %>% .$lambda %>% as.vector()
-
-  } else stop("cf must either be one value (reference time), two values (reference time + ...), or a list of 5 vectors (n, mu, sigma, beta, lambda)")
+  } else stop("ref must either be one value (reference time) (recommended), two values (reference time of a specific column), or a list of 5 vectors (n, mu, sigma, beta, lambda)")
 
   # Create counterfactual dataset ---------------------------------------------------------------- #
 
@@ -154,46 +87,62 @@ createCF <- function(x, y, ystat, groupvar, timevar, cf, wibe.xpv1, AME_mu, AME_
     inner_join(tibble(group=group_levels, n.cf=n), by="group") %>%
     inner_join(tibble(group=group_levels, mu.cf=mu), by="group") %>%
     inner_join(tibble(group=group_levels, sigma.cf=sigma), by="group") %>%
-    inner_join(tibble(group=group_levels, beta.cf=beta), by="group") %>%
-    inner_join(tibble(group=group_levels, lambda.cf=lambda), by="group")
+    inner_join(
+      AME_mu[[1]] %>%
+        dplyr::select(-!!ref[2]) %>% # replace ref[2] ...
+        inner_join(tibble(group=group_levels, !!ref[2]:=beta), by="group") %>% # ... with counterfactual values
+        dplyr::mutate(beta.cf = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% # and then calculate beta.cf as sum over all columns
+        dplyr::select(time, group, beta.cf)
+      , by=c("time", "group")) %>%
+    inner_join(
+      AME_sigma[[1]] %>%
+        dplyr::select(-!!ref[2]) %>%
+        inner_join(tibble(group=group_levels, !!ref[2]:=lambda), by="group") %>%
+        dplyr::mutate(lambda.cf = rowSums(dplyr::across(c(everything(), -time, -group)))) %>%
+        dplyr::select(time, group, lambda.cf),
+      by=c("time", "group"))
 
-  # beta.cf: by gender
-  if(length(cf)==2) {
-    dat.cf <-
-      dat.cf %>%
-      dplyr::select(-beta.cf) %>%
-      inner_join(
-        AME_mu[[1]] %>%
-          dplyr::select(-!!paste0("beta_", cf[2]), -beta) %>% # remove beta and beta_x
-          inner_join(tibble(group=group_levels, !!paste0("beta_", cf[2]):=beta), by="group") %>% # add cf beta_x
-          dplyr::mutate(beta.cf=beta_w+beta_m) %>% # calculate cf beta
-          dplyr::select(time, group, beta.cf),
-        by=c("time", "group"))
-  }
-
-  # lambda.cf: by gender
-  if(length(cf)==2) {
-    dat.cf <-
-      dat.cf %>%
-      dplyr::select(-lambda.cf) %>%
-      inner_join(
-        AME_sigma[[1]] %>%
-          dplyr::select(-!!paste0("lambda_", cf[2]), -lambda) %>% # remove lambda and lambda_x
-          inner_join(tibble(group=group_levels, !!paste0("lambda_", cf[2]):=lambda), by="group") %>% # add cf lambda_x
-          dplyr::mutate(lambda.cf=lambda_w+lambda_m) %>% # calculate cf lambda
-          dplyr::select(time, group, lambda.cf),
-        by=c("time", "group"))
-  }
+  # Re: Beta and Lambda
+  # I allow AME_mu/AME_sigma to contain several betas that together sum to the total beta
+  # so that I can calculate the effect of changing only one column
+  # If there is just one column, the procedure is equivalent to
+  # inner_join(tibble(group=group_levels, beta.cf=beta), by="group")
 
   # Merge factual and counterfactual data
+
   dat.f_cf <-
     tibble() %>%
     expand(time=min(time_levels):max(time_levels), group=group_levels) %>%
-    inner_join(wibe.xpv1 %>% dplyr::select(time, group, n, mu, sigma), by=c("time", "group")) %>%
-    left_join(AME_mu[[1]], by=c("time", "group")) %>%
-    left_join(AME_sigma[[1]], by=c("time", "group")) %>%
-    inner_join(dat.cf, by=c("time", "group")) %>%
-    dplyr::rename(n.f = n, mu.f =  mu, sigma.f = sigma, beta.f = beta, lambda.f = lambda)
+    inner_join(wibe.xpv0 %>% dplyr::select(time, group, n, mu, sigma) %>% dplyr::rename(n.f = n, mu.f =  mu, sigma.f = sigma), by=c("time", "group")) %>% # factual n, mu, sigma
+    left_join(AME_mu[[1]] %>% dplyr::mutate(effect = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% dplyr::rename(beta.f=effect), by=c("time", "group")) %>% # factual beta
+    left_join(AME_sigma[[1]] %>% dplyr::mutate(effect = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% dplyr::rename(lambda.f=effect), by=c("time", "group")) %>% # factual lambda
+    inner_join(dat.cf, by=c("time", "group")) %>% # counterfactual data
+    dplyr::select(time, group, ends_with(".f"), ends_with(".cf"))
+
+  if(refm) {
+
+    # If ref are manual values, add zero row with those values
+
+    row_zero <-
+      tibble() %>%
+      expand(time=0, group=group_levels) %>%
+      inner_join(tibble(group=group_levels, n.f=n), by="group") %>%
+      inner_join(tibble(group=group_levels, mu.f=mu), by="group") %>%
+      inner_join(tibble(group=group_levels, sigma.f=sigma), by="group") %>%
+      inner_join(tibble(group=group_levels, beta.f=beta), by="group") %>%
+      inner_join(tibble(group=group_levels, lambda.f=lambda), by="group") %>%
+      inner_join(tibble(group=group_levels, n.cf=n), by="group") %>%
+      inner_join(tibble(group=group_levels, mu.cf=mu), by="group") %>%
+      inner_join(tibble(group=group_levels, sigma.cf=sigma), by="group") %>%
+      inner_join(tibble(group=group_levels, beta.cf=beta), by="group") %>%
+      inner_join(tibble(group=group_levels, lambda.cf=lambda), by="group")
+
+    dat.f_cf <-
+      dat.f_cf %>%
+      add_row(row_zero) %>%
+      arrange(time)
+
+  }
 
   return(dat.f_cf)
 
@@ -201,10 +150,10 @@ createCF <- function(x, y, ystat, groupvar, timevar, cf, wibe.xpv1, AME_mu, AME_
 
 
 # ================================================================================================ #
-# Function dWB
+# Function dX
 # ================================================================================================ #
 
-dWB <- function(nox, ystat, dat.f_cf) {
+dX <- function(nox, ystat, dat.f_cf) {
 
   # The changing effect of X --------------------------------------------------------------------- #
 
@@ -255,7 +204,7 @@ dWB <- function(nox, ystat, dat.f_cf) {
       nest() %>%
       dplyr::mutate(dX = purrr::map(.x = data, ~ dYdMuSigma(.x, ystat=ystat, partial = F))) %>%
       dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x,       ystat=ystat, partial = F))) %>%
-      unnest(cols = c(data, dB, dD)) %>%
+      unnest(cols = c(data, dX, dD)) %>%
       dplyr::filter(row_number()==1) %>%
       ungroup() %>%
       dplyr::select(time, dX, dD)
@@ -308,7 +257,7 @@ dD <- function(nox, dW.out, dB.out) {
 # Function dT
 # ================================================================================================ #
 
-dT <- function(nox, dW.out, dB.out, ystat, cf) {
+dT <- function(nox, dW.out, dB.out, ystat) {
 
   # Combine effects ------------------------------------------------------------------------------ #
 
@@ -345,17 +294,6 @@ dT <- function(nox, dW.out, dB.out, ystat, cf) {
       ) %>%
       dplyr::select(time, dW, dB, dD, dT, paste0(ystat, c("W", "B", "T")))
 
-  }
-
-  # Add actual change in inequality
-  if(length(cf)==5) {
-    if(ystat == "CV2") {
-      total <- total %>% dplyr::mutate(dCV2T=CV2T-(CV2W(cf$n, cf$mu, cf$sigma)+CV2B(cf$n, cf$mu)))
-    } else {
-      total <- total %>% dplyr::mutate(dVarT=VarT-(VarW(cf$n, cf$sigma)+VarB(cf$n, cf$mu)))
-    }
-  } else {
-    total <- if(ystat == "CV2") total %>% dplyr::mutate(dCV2T=CV2T-CV2T[time == cf[1]]) else  total %>% dplyr::mutate(dVarT=VarT-VarT[time == cf[1]])
   }
 
   # Calculate shares ----------------------------------------------------------------------------- #
