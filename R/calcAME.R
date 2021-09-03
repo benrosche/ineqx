@@ -33,7 +33,7 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
   x.vals <- dat[x] %>% unique() %>% unlist() %>% as.vector() %>% sort()
   if(!0 %in% x.vals) stop(paste0("Values of ", x, " must contain 0."))
   x.vals <- x.vals[x.vals!=0]
-  if(length(x.vals)>1) warning("Effect of x was calculated as weighted average of ", paste0("0->", x.vals, sep=" "))
+  if(length(x.vals)>1) warning("Effect of x was calculated as weighted average of ", paste0("0->", x.vals, sep=" "), ".")
 
   # ---------------------------------------------------------------------------------------------- #
   # Predictions from variance function regression
@@ -84,7 +84,7 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
     # Relative frequency of each x.vals by timevar and groupvar
     x.props <-
       dat %>%
-      dplyr::filter(!!rlang::sym(x)!=0) %>% # don't need to count how many 0 values
+      dplyr::filter(!!rlang::sym(x)!=0) %>% # freq. of 0s don't need to be counted
       group_by(across(all_of(c(timevar, groupvar, x)))) %>%
       dplyr::summarise(n=n()) %>%
       group_by(across(all_of(c(timevar, groupvar)))) %>%
@@ -96,10 +96,10 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
     AME[[1]] <-
       pred %>%
       group_by(across(all_of(c(timevar, groupvar)))) %>%
-      dplyr::summarise(across(starts_with("pb"), ~ mean(.x-pa))) %>% # each effect for each obs., which is than averaged within {timevar, groupvar}
+      dplyr::summarise(across(starts_with("pb"), ~ mean(.x-pa))) %>% # AME for each effect (0->x.vals[1], 0->x.vals[2], ...)
       ungroup() %>%
-      inner_join(x.props, by=c(timevar, groupvar)) %>% # add how each effect should be weighted
-      rowwise() %>% dplyr::mutate(effect=sum(c_across(starts_with("n"))*c_across(starts_with("pb")))) %>% # total effect = weighted sum of each effect c(pb.1, pb.2, ..)
+      inner_join(x.props, by=c(timevar, groupvar)) %>%
+      rowwise() %>% dplyr::mutate(effect=sum(c_across(starts_with("n"))*c_across(starts_with("pb")))) %>% # total effect = n.1*pb.1 + n.2*pb.2 + ...
       ungroup() %>%
       dplyr::select(-starts_with("pb"), -starts_with("n"))
 
@@ -108,7 +108,7 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
     AME[[1]] <-
       pred %>%
       group_by(across(all_of(c(timevar, groupvar)))) %>%
-      dplyr::summarise(effect = mean(pb.1-pa)) %>%
+      dplyr::summarise(effect = mean(pb.1-pa)) %>% # AME
       ungroup()
 
   }
@@ -120,7 +120,7 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
     # Relative frequency of each x.vals by timevar
     x.props <-
       dat %>%
-      dplyr::filter(!!rlang::sym(x)!=0) %>% # don't need to count how many 0 values
+      dplyr::filter(!!rlang::sym(x)!=0) %>%
       group_by(across(all_of(c(timevar, x)))) %>%
       dplyr::summarise(n=n()) %>%
       group_by(across(all_of(c(timevar)))) %>%
@@ -132,10 +132,10 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
     AME[[2]] <-
       pred %>%
       group_by(across(all_of(c(timevar)))) %>%
-      dplyr::summarise(across(starts_with("pb"), ~ mean(.x-pa))) %>%
+      dplyr::summarise(across(starts_with("pb"), ~ mean(.x-pa))) %>% # AME
       ungroup() %>%
-      inner_join(x.props, by=c(timevar)) %>% # add how each effect should be weighted
-      rowwise() %>% dplyr::mutate(effect=sum(c_across(starts_with("n"))*c_across(starts_with("pb")))) %>% # total effect = weighted sum of each effect c(pb.1, pb.2, ..)
+      inner_join(x.props, by=c(timevar)) %>%
+      rowwise() %>% dplyr::mutate(effect=sum(c_across(starts_with("n"))*c_across(starts_with("pb")))) %>%
       ungroup() %>%
       dplyr::select(-starts_with("pb"), -starts_with("n"))
 
@@ -144,7 +144,7 @@ calcAME <- function(x, groupvar, timevar, what, vfr, dat) {
     AME[[2]] <-
       pred %>%
       group_by(across(all_of(c(timevar)))) %>%
-      dplyr::summarise(effect = mean(pb.1-pa)) %>%
+      dplyr::summarise(effect = mean(pb.1-pa)) %>% # AME
       ungroup()
 
   }

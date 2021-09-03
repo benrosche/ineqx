@@ -16,11 +16,15 @@
 #' wibe1 <- wibe(dat, y=inc, groupvar=SES, timevar=year)
 #'
 #' @export wibe
+#'
 #' @author Benjamin Rosche <benjamin.rosche@@gmail.com>
+#'
+#' @details
+#' ...
 
 wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, long=F) {
 
-  # dat <- incdat; timevar <- "i.year"; groupvar <- "i.group"; y <- "inc"; ref <- F; smoothDat <- F
+  # dat <- incdat; timevar <- "i.year"; groupvar <- "i.group"; y <- "inc"; ref <- 1; smoothDat <- F
 
   # ============================================================================================== #
   # Dissect input

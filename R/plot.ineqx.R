@@ -22,10 +22,24 @@
 #' i1 <- ineqx(incdat, by, inc, groupvar = SES, timevar = year)
 #' plot(i1, type="dMuSigma2")
 #'
-#' @author Benjamin Rosche <benjamin.rosche@@gmail.com>
-#'
 #' @export plot.ineqx
 #' @export
+#'
+#' @author Benjamin Rosche <benjamin.rosche@@gmail.com>
+#'
+#' @details
+#'
+#' \bold{Interpretation of the y-axis}
+#'
+#' The interpretation of \code{yint=1} (default) is in absolute points of CV2\{W/B/T\}.
+#'
+#' The interpretation of \code{yint=2}
+#' \itemize{
+#'   \item For \code{plot(ineqx.out, type="dBP")} or \code{plot(ineqx.out, type="dBT")}, it is the change in the proportion of dB/CV2B, dD/CV2B relative to the reference value given in \code{ref}. The interpretation of \code{dB} is analogous.
+#'   \item For \code{plot(ineqx.out, type="dT")}, it is the change in the proportion of dW/CV2T, dB/CV2T, dD/CV2T, dT/CV2T relative to the reference value given in ref.
+#'   }
+#' In the example, the CV2 is used as inequality statistic. But the interpretation for the variance as inequality statistic is analogous.
+#'
 
 plot.ineqx <- function(ineqx.out, type, yint=1, xlab=NULL, ylab=NULL, llab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
 
@@ -135,7 +149,7 @@ plot_dMuSigma <- function(ineqx.out, type=type, xlab=NULL, ylab=NULL, llab=NULL,
 
 plot_dWBD <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, llab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
 
-  # ineqx.out = test; type=substitute(dDP); yint=2; timeseq=seq(1985,2020,5); ylab=""; tlab=c("By economic position", "Total"); llab=c("low", "medium", "high"); hline=0; legend=T; sav=F; dim=c(11,5)
+  # ineqx.out = t1; type="dT"; yint=2; xlab=NULL; ylab=""; tlab=c("By economic position", "Total"); llab=c("low", "medium", "high"); hline=0; legend=T; sav=F; dim=c(11,5)
 
   # ---------------------------------------------------------------------------------------------- #
   # 2do:
@@ -280,6 +294,7 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
     } else if(yint==2) {
       ystatvar <- as.symbol(paste0(ystat, substr(type, 2,2)))
       p1 <- p1 + geom_line(aes(y= (1 + value / ( {{ ystatvar }} - value )) * 100))
+
     }
 
     if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)

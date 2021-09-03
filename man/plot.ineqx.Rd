@@ -53,6 +53,18 @@ Returns a ggplot2 object
 \description{
 [...]
 }
+\details{
+\bold{Interpretation of the y-axis}
+
+The interpretation of \code{yint=1} (default) is in absolute points of CV2\{W/B/T\}.
+
+The interpretation of \code{yint=2}
+\itemize{
+  \item For \code{plot(ineqx.out, type="dBP")} or \code{plot(ineqx.out, type="dBT")}, it is the change in the proportion of dB/CV2B, dD/CV2B relative to the reference value given in \code{ref}. The interpretation of \code{dB} is analogous.
+  \item For \code{plot(ineqx.out, type="dT")}, it is the change in the proportion of dW/CV2T, dB/CV2T, dD/CV2T, dT/CV2T relative to the reference value given in ref.
+  }
+In the example, the CV2 is used as inequality statistic. But the interpretation for the variance as inequality statistic is analogous.
+}
 \examples{
 data(incdat)
 i1 <- ineqx(incdat, by, inc, groupvar = SES, timevar = year)
