@@ -35,6 +35,9 @@ List of length 2. Element 1 returns the decomposition by group and time. Element
 \description{
 [...]
 }
+\details{
+...
+}
 \examples{
 data(incdat)
 wibe1 <- wibe(dat, y=inc, groupvar=SES, timevar=year)

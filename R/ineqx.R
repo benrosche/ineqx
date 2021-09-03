@@ -75,13 +75,13 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
     x_levels <- dat[x] %>% unique() %>% unlist() %>% as.vector() %>% sort()
     if(!0 %in% x_levels | length(x_levels)==1) stop(paste0(x, " must contain 0 (not treated) and at least one other value (treated)."))
     if(!not & any(!x_levels %in% c(0,1))) stop("If t is specified, x values must be 0 (not treated) or 1 (treated).")
-    if(not & length(x_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", x_levels[x_levels!=0], sep=" "), ", as x has multiple treatment values.")
+    if(not & length(x_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", x_levels[x_levels!=0], sep=" "), " as x has multiple treatment values.")
   }
   if(!not) {
     if(!as.character(t) %in% names(dat)) stop(paste0(t, " not in dataset."))
     t_levels <- dat[t] %>% unique() %>% unlist() %>% as.vector() %>% sort()
     if(!0 %in% t_levels | length(t_levels)==1) stop(paste0(t, " must contain 0 (pre) and at least one other value (post)."))
-    if(length(t_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", t_levels[t_levels!=0], sep=" "), ", as t has multiple post-treatment values.")
+    if(length(t_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", t_levels[t_levels!=0], sep=" "), "as t has multiple post-treatment values.")
   }
   if(!as.character(y) %in% names(dat)) stop(paste0(y, " not in dataset."))
   if(!as.character(groupvar) %in% names(dat)) stop(paste0(groupvar, " not in dataset."))
@@ -189,14 +189,14 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
 
     # Filter expression
     if(not) {
-      f0 <- "x==0"
-      f1 <- "x>0"
+      f0 <- "x==0" # untreated
+      f1 <- "x>0"  # treated
     } else {
       f0 <- "x>0&t==0" # treated, pre-treatment
       f1 <- "x>0&t>0"  # treated, post-treatment
     }
 
-    n.pt <- dat %>% dplyr::filter(x==1) %>% group_by(time, group) %>% dplyr::summarise(n=n()) # post-treatment n
+    n.pt <- dat %>% dplyr::filter(eval(parse(text=f1))) %>% group_by(time, group) %>% dplyr::summarise(n=n()) # post-treatment n
 
     wibe.xpv0 <-
       wibe("y", "group", "time", dat %>% dplyr::filter(eval(parse(text=f0))), smoothDat = F, ref = F)[[1]] %>%
