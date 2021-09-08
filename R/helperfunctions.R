@@ -150,7 +150,8 @@ createCF <- function(groupvar, timevar, ref, wibe.xpv0, AME_mu, AME_sigma, dat) 
 
 
 # ================================================================================================ #
-# Function dX
+# Function dX: dW or dB
+#
 # ================================================================================================ #
 
 dX <- function(nox, ystat, dat.f_cf) {
@@ -165,11 +166,12 @@ dX <- function(nox, ystat, dat.f_cf) {
       group_by(time) %>% # so that ~ fcts are executed by year
       nest() %>%
       dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x,   ystat=ystat, partial = T))) %>%
+      dplyr::mutate(dC = purrr::map(.x = data, ~ dYdXdC(.x, ystat=ystat, partial = T))) %>%
       dplyr::mutate(dD = purrr::map(.x = data, ~ dYdXdD(.x, ystat=ystat, partial = T))) %>%
-      dplyr::mutate(dO = purrr::map(.x = data, ~ dYdD(.x,   ystat=ystat, partial = T))) %>%
-      unnest(cols = c(data, dX, dD, dO)) %>%
+      dplyr::mutate(dP = purrr::map(.x = data, ~ dYdD(.x,   ystat=ystat, partial = T))) %>%
+      unnest(cols = c(data, dX, dC, dD, dP)) %>%
       ungroup() %>%
-      dplyr::select(time, group, dX, dD, dO)
+      dplyr::select(time, group, dX, dC, dD, dP)
 
     # Total change = Total effect of X
     impact.total <-
@@ -177,12 +179,13 @@ dX <- function(nox, ystat, dat.f_cf) {
       group_by(time) %>%
       nest() %>%
       dplyr::mutate(dX = purrr::map(.x = data, ~ dYdX(.x,   ystat=ystat, partial = F))) %>%
+      dplyr::mutate(dC = purrr::map(.x = data, ~ dYdXdC(.x, ystat=ystat, partial = F))) %>%
       dplyr::mutate(dD = purrr::map(.x = data, ~ dYdXdD(.x, ystat=ystat, partial = F))) %>%
-      dplyr::mutate(dO = purrr::map(.x = data, ~ dYdD(.x,   ystat=ystat, partial = F))) %>%
-      unnest(cols = c(data, dX, dD, dO)) %>%
+      dplyr::mutate(dP = purrr::map(.x = data, ~ dYdD(.x,   ystat=ystat, partial = F))) %>%
+      unnest(cols = c(data, dX, dC, dD, dP)) %>%
       dplyr::filter(row_number()==1) %>%
       ungroup() %>%
-      dplyr::select(time, dX, dD, dO)
+      dplyr::select(time, dX, dC, dD, dP)
 
   } else {
 
@@ -192,22 +195,22 @@ dX <- function(nox, ystat, dat.f_cf) {
       dat.f_cf %>%
       group_by(time) %>%
       nest() %>%
-      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdMuSigma(.x, ystat=ystat, partial = T))) %>%
-      dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x,       ystat=ystat, partial = T))) %>%
-      unnest(cols = c(data, dX, dD)) %>%
+      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdD(.x, ystat=ystat, partial = T))) %>%
+      dplyr::mutate(dC = purrr::map(.x = data, ~ dYdC(.x, ystat=ystat, partial = T))) %>%
+      unnest(cols = c(data, dX, dC)) %>%
       ungroup() %>%
-      dplyr::select(time, group, dX, dD)
+      dplyr::select(time, group, dX, dC)
 
     impact.total <-
       dat.f_cf %>%
       group_by(time) %>%
       nest() %>%
-      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdMuSigma(.x, ystat=ystat, partial = F))) %>%
-      dplyr::mutate(dD = purrr::map(.x = data, ~ dYdN(.x,       ystat=ystat, partial = F))) %>%
-      unnest(cols = c(data, dX, dD)) %>%
+      dplyr::mutate(dX = purrr::map(.x = data, ~ dYdD(.x, ystat=ystat, partial = F))) %>%
+      dplyr::mutate(dC = purrr::map(.x = data, ~ dYdC(.x, ystat=ystat, partial = F))) %>%
+      unnest(cols = c(data, dX, dC)) %>%
       dplyr::filter(row_number()==1) %>%
       ungroup() %>%
-      dplyr::select(time, dX, dD)
+      dplyr::select(time, dX, dC)
   }
 
   return(list(impact.partial, impact.total))
@@ -216,10 +219,10 @@ dX <- function(nox, ystat, dat.f_cf) {
 
 
 # ================================================================================================ #
-# Function dD
+# Function dCD
 # ================================================================================================ #
 
-dD <- function(nox, dW.out, dB.out) {
+dCD <- function(nox, dW.out, dB.out) {
 
   if(!nox) {
 
@@ -227,10 +230,11 @@ dD <- function(nox, dW.out, dB.out) {
       purrr::map2(
         .x=dB.out, .y=dW.out,
         ~ .x %>%
-          dplyr::select(dD, dO, matches("CV2T|Var2T")) %>%
+          dplyr::select(dC, dD, dP, matches("CV2T|Var2T")) %>%
           dplyr::mutate(
+            dC=.x$dC+.y$dC,
             dD=.x$dD+.y$dD,
-            dO=.x$dO+.y$dO
+            dP=.x$dP+.y$dP
           ) %>%
           ungroup()
       )
@@ -241,8 +245,8 @@ dD <- function(nox, dW.out, dB.out) {
       purrr::map2(
         .x=dB.out, .y=dW.out,
         ~ .x %>%
-          dplyr::select(dD, matches("CV2T|Var2T")) %>%
-          dplyr::mutate(dD=.x$dD+.y$dD) %>%
+          dplyr::select(dC, matches("CV2T|Var2T")) %>%
+          dplyr::mutate(dC=.x$dC+.y$dC) %>%
           ungroup()
       )
 
@@ -265,34 +269,35 @@ dT <- function(nox, dW.out, dB.out, ystat) {
 
     total <-
       dW.out[[2]] %>%
-      dplyr::rename(dD.W=dD, dO.W=dO) %>%
+      dplyr::rename(dC.W=dC, dD.W=dD, dP.W=dP) %>%
       inner_join(
         dB.out[[2]] %>%
-          dplyr::rename(dD.B=dD, dO.B=dO) %>%
+          dplyr::rename(dC.B=dC, dD.B=dD, dP.B=dP) %>%
           dplyr::select(-paste0(ystat, "T")),
         by=c("time")) %>%
       dplyr::mutate(
+        dC=dC.W+dC.B,
         dD=dD.W+dD.B,
-        dT=dW+dB+dD,
-        dO=dO.W+dO.B
+        dT=dW+dB+dC+dD,
+        dP=dP.W+dP.B
       ) %>%
-      dplyr::select(time, dW, dB, dD, dT, dO, paste0(ystat, c("W", "B", "T")))
+      dplyr::select(time, dW, dB, dC, dD, dT, dP, paste0(ystat, c("W", "B", "T")))
 
   } else {
 
     total <-
       dW.out[[2]] %>%
-      dplyr::rename(dD.W=dD) %>%
+      dplyr::rename(dC.W=dC) %>%
       inner_join(
         dB.out[[2]] %>%
-          dplyr::rename(dD.B=dD) %>%
+          dplyr::rename(dC.B=dC) %>%
           dplyr::select(-paste0(ystat, "T")),
         by=c("time")) %>%
       dplyr::mutate(
-        dD=dD.W+dD.B,
-        dT=dW+dB+dD
+        dC=dC.W+dC.B,
+        dT=dW+dB+dC
       ) %>%
-      dplyr::select(time, dW, dB, dD, dT, paste0(ystat, c("W", "B", "T")))
+      dplyr::select(time, dW, dB, dC, dT, paste0(ystat, c("W", "B", "T")))
 
   }
 
@@ -383,11 +388,11 @@ dYdX <- function(dat, ystat, partial=F) {
 
 
 # ================================================================================================ #
-# Function dYdXdD
-# This function manipulates Mu, Sigma, and N in their effect through X
+# Function dYdXdC
+# This function manipulates N in its effect through X
 # ================================================================================================ #
 
-dYdXdD <- function(dat, ystat, partial=F) {
+dYdXdC <- function(dat, ystat, partial=F) {
 
   delta <- c() # container
   wb <- substr(ystat, 4,4) # within/between
@@ -396,7 +401,7 @@ dYdXdD <- function(dat, ystat, partial=F) {
 
   for(i in 1:l) {
 
-    # Calculates the group-specific effect of n and mu that is realized through X
+    # Calculates the group-specific effect of n realized through X
 
     if(isTRUE(partial)) {
 
@@ -421,29 +426,29 @@ dYdXdD <- function(dat, ystat, partial=F) {
 
     if(ystat=="CV2B") {
 
-      dydx_t1 <- CV2B(n.star, mu.star + beta.f) - CV2B(n.star, mu.star)
-      dydx_t0 <- CV2B(n.cf, mu.cf + beta.f)     - CV2B(n.cf, mu.cf)
+      dydx_t1 <- CV2B(n.star, mu.f + beta.f) - CV2B(n.star, mu.f)
+      dydx_t0 <- CV2B(n.cf,   mu.f + beta.f) - CV2B(n.cf,   mu.f)
 
       delta[i] <- dydx_t1 - dydx_t0
 
     } else if(ystat=="VarB") {
 
-      dydx_t1 <- VarB(n.star, mu.star + beta.f) - VarB(n.star, mu.star)
-      dydx_t0 <- VarB(n.cf, mu.cf + beta.f)     - VarB(n.cf, mu.cf)
+      dydx_t1 <- VarB(n.star, mu.f + beta.f) - VarB(n.star, mu.f)
+      dydx_t0 <- VarB(n.cf,   mu.f + beta.f) - VarB(n.cf,   mu.f)
 
       delta[i] <- dydx_t1 - dydx_t0
 
     } else if(ystat=="CV2W") {
 
-      dydx_t1 <- CV2W(n.star, mu.star + beta.f, sigma.star + lambda.f) - CV2W(n.star, mu.star, sigma.star)
-      dydx_t0 <- CV2W(n.cf, mu.cf + beta.f, sigma.cf + lambda.f)       - CV2W(n.cf, mu.cf, sigma.cf)
+      dydx_t1 <- CV2W(n.star, mu.f + beta.f, sigma.f + lambda.f) - CV2W(n.star, mu.f, sigma.f)
+      dydx_t0 <- CV2W(n.cf,   mu.f + beta.f, sigma.f + lambda.f) - CV2W(n.cf,   mu.f, sigma.f)
 
       delta[i] <- dydx_t1 - dydx_t0
 
     } else if(ystat=="VarW") {
 
-      dydx_t1 <- VarW(n.star, sigma.star + lambda.f) - VarW(n.cf, sigma.star)
-      dydx_t0 <- VarW(n.cf, sigma.cf + lambda.f)     - VarW(n.cf, sigma.cf)
+      dydx_t1 <- VarW(n.star, sigma.f + lambda.f) - VarW(n.star, sigma.f)
+      dydx_t0 <- VarW(n.cf,   sigma.f + lambda.f) - VarW(n.cf,   sigma.f)
 
       delta[i] <- dydx_t1 - dydx_t0
 
@@ -457,11 +462,11 @@ dYdXdD <- function(dat, ystat, partial=F) {
 
 
 # ================================================================================================ #
-# Function dYdD
-# This function manipulates Mu, Sigma, and N
+# Function dYdXdD
+# This function manipulates Mu, Sigma in their effect through X
 # ================================================================================================ #
 
-dYdD <- function(dat, ystat, partial=F) {
+dYdXdD <- function(dat, ystat, partial=F) {
 
   delta <- c() # container
   wb <- substr(ystat, 4,4) # within/between
@@ -470,9 +475,9 @@ dYdD <- function(dat, ystat, partial=F) {
 
   for(i in 1:l) {
 
-    # Calculates the impact of n and mu that does not go through X
+    # Calculates the group-specific effect of Mu and Sigma that is realized through X
 
-    if(partial==T) {
+    if(isTRUE(partial)) {
 
       # Partial or total effect?
 
@@ -493,21 +498,33 @@ dYdD <- function(dat, ystat, partial=F) {
 
     }
 
-    if(ystat=="VarW") {
+    if(ystat=="CV2B") {
 
-      delta[i] <- VarW(n.star, sigma.star) - VarW(n.cf, sigma.cf)
+      dydx_t1 <- CV2B(n.f, mu.star + beta.f) - CV2B(n.f, mu.star)
+      dydx_t0 <- CV2B(n.f, mu.cf   + beta.f) - CV2B(n.f, mu.cf)
+
+      delta[i] <- dydx_t1 - dydx_t0
 
     } else if(ystat=="VarB") {
 
-      delta[i] <- VarB(n.star, mu.star) - VarB(n.cf, mu.cf)
+      dydx_t1 <- VarB(n.f, mu.star + beta.f) - VarB(n.f, mu.star)
+      dydx_t0 <- VarB(n.f, mu.cf   + beta.f) - VarB(n.f, mu.cf)
+
+      delta[i] <- dydx_t1 - dydx_t0
 
     } else if(ystat=="CV2W") {
 
-      delta[i] <- CV2W(n.star, mu.star, sigma.star) - CV2W(n.cf, mu.cf, sigma.cf)
+      dydx_t1 <- CV2W(n.f, mu.star + beta.f, sigma.star + lambda.f) - CV2W(n.f, mu.star, sigma.star)
+      dydx_t0 <- CV2W(n.f, mu.cf   + beta.f, sigma.cf   + lambda.f) - CV2W(n.f, mu.cf,   sigma.cf)
 
-    } else if(ystat=="CV2B") {
+      delta[i] <- dydx_t1 - dydx_t0
 
-      delta[i] <- CV2B(n.star, mu.star) - CV2B(n.cf, mu.cf)
+    } else if(ystat=="VarW") {
+
+      dydx_t1 <- VarW(n.f, sigma.star + lambda.f) - VarW(n.f, sigma.star)
+      dydx_t0 <- VarW(n.f, sigma.cf   + lambda.f) - VarW(n.f, sigma.cf)
+
+      delta[i] <- dydx_t1 - dydx_t0
 
     }
 
@@ -517,12 +534,67 @@ dYdD <- function(dat, ystat, partial=F) {
 
 }
 
+
 # ================================================================================================ #
-# Function dYdMuSigma
-# This function only manipulates Mu and Sigma, not N
+# Function dYdC
+# This function manipulates only N
 # ================================================================================================ #
 
-dYdMuSigma <- function(dat, ystat, partial=F) {
+dYdC <- function(dat, ystat, partial=F) {
+
+  delta <- c() # container
+  wb <- substr(ystat, 4,4) # within/between
+  l <- dim(dat)[1] # number of groups
+  list2env(dat, envir=environment()) # extract variables from dataframe
+
+  for(i in 1:l) {
+
+    # Calculates the impact of mu and sigma when no x is specified
+
+    if(partial==T) {
+
+      # Partial or total effect?
+
+      n.star     <- n.cf
+      n.star[i]  <- n.f[i]
+
+    } else {
+
+      n.star  <- n.f
+
+    }
+
+    if(ystat=="VarW") {
+
+      delta[i] <- VarW(n.star, sigma.f) - VarW(n.cf, sigma.f)
+
+    } else if(ystat=="VarB") {
+
+      delta[i] <- VarB(n.star, mu.f) - VarB(n.cf, mu.f)
+
+    } else if(ystat=="CV2W") {
+
+      delta[i] <- CV2W(n.star, mu.f, sigma.f) - CV2W(n.cf, mu.f, sigma.f)
+
+    } else if(ystat=="CV2B") {
+
+      delta[i] <- CV2B(n.star, mu.f) - CV2B(n.cf, mu.f)
+
+    }
+
+  }
+
+  return(as.numeric(delta))
+
+}
+
+
+# ================================================================================================ #
+# Function dYdD
+# This function only manipulates Mu and Sigma
+# ================================================================================================ #
+
+dYdD <- function(dat, ystat, partial=F) {
 
   delta <- c() # container
   wb <- substr(ystat, 4,4) # within/between
@@ -576,11 +648,11 @@ dYdMuSigma <- function(dat, ystat, partial=F) {
 
 
 # ================================================================================================ #
-# Function dYdN
-# This function manipulates only N, not Mu and Sigma
+# Function dYdCD
+# This function manipulates (pre-treatment) N, Mu, and Sigma
 # ================================================================================================ #
 
-dYdN <- function(dat, ystat, partial=F) {
+dYdCD <- function(dat, ystat, partial=F) {
 
   delta <- c() # container
   wb <- substr(ystat, 4,4) # within/between
@@ -589,7 +661,7 @@ dYdN <- function(dat, ystat, partial=F) {
 
   for(i in 1:l) {
 
-    # Calculates the impact of mu and sigma when no x is specified
+    # Calculates the impact of pre-treatment N, Mu, and Sigma that does not go through X
 
     if(partial==T) {
 
@@ -598,27 +670,35 @@ dYdN <- function(dat, ystat, partial=F) {
       n.star     <- n.cf
       n.star[i]  <- n.f[i]
 
+      mu.star    <- mu.cf
+      mu.star[i] <- mu.f[i]
+
+      if(wb=="W") sigma.star    <- sigma.cf
+      if(wb=="W") sigma.star[i] <- sigma.f[i]
+
     } else {
 
       n.star  <- n.f
+      mu.star <- mu.f
+      if(wb=="W") sigma.star <- sigma.f
 
     }
 
     if(ystat=="VarW") {
 
-      delta[i] <- VarW(n.star, sigma.f) - VarW(n.cf, sigma.f)
+      delta[i] <- VarW(n.star, sigma.star) - VarW(n.cf, sigma.cf)
 
     } else if(ystat=="VarB") {
 
-      delta[i] <- VarB(n.star, mu.f) - VarB(n.cf, mu.f)
+      delta[i] <- VarB(n.star, mu.star) - VarB(n.cf, mu.cf)
 
     } else if(ystat=="CV2W") {
 
-      delta[i] <- CV2W(n.star, mu.f, sigma.f) - CV2W(n.cf, mu.f, sigma.f)
+      delta[i] <- CV2W(n.star, mu.star, sigma.star) - CV2W(n.cf, mu.cf, sigma.cf)
 
     } else if(ystat=="CV2B") {
 
-      delta[i] <- CV2B(n.star, mu.f) - CV2B(n.cf, mu.f)
+      delta[i] <- CV2B(n.star, mu.star) - CV2B(n.cf, mu.cf)
 
     }
 
