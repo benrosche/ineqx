@@ -15,7 +15,7 @@
 #' @param AME_sigma Dataframe with average marginal effects (Sigma)
 #' @param dat Dataframe
 #'
-#' @return List with six elements: pred_mu, pred_sigma, dW, dB, dD, dT. See details.
+#' @return List with six elements: pred_mu, pred_sigma, dW, dB, dCD, dT. See details.
 #'
 #' @examples data(incdat)
 #' decomp1 <- ineqx()
@@ -37,7 +37,7 @@
 
 ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, ref=NULL, controls=NULL, weights=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = incdat; x="i.x"; t="i.t"; y="inc"; ystat="CV2"; groupvar="group"; timevar="i.year"; ref=1; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
+  # dat = incdat; x="i.x"; t=NULL; y="inc"; ystat="CV2"; groupvar="group"; timevar="i.year"; ref=1; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
   # dat = dat.f; x="i.mother"; t="i.byear"; y="fearnings_wk"; ystat="CV2"; groupvar="f_SES"; timevar="c5.year2"; ref=1990; controls=c("i.race", "c.famsize"); weights=NULL; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #
@@ -261,8 +261,8 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
           ungroup()
       })
 
-  # Demographic
-  dD.out <- dD(nox, dW.out, dB.out)
+  # Compositional + Demographic
+  dCD.out <- dCD(nox, dW.out, dB.out)
 
   # Total
   dT.out <- dT(nox, dW.out, dB.out, ystat)
@@ -289,7 +289,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   AME_sigma <- rnm(AME_sigma, {{ timevar }}, {{ groupvar }})
   dW.out    <- rnm(dW.out, {{ timevar }}, {{ groupvar }})
   dB.out    <- rnm(dB.out, {{ timevar }}, {{ groupvar }})
-  dD.out    <- rnm(dD.out, {{ timevar }}, {{ groupvar }})
+  dCD.out   <- rnm(dCD.out, {{ timevar }}, {{ groupvar }})
   dT.out    <- rnm(dT.out, {{ timevar }}, NULL)
 
   # Return
@@ -297,7 +297,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   vars <-  rlang::enexprs(x, t, y, groupvar, timevar, ystat, ref) %>% as.character()
   names(vars) <- c("x", "t", "y", "groupvar", "timevar", "ystat", "ref")
 
-  out <- list("vars"=vars, "dMu"=AME_mu, "dSigma"=AME_sigma, "dW"=dW.out, "dB"=dB.out, "dD"=dD.out, "dT"=dT.out)
+  out <- list("vars"=vars, "dMu"=AME_mu, "dSigma"=AME_sigma, "dW"=dW.out, "dB"=dB.out, "dCD"=dCD.out, "dT"=dT.out)
   class(out) <- "ineqx"
 
   message("Done.")

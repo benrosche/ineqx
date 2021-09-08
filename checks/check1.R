@@ -9,7 +9,7 @@ library(ineqx)
 source("./create/createExampleData.R")
 
 # ------------------------------------------------------------------------------------------------ #
-# Violation of the PD principle of transfers
+# 1 Violation of the PD principle of transfers
 # ------------------------------------------------------------------------------------------------ #
 
 # Situation 1 ------------------------------------------------------------------------------------ #
@@ -66,7 +66,7 @@ wibe(dat.PD2, y="lninc", groupvar="group", timevar="year", long=F)[[2]] %>% dply
 # For how log-variance violates decomposability: Cowell 1988
 
 # ------------------------------------------------------------------------------------------------ #
-# Check dW + dB
+# 2 Check dW + dB
 # ------------------------------------------------------------------------------------------------ #
 
 dat.dWB1 <-
@@ -86,9 +86,9 @@ ggplot(data=
   geom_line() +
   labs(x="", color="")
 
-ineqx.dWB1 <- ineqx(x="x", y="c.inc",   ystat="CV2", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB1)
-ineqx.dWB2 <- ineqx(x="x", y="c.inc",   ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB1)
-ineqx.dWB3 <- ineqx(x="x", y="c.lninc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB1)
+ineqx.dWB1 <- ineqx(x="x", y="c.inc",   ystat="CV2", groupvar = "i.group", timevar = "i.year", ref=1, dat=dat.dWB1)
+ineqx.dWB2 <- ineqx(x="x", y="c.inc",   ystat="Var", groupvar = "i.group", timevar = "i.year", ref=1, dat=dat.dWB1)
+ineqx.dWB3 <- ineqx(x="x", y="c.lninc", ystat="Var", groupvar = "i.group", timevar = "i.year", ref=1, dat=dat.dWB1)
 
 plot(ineqx.dWB1, type="dMuP")
 plot(ineqx.dWB1, type="dSigmaP")
@@ -104,26 +104,30 @@ ineqx.dWB3$dT[[1]]
 # - We can see that variance, log-variance, and CV2 all predict a different trajectory of inequality
 
 # ------------------------------------------------------------------------------------------------ #
-# Check dD + dO
+# 3 Check dC, dD, dP
 # ------------------------------------------------------------------------------------------------ #
 
-# Situation 1 ------------------------------------------------------------------------------------ #
+# -> After year 1, group 2 has $1000 more at x=0 (pre-treatment)
+# -> After year 2, the size of group 3 (n) shrinks from 1000 to 500
 
 dat.dD1 <-
   crDat(
-    N.T=3,
+    N.T=4,
     N.G=3,
-    LP_x = c("0.5", "0.5", "0.5"),
+    LP_x = c("0.1", "0.1", "0.1"),
     LP_n     = c("1000", "1000", "1000-(year>2)*500"),
-    LP_mu    = " 100*(group==1) +        100*(group==2) +       100*(group==3) +       1000*(group==2)*(year>1) +
-                -100*(group==1)*(x==1) + 300*(group==2)*(x==1) +  100*(group==3)*(x==1)",
+    LP_mu    = " 100*(group==1) + 100*(group==2) + 1000*(group==2) + 100*(group==3) +
+                -100*(group==1)*x*t + 300*(group==2)*x*t +  100*(group==3)*x*t",
     LP_sigma = "10",
+    yp1 = F,
     seed=T,
     sav = F
   )
 
-# -> After year 1, group 2 has $1000 more at x=0
-# -> After year 2, the size of group 3 (n) shrinks from 1000 to 500
+# LP_mu    = " 100*(group==1) + 100*(group==2) + 1000*(group==2)*(year>1) + 100*(group==3) +
+#                 -100*(group==1)*x*t + 300*(group==2)*x*t +  100*(group==3)*x*t",
+
+# Descriptives ----------------------------------------------------------------------------------- #
 
 # CV2
 ggplot(data=
@@ -139,41 +143,57 @@ ggplot(data=
   geom_line() + scale_x_continuous(breaks=seq(1,10,1)) + labs(x="", y="Var", color="")
 # -> inequality goes up after year and up after year 2
 
+# Shrinking of group 3 after year 2
+dat.dD1 %>% group_by(year, group, x) %>% dplyr::summarise(n=n())
+
+# ineqx() ---------------------------------------------------------------------------------------- #
+
+ineqx.dD11 <- ineqx(x="i.x", t="i.t", y="c.inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", ref=1, dat=dat.dD1)
+
+ineqx.dD12 <- ineqx(x="i.x", y="c.inc", ystat="Var", groupvar = "i.group", timevar = "i.year", ref=1, dat=dat.dD1)
+
+# ----
 # Explanation for YEAR 1 to YEAR 2 --------------------------------------------------------------- #
+# -------
 
 # CV2
 
-ineqx.dD11 <- ineqx(x="i.x", y="c.inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dD1)
+plot(ineqx.dD11, type="dPA")
 
-ineqx.dD11$dW[[1]]
-# -> unaffected
-
+ineqx.dD11$dT[[1]]
 ineqx.dD11$dB[[1]]
-# -> dO is positive because group 2 has $1000 more at x=0
-# -> dD is negative because the impact of X weighs less heavily given the overall amount those households have ~~ scale invariance feature
-# -> dB is positive because the positive effect of X contributes to inequality
+
+# -> dP is affected (positive) after year 1 because group 2 has $1000 more pre-treatment after year 1
+# -> dD is affected (negative) after year 1 because the income-exacerbating effect of treatment of group 2 is less important given the new pre-treatment mean ~~ scale invariance feature
 
 # Var
 
-ineqx.dD12 <- ineqx(x="i.x", y="c.inc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dD1)
+plot(ineqx.dD12, type="dPA")
 
-ineqx.dD12$dW[[1]]
-# -> unaffected
-
+ineqx.dD12$dT[[1]]
 ineqx.dD12$dB[[1]]
-# -> dO is positive because group 2 has $1000 more at x=0
-# -> dD is positive because the variance is not scale invariant. That is, because group 2 has more at x=0, the effect of x on the variance will be stronger
-# -> dB is positive because the positive effect of X contributes to inequality
 
+# -> dP is affected (positive) after year 1 because group 2 has $1000 more pre-treatment after year 1
+# -> dD is affected (positive) after year 1 because the variance is not scale invariant. That is, because group 2 has more at x=0, the effect of x on the variance will be stronger
+
+# ---
 # Explanation for YEAR 2 to YEAR 3 --------------------------------------------------------------- #
+# ------
 
-wibe(dat.dD1 %>% dplyr::filter(x==1), y="inc", groupvar="group", timevar="year", long=F)[[1]] %>% dplyr::filter(year==3)
 wibe(dat.dD1 %>% dplyr::filter(x==1), y="inc", groupvar="group", timevar="year", long=F)[[2]]
+wibe(dat.dD1 %>% dplyr::filter(x==1), y="inc", groupvar="group", timevar="year", long=F)[[1]] %>% dplyr::filter(year==3)
 
-# -> CV2 is going down while Var is going up
+# -> CV2 is going down while Var is going up after year 2
 # -> Var goes up because the group-size weighted distance, VarB, is going up
 # -> CV2, however, is normalized by the grand mean. The grand mean increases since the mean of group 2 (y_bar=1400) weighs more heavily now. Accordingly, CV2 goes down.
-# -> VarW decreases marginally but not enough for the Var to go down.
+
+ineqx.dD11$dT[[1]]
+ineqx.dD11$dB[[1]]
+
+ineqx.dD12$dT[[1]]
+ineqx.dD12$dB[[1]]
+
+# CONTINUE HERE
 
 # Intepretation of the different changes --------------------------------------------------------- #
 
@@ -191,7 +211,7 @@ plot(ineqx.dD12, type="dPA")
 # -> I don't think we can call dD "characteristic effect" since it is not the quantitative change of X but of n and mu
 
 # ------------------------------------------------------------------------------------------------ #
-# Different distributions of X
+# 4 Check different distributions of X
 # ------------------------------------------------------------------------------------------------ #
 
 dat.WX1 <-
@@ -206,7 +226,7 @@ dat.WX1 <-
     sav = F
   )
 
-ineqx.WX1 <- ineqx(x="i.x", t="t", y="c.inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.WX1)
+ineqx.WX1 <- ineqx(x="i.x", t="t", y="c.inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", ref=2, dat=dat.WX1)
 plot(ineqx.WX1, type="dPA")
 
 # > Difference in difference estimator works with different x distributions
@@ -223,37 +243,13 @@ dat.WX2 <-
     sav = F
   )
 
-ineqx.WX2 <- ineqx(x="i.x", y="c.inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.WX2)
+ineqx.WX2 <- ineqx(x="i.x", y="c.inc", ystat="CV2", groupvar = "i.group", timevar = "i.year", ref=1, dat=dat.WX2)
 plot(ineqx.WX2, type="dPA")
 
 # Between-group estimator also works!
 
 # ------------------------------------------------------------------------------------------------ #
-# Check x_type == "between"
+# 5 Check averaging of treatment effects
 # ------------------------------------------------------------------------------------------------ #
 
-dat.dWB2 <-
-  crDat(
-    N.T=5,
-    N.G=3,
-    LP_n     = c("1000", "1000", "1000"),
-    LP_mu="10+100*(group==1)*x+150*(group==2)*x+20*(group==3)*x*year",
-    LP_sigma="10+10*(group==1)*x*year",
-    X_type = "between",
-    sav = F
-  )
 
-ineqx.dWB2 <- ineqx(x="i.x", y="c.inc", ystat="Var", groupvar = "i.group", timevar = "i.year", cf=1, dat=dat.dWB2)
-
-plot(ineqx.dWB2, type="dMuP")
-plot(ineqx.dWB2, type="dSigmaP")
-
-plot(ineqx.dWB2, type="dPA")
-
-ineqx.dWB2$dT[[1]]
-
-# Comments:
-# - The problem is that inequality in the values of X creates another grouping.
-#   For the between effect, we then need to differentiate between the effect change and the endowment change.
-#   For the within level, however, it is more complicated because coefficient changes at the between
-#   level will create within change in each group because of difference in x within groups
