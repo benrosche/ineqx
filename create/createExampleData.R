@@ -6,7 +6,7 @@ library(haven)
 
 setwd("C:/Users/benja/OneDrive - Cornell University/GitHub/ineqx")
 
-crDat <- function(N.T, N.G, LP_n, LP_x, LP_mu, LP_sigma, X_const=F, yp1=F, seed=T, sav=F) {
+crDat <- function(N.T, N.G, LP_n, LP_x, LP_mu, LP_sigma, x_const=F, t_vals=c(0,1), yp1=F, seed=T, sav=F) {
 
   # Arguments ------------------------------------------------------------------------------------ #
   # N.T      = Number of time points
@@ -16,13 +16,14 @@ crDat <- function(N.T, N.G, LP_n, LP_x, LP_mu, LP_sigma, X_const=F, yp1=F, seed=
   # LP_x     = Proportion of X=0 as "linear predictor". E.g., LP_x = c("0.1+0.1*i", "0.5", "0.9-0.1*i")
   # LP_mu    = Linear predictor for mean, e.g.
   # LP_sigma = Linear predictor for standard deviation
-  # X_const  = {T|F} If True, distribution of X does not change across waves
+  # x_const  = {T|F} If True, distribution of X does not change across waves
+  # t_vals   = Vector with numeric values, e.g. c(0,1) or c(0,1,2)
   # yp1      = {T|F} IF True, {t=0, year}, {t=1, year+1}
   # seed     = {T|F}
   # sav      = {T|F}
   # ---------------------------------------------------------------------------------------------- #
 
-  # N.T=3; N.G=3; LP_n = c("2", "2", "2"); LP_x <- c("0.5-0.1*i", "0.5", "0.5"); LP_mu = "10*(group==1)*x*t + 20*(group==2)*x*t + 30*(group==3)*x*t"; LP_sigma = "1"; X_const = F; seed=F; sav=F;
+  # N.T=3; N.G=3; LP_n = c("2", "2", "2"); LP_x <- c("0.5-0.1*i", "0.5", "0.5"); LP_mu = "10*(group==1)*x*t + 20*(group==2)*x*t + 30*(group==3)*x*t"; LP_sigma = "1"; x_const = F; x_vals=c(0,1); t_vals=c(0,1); yp1=F; seed=F; sav=F;
 
   if(seed==T) set.seed(1)
   if(isTRUE(sav)) stop("sav must be 'R', 'Stata', or FALSE.")
@@ -49,12 +50,12 @@ crDat <- function(N.T, N.G, LP_n, LP_x, LP_mu, LP_sigma, X_const=F, yp1=F, seed=
 
       N.ij <- N %>% dplyr::filter(year==i) %>% dplyr::select(paste0("G", j)) %>% unlist() %>% as.vector()
 
-      if(X_const & i > 1) d[[i]][[j]] <- d[[1]][[j]] %>% dplyr::mutate(year=i)
+      if(x_const & i > 1) d[[i]][[j]] <- d[[1]][[j]] %>% dplyr::mutate(year=i)
       else {
         d[[i]][[j]] <-
           tibble() %>%
-          tidyr::expand(id=1:N.ij, year=i, group=j, x=1, t=0:1) %>% # t=0:1
-          dplyr::mutate(x=case_when(id %in% sample(1:N.ij, N.ij*eval(parse(text=LP_x[j]))) & x==1 ~ 0, TRUE ~ as.double(x))) #x==1
+          tidyr::expand(id=1:N.ij, year=i, group=j, x=1, t=t_vals) %>%
+          dplyr::mutate(x=case_when(id %in% sample(1:N.ij, N.ij*eval(parse(text=LP_x[j]))) & x>0 ~ 0, TRUE ~ as.double(x)))
       }
 
     }
