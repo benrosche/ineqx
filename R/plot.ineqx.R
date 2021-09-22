@@ -149,7 +149,7 @@ plot_dMuSigma <- function(ineqx.out, type=type, xlab=NULL, ylab=NULL, llab=NULL,
 
 plot_dWBCD <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, llab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
 
-  # ineqx.out = f1; type="dCP"; yint=2; xlab=NULL; ylab=""; tlab=c("By economic position", "Total"); llab=c("low", "medium", "high"); titl="Test"; hline=0; legend=T; sav=F; dim=c(11,5)
+  # ineqx.out = wb.ineqx; type="dT"; yint=2; xlab=NULL; ylab=""; tlab=c("By economic position", "Total"); llab=c("low", "medium", "high"); titl="Test"; hline=0; legend=T; sav=F; dim=c(11,5)
 
   # ---------------------------------------------------------------------------------------------- #
   # 2do:
@@ -266,28 +266,57 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
     # Data
     total  <- ineqx.out[["dT"]][[1]]
 
-    p1 <-
-      ggplot(data=
-               total %>%
-               pivot_longer(c("dW", "dB", "dC", "dD", "dT"), names_to = "delta", values_to = "value"),
-             aes(
-               x=get(timevar),
-               color=factor(delta,
-                            levels=c("dW", "dB", "dC", "dD", "dT"),
-                            labels = c("within", "between", "compositional", "demographic", "total")),
-               size=factor(delta,
-                           levels=c("dW", "dB", "dC", "dD", "dT"),
-                           labels = c("within", "between", "compositional", "demographic", "total"))
-             )) +
-      ggpubr_ineqx +
-      scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#F8766D", "#000000")) +
-      scale_size_manual(values = c(0.75,0.75,0.75,0.75,1.2)) +
-      labs(title=ifelse(is.null(titl), "", titl[1]),
-           color="",
-           size="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), "dT", ylab[1])) +
-      NULL
+    if(x=="NULL") {
+
+      p1 <-
+        ggplot(data=
+                 total %>%
+                 pivot_longer(c("dW", "dB", "dC", "dT"), names_to = "delta", values_to = "value"),
+               aes(
+                 x=get(timevar),
+                 color=factor(delta,
+                              levels = c("dW", "dB", "dC", "dT"),
+                              labels = c("within", "between", "compositional", "total")),
+                 size=factor(delta,
+                             levels = c("dW", "dB", "dC", "dT"),
+                             labels = c("within", "between", "compositional", "total"))
+               )) +
+        ggpubr_ineqx +
+        scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#000000")) +
+        scale_size_manual(values = c(0.75,0.75,0.75,1.2)) +
+        labs(title=ifelse(is.null(titl), "", titl[1]),
+             color="",
+             size="",
+             x=ifelse(is.null(xlab), "", xlab),
+             y=ifelse(is.null(ylab), "dT", ylab[1])) +
+        NULL
+
+    } else {
+
+      p1 <-
+        ggplot(data=
+                 total %>%
+                 pivot_longer(c("dW", "dB", "dC", "dD", "dT"), names_to = "delta", values_to = "value"),
+               aes(
+                 x=get(timevar),
+                 color=factor(delta,
+                              levels=c("dW", "dB", "dC", "dD", "dT"),
+                              labels = c("within", "between", "compositional", "demographic", "total")),
+                 size=factor(delta,
+                             levels=c("dW", "dB", "dC", "dD", "dT"),
+                             labels = c("within", "between", "compositional", "demographic", "total"))
+               )) +
+        ggpubr_ineqx +
+        scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#F8766D", "#000000")) +
+        scale_size_manual(values = c(0.75,0.75,0.75,0.75,1.2)) +
+        labs(title=ifelse(is.null(titl), "", titl[1]),
+             color="",
+             size="",
+             x=ifelse(is.null(xlab), "", xlab),
+             y=ifelse(is.null(ylab), "dT", ylab[1])) +
+        NULL
+
+    }
 
     if(yint==1) {
       p1 <- p1 + geom_line(aes(y=value))

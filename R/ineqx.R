@@ -35,13 +35,13 @@
 #'
 #' ...
 
-ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, ref=NULL, controls=NULL, weights=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
+ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, weights=NULL, controls=NULL, ref=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = incdat; x="i.x"; t=NULL; y="inc"; ystat="CV2"; groupvar="group"; timevar="i.year"; ref=1; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
-  # dat = dat.f; x="i.mother"; t="i.byear"; y="fearnings_wk"; ystat="CV2"; groupvar="f_SES"; timevar="c5.year2"; ref=1990; controls=c("i.race", "c.famsize"); weights=NULL; AME_mu=NULL; AME_sigma=NULL
+  # dat = incdat; x="i.x"; t="i.t"; y="inc"; ystat="CV2"; groupvar="group"; timevar="i.year"; ref=list(beta=c(0,0,0)); controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
+  # dat = dat.f1; x=NULL; t=NULL; y="earnwk_hh"; ystat="CV2"; groupvar="f_SES"; timevar="i.year2"; ref=1990; controls=NULL; weights="earnwt"; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #
-  # Dissect input
+  # Dissect input ----
   # ---------------------------------------------------------------------------------------------- #
 
   # x
@@ -65,8 +65,8 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   # timevar
   c(timevar, timecont, timepoly, notime) %<-% dissectVar(timevar, cicheck = "ci")
 
-  # weights
-  if(!is.null(weights)) w <- as.symbol(weights) else w <- NULL
+  # Are manual values provided as reference?
+  refm <- (!is.null(names(ref)) & all(names(ref) %in% c("n", "mu", "sigma", "beta", "lambda")))
 
   # Check variables and values
   if(nox & !not) stop("t can only be specified if x is specified as well.")
@@ -91,16 +91,16 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
     if(!as.character(timevar) %in% names(dat)) stop(paste0(timevar, " not in dataset."))
     time_levels <- dat[timevar] %>% unique() %>% unlist() %>% as.vector() %>% sort() # time_levels
     if(is.null(ref)) stop("Counterfactual reference point must be given.")
-    if(length(ref) <= 2) if(!ref[1] %in% time_levels) stop(paste0("ref not observed in ", timevar, "."))
-    if(length(ref) == 5) if(0 %in% time_levels) stop(paste0(timevar, "must not contain 0 if manual values are provided for ref."))
+    if(!refm) if(!ref[1] %in% time_levels) stop(paste0("ref not observed in ", timevar, "."))
+    if(refm)  if(0 %in% time_levels) stop(paste0(timevar, "must not contain 0 if manual values are provided for ref."))
   }
 
   # Rename variables in dat
   dat <-
     dat %>%
-    dplyr::select({{ x }}, {{ t }}, {{ y }}, {{ groupvar }}, {{ timevar }}, {{ w }}, !!controls) %>%
+    dplyr::select({{ x }}, {{ t }}, {{ y }}, {{ groupvar }}, {{ timevar }}, {{ weights }}, !!controls) %>%
     rename_with(~paste0("c",1:length(controls)), .cols = controls) %>%
-    dplyr::rename(x={{ x }}, t={{ t }}, y={{ y }}, w = {{ w }}, group={{ groupvar }}, time={{ timevar }})
+    dplyr::rename(x={{ x }}, t={{ t }}, y={{ y }}, w = {{ weights }}, group={{ groupvar }}, time={{ timevar }})
 
   # Add variable: xt (= treatment * before/after)
   dat <- if(!is.null(t)) dat %>% dplyr::mutate(xt=x*t) else dat %>% dplyr::mutate(xt=x)
@@ -112,8 +112,11 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   group_levels <- dat %>% .$group %>% unique() %>% sort()
   time_levels  <- dat %>% .$time %>% unique() %>% sort()
 
+  # Weights
+  if(!is.null(weights)) w <- "w" else w <- NULL
+
   # ---------------------------------------------------------------------------------------------- #
-  # Create formulas
+  # Create formulas ----
   # ---------------------------------------------------------------------------------------------- #
 
   if(!notime) {
@@ -134,7 +137,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   if(!nox & is.null(AME_mu) & is.null(AME_sigma)) {
 
     # -------------------------------------------------------------------------------------------- #
-    # Variance function regression
+    # Variance function regression ----
     # -------------------------------------------------------------------------------------------- #
 
     message("Running variance function regression ...")
@@ -143,7 +146,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
                   weights = w,
                   data = dat)
     # -------------------------------------------------------------------------------------------- #
-    # Compute average marginal effects
+    # Compute average marginal effects ----
     # -------------------------------------------------------------------------------------------- #
 
     message("Computing average marginal effects ...")
@@ -179,7 +182,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   }
 
   # ---------------------------------------------------------------------------------------------- #
-  # Decomposition
+  # Decomposition ----
   # ---------------------------------------------------------------------------------------------- #
 
   message("Performing decomposition ...")
@@ -192,14 +195,14 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
       f0 <- "x==0" # untreated
       f1 <- "x>0"  # treated
     } else {
-      f0 <- "x>0&t==0" # treated, pre-treatment
-      f1 <- "x>0&t>0"  # treated, post-treatment
+      f0 <- "x>0&xt==0" # treated, pre-treatment
+      f1 <- "x>0&xt>0"  # treated, post-treatment
     }
 
     n.pt <- dat %>% dplyr::filter(eval(parse(text=f1))) %>% group_by(time, group) %>% dplyr::summarise(n=n()) # post-treatment n
 
     wibe.xpv0 <-
-      wibe("y", "group", "time", dat %>% dplyr::filter(eval(parse(text=f0))), smoothDat = F, ref = F)[[1]] %>%
+      wibe(y="y", groupvar="group", timevar="time", weights=w, dat=dat %>% dplyr::filter(eval(parse(text=f0))))[[1]] %>%
       dplyr::select(-n) %>%
       inner_join(n.pt, by=c("time", "group")) %>%
       dplyr::relocate(n, .after = "group")
@@ -210,33 +213,49 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
     # > mutate(n=...) is important for x=x, t=NULL. When t is also specified, the mutation of n does
     #   not make a difference as f0/f1 both lead to the same n.
 
-    # ------
+    # ------ #
 
-    wibe.xpv1 <- wibe("y", "group", "time", dat %>% dplyr::filter(eval(parse(text=f1))), smoothDat = F, ref = F)[[2]]
-
-    if(length(ref)==5) {
-      # Add row zero if manual values are provided
-      wibe.xpv1 <-
-        wibe.xpv1 %>%
-        add_row(
-          tibble(time=0, N=sum(ref$n), gmu=sum(ref$n/sum(ref$n)*ref$mu), VarW=VarW(ref$n, ref$sigma), VarB=VarB(ref$n, ref$mu), CV2W=CV2W(ref$n, ref$mu, ref$sigma), CV2B=CV2B(ref$n, ref$mu), VarWBRatio=VarW/VarB, CV2WBRatio=CV2W/CV2B, VarT=VarW+VarB, CV2T=CV2W+CV2B)
-        ) %>% arrange(time)
-    }
+    wibe.xpv1 <- wibe(y="y", groupvar="group", timevar="time", weights=w, dat=dat %>% dplyr::filter(eval(parse(text=f1))))[[2]]
 
   } else {
 
-    wibe.xpv0 <- wibe("y", "group", "time", dat, smoothDat = F, ref = F)[[1]]
-    wibe.xpv1 <- wibe("y", "group", "time", dat, smoothDat = F, ref = F)[[2]]
+    wibe.xpv0 <- wibe(y="y", groupvar="group", timevar="time", weights=w, dat=dat)[[1]]
+    wibe.xpv1 <- wibe(y="y", groupvar="group", timevar="time", weights=w, dat=dat)[[2]]
 
   }
 
-  # Gather factual and counterfactual data
+  ## Gather factual and counterfactual data --------------------------------------------------------
+
   dat.f_cf <- createCF("group", "time", ref, wibe.xpv0, AME_mu, AME_sigma, dat)
 
-  # If manual values provided, the reference becomes time==0
-  if(length(ref)==5) ref <- 0
+  # Add time = 0 if manual references are provided
+  if(refm) {
 
-  # Calculate impact ----------------------------------------------------------------------------- #
+    ref <- 0
+
+    dat0 <- dat.f_cf %>% dplyr::filter(time==0) %>% dplyr::select(time, group, ends_with(".f"))
+
+    # Calculate inequality at time 0
+    wibe.xpv1 <-
+      wibe.xpv1 %>%
+      add_row(
+        tibble(time=0,
+               N=sum(dat0$n.f),
+               gmu=sum(dat0$n.f/sum(dat0$n.f)*(dat0$mu.f+dat0$beta.f)),
+               VarW=VarW(dat0$n.f, dat0$sigma.f+dat0$lambda.f),
+               VarB=VarB(dat0$n.f, dat0$mu.f+dat0$beta.f),
+               CV2W=CV2W(dat0$n.f, dat0$mu.f+dat0$beta.f, dat0$sigma.f+dat0$lambda.f),
+               CV2B=CV2B(dat0$n.f, dat0$mu.f+dat0$beta.f),
+               VarWBRatio=VarW/VarB,
+               CV2WBRatio=CV2W/CV2B,
+               VarT=VarW+VarB,
+               CV2T=CV2W+CV2B)
+      ) %>%
+      arrange(time)
+
+  }
+
+  ## Calculate impact ------------------------------------------------------------------------------
 
   # Within
   dW.out <-
@@ -244,7 +263,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
     purrr::map(
       .f = function(x) {
         x %>%
-          inner_join(wibe.xpv1 %>% dplyr::select(time, paste0(ystat, c("W","T"))), by=c("time")) %>%
+          left_join(wibe.xpv1 %>% dplyr::select(time, paste0(ystat, c("W","T"))), by=c("time")) %>%
           dplyr::rename(dW=dX) %>%
           ungroup()
       })
@@ -256,7 +275,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
     purrr::map(
       .f = function(x) {
         x %>%
-          inner_join(wibe.xpv1 %>% dplyr::select(time, paste0(ystat, c("B","T"))), by=c("time")) %>%
+          left_join(wibe.xpv1 %>% dplyr::select(time, paste0(ystat, c("B","T"))), by=c("time")) %>%
           dplyr::rename(dB=dX) %>%
           ungroup()
       })
@@ -269,7 +288,7 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, r
   dT.out[[1]] <- if(ystat == "CV2") dT.out[[1]] %>% dplyr::mutate(dCV2T=CV2T-CV2T[time == ref[1]]) else dT.out[[1]] %>% dplyr::mutate(dVarT=VarT-VarT[time == ref[1]]) # add actual change in inequality
 
   # ---------------------------------------------------------------------------------------------- #
-  # Rename variables again and return output
+  # Rename variables again and return output ----
   # ---------------------------------------------------------------------------------------------- #
 
   # Rename

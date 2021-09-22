@@ -2,10 +2,11 @@
 #'
 #' @description [...]
 #'
-#' @param dat Dataframe
 #' @param y Dependent variable
 #' @param groupvar Grouping variable to decompose variance into within- and between-group components
 #' @param timevar Time variable to analyze change over time
+#' @param weights Probability weights
+#' @param dat Dataframe
 #' @param smoothDat Logical. Should data be smoothed?
 #' @param ref Number or FALSE. Should values be reported in reference to a specific time?
 #' @param long Logical. Should output be in long format?
@@ -13,7 +14,7 @@
 #' @return List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.
 #'
 #' @examples data(incdat)
-#' wibe1 <- wibe(dat, y=inc, groupvar=SES, timevar=year)
+#' wibe1 <- wibe(y="inc", groupvar="SES", timevar="year", dat=dat1)
 #'
 #' @export wibe
 #'
@@ -22,12 +23,12 @@
 #' @details
 #' ...
 
-wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, long=F) {
+wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, weights=NULL, dat, smoothDat=F, ref=F, long=F) {
 
-  # dat <- incdat; timevar <- "i.year"; groupvar <- "i.group"; y <- "inc"; ref <- 1; smoothDat <- F
+  # dat <- dat.f1; timevar <- NULL; groupvar <- "i.f_SES"; y <- "earnwk_hh"; weights="earnwt"; ref <- F; smoothDat <- F
 
   # ============================================================================================== #
-  # Dissect input
+  # Dissect input ----
   # ============================================================================================== #
 
   if(isTRUE(ref)) stop("ref must be numeric")
@@ -53,20 +54,24 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, l
   if(!as.character(y) %in% names(dat)) stop(paste0(y, " not in dataset"))
   if(!as.character(groupvar) %in% names(dat)) stop(paste0(groupvar, " not in dataset"))
   if(!as.character(timevar) %in% names(dat)) stop(paste0(timevar, " not in dataset"))
+  if(!is.null(weights)) if(!as.character(weights) %in% names(dat)) stop(paste0(weights, " not in dataset"))
 
   # ============================================================================================== #
-  # Rename
+  # Rename ----
   # ============================================================================================== #
 
   # Rename variables and filter NAs to avoid creating another grouping level
-  dat <- dat %>% dplyr::rename(group:={{ groupvar }}, time:={{ timevar }}, y:={{ y }}) %>% filter(!is.na(group))
+  dat <- dat %>% dplyr::rename(group:={{ groupvar }}, time:={{ timevar }}, y:={{ y }}, w := {{ weights }}) %>% filter(!is.na(group))
+
+  # Weights
+  if(is.null(weights)) dat <- dat %>% dplyr::mutate(w=1)
 
   # Number of levels of group and time var
   group_levels <- dat %>% .$group %>% unique() %>% sort()
   time_levels <- dat %>% .$time %>% unique() %>% sort()
 
   # ============================================================================================== #
-  # Create dat.between
+  # Create dat.between ----
   # ============================================================================================== #
 
   dat.between <-
@@ -76,15 +81,22 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, l
       dat %>%
         group_by(time, group) %>%
         dplyr::summarise(
-          mu=mean(y, na.rm = T),
-          sigma=sd(y, na.rm = T),
-          sigma2=var(y, na.rm = T),
           n=n(),
+          sw=sum(w),
+          mu=1/sw * sum(w * y, na.rm = T),
+          sigma2=n/(sw*(n-1)) * sum(w*(y-mu)^2),
+          sigma=sqrt(sigma2)
         ) %>%
         ungroup() %>%
-        mutate(CV2=sigma2/(mu^2)) %>% # Squared CV
+        dplyr::mutate(
+          n=sw/sum(sw)*sum(n), # weighted n
+          CV2=sigma2/(mu^2) # squared CV
+        ) %>%
         dplyr::select(time, group, n, mu, sigma, sigma2, CV2),
       by=c("time", "group"))
+
+  # Weights follow Stata's sum command:
+  # https://www.stata.com/support/faqs/statistics/weights-and-summary-statistics/
 
   # Replace n, mu, sigma2, and CV2 with smoothed versions?
   if(smoothDat==T) {
@@ -107,7 +119,7 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, l
   }
 
   # ============================================================================================== #
-  # Create dat.total
+  # Create dat.total ----
   # ============================================================================================== #
 
   dat.total <-
@@ -132,7 +144,7 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, dat, smoothDat=F, ref=F, l
         ungroup(), by="time")
 
   # ============================================================================================== #
-  # Prepare output
+  # Prepare output ----
   # ============================================================================================== #
 
   if(!isFALSE(ref)) {

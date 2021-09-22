@@ -51,23 +51,11 @@ createCF <- function(groupvar, timevar, ref, wibe.xpv0, AME_mu, AME_sigma, dat) 
     ref <- list(n=wibe.xpv0 %>% .$n, mu=wibe.xpv0 %>% .$mu, sigma=wibe.xpv0 %>% .$sigma, beta=c(0,0,0), lambda=c(0,0,0))
   }
 
-  # Counterfactual reference --------------------------------------------------------------------- #
+  # Get reference values ---------------------------------------------------------------------------
 
-  if(length(ref)==5) {
+  if(is.null(names(ref)) & between(length(ref), 1, 2)) {
 
-    refm <- TRUE # manual values
-
-    n <- ref$n
-    mu <- ref$mu
-    sigma <- ref$sigma
-    beta <- ref$beta
-    lambda <- ref$lambda
-
-    ref <- c(0, "effect")
-
-  } else if(between(length(ref),1,2)) {
-
-    refm <- FALSE # values from reference time
+    refm <- FALSE # time reference
 
     if(length(ref)==1) ref <- c(ref, "effect")
 
@@ -77,9 +65,21 @@ createCF <- function(groupvar, timevar, ref, wibe.xpv0, AME_mu, AME_sigma, dat) 
     beta <- AME_mu[[1]] %>% dplyr::filter(time==!!ref[1]) %>% dplyr::select(!!ref[2]) %>% unlist()
     lambda <- AME_sigma[[1]] %>% dplyr::filter(time==!!ref[1]) %>% dplyr::select(!!ref[2]) %>% unlist()
 
-  } else stop("ref must either be one value (reference time) (recommended), two values (reference time of a specific column), or a list of 5 vectors (n, mu, sigma, beta, lambda)")
+  } else if(!is.null(names(ref)) & all(names(ref) %in% c("n", "mu", "sigma", "beta", "lambda"))) {
 
-  # Create counterfactual dataset ---------------------------------------------------------------- #
+    refm <- TRUE # manual values as reference
+
+    n      <- if(any(names(ref) %in% "n")) ref$n else NA
+    mu     <- if(any(names(ref) %in% "mu")) ref$mu else NA
+    sigma  <- if(any(names(ref) %in% "sigma")) ref$sigma else NA
+    beta   <- if(any(names(ref) %in% "beta")) ref$beta else NA
+    lambda <- if(any(names(ref) %in% "lambda")) ref$lambda else NA
+
+    ref <- c(0, "effect")
+
+  } else stop("ref must either be a reference time (numeric value) (recommended), a reference time of a specific column, e.g. c(1987, 'effect1') (experimental), or a list of vectors that can be either or all of: list(n=c(), mu=c(), sigma=c(), beta=c(), lambda=c()).")
+
+  # Create counterfactual dataset ------------------------------------------------------------------
 
   dat.cf <-
     tibble() %>%
@@ -108,7 +108,7 @@ createCF <- function(groupvar, timevar, ref, wibe.xpv0, AME_mu, AME_sigma, dat) 
   # If there is just one column, the procedure is equivalent to
   # inner_join(tibble(group=group_levels, beta.cf=beta), by="group")
 
-  # Merge factual and counterfactual data
+  # Merge factual and counterfactual data ----------------------------------------------------------
 
   dat.f_cf <-
     tibble() %>%
@@ -117,25 +117,26 @@ createCF <- function(groupvar, timevar, ref, wibe.xpv0, AME_mu, AME_sigma, dat) 
     left_join(AME_mu[[1]] %>% dplyr::mutate(effect = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% dplyr::rename(beta.f=effect), by=c("time", "group")) %>% # factual beta
     left_join(AME_sigma[[1]] %>% dplyr::mutate(effect = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% dplyr::rename(lambda.f=effect), by=c("time", "group")) %>% # factual lambda
     inner_join(dat.cf, by=c("time", "group")) %>% # counterfactual data
-    dplyr::select(time, group, ends_with(".f"), ends_with(".cf"))
+    dplyr::select(time, group, ends_with(".f"), ends_with(".cf")) %>%
+    dplyr::mutate(
+      n.cf = case_when(is.na(n.cf) ~ as.numeric(n.f), TRUE ~ as.numeric(n.cf)),
+      mu.cf = case_when(is.na(mu.cf) ~ as.numeric(mu.f), TRUE ~ as.numeric(mu.cf)),
+      sigma.cf = case_when(is.na(sigma.cf) ~ as.numeric(sigma.f), TRUE ~ as.numeric(sigma.cf)),
+      beta.cf = case_when(is.na(beta.cf) ~ as.numeric(beta.f), TRUE ~ as.numeric(beta.cf)),
+      lambda.cf = case_when(is.na(lambda.cf) ~ as.numeric(lambda.f), TRUE ~ as.numeric(lambda.cf))
+    )
+
+  # Re last mutate: If manual values are only provided to a subset of the parameters,
+  #                 then the other parameters takeon the factual values.
 
   if(refm) {
 
     # If ref are manual values, add zero row with those values
 
     row_zero <-
-      tibble() %>%
-      expand(time=0, group=group_levels) %>%
-      inner_join(tibble(group=group_levels, n.f=n), by="group") %>%
-      inner_join(tibble(group=group_levels, mu.f=mu), by="group") %>%
-      inner_join(tibble(group=group_levels, sigma.f=sigma), by="group") %>%
-      inner_join(tibble(group=group_levels, beta.f=beta), by="group") %>%
-      inner_join(tibble(group=group_levels, lambda.f=lambda), by="group") %>%
-      inner_join(tibble(group=group_levels, n.cf=n), by="group") %>%
-      inner_join(tibble(group=group_levels, mu.cf=mu), by="group") %>%
-      inner_join(tibble(group=group_levels, sigma.cf=sigma), by="group") %>%
-      inner_join(tibble(group=group_levels, beta.cf=beta), by="group") %>%
-      inner_join(tibble(group=group_levels, lambda.cf=lambda), by="group")
+      dat.f_cf %>%
+      dplyr::filter(time==min(time)) %>%
+      dplyr::mutate(time=0, n.f=n.cf, mu.f=mu.cf, sigma.f=sigma.cf, beta.f=beta.cf, lambda.f=lambda.cf)
 
     dat.f_cf <-
       dat.f_cf %>%
@@ -426,31 +427,19 @@ dYdXdC <- function(dat, ystat, partial=F) {
 
     if(ystat=="CV2B") {
 
-      dydx_t1 <- CV2B(n.star, mu.f + beta.f) - CV2B(n.star, mu.f)
-      dydx_t0 <- CV2B(n.cf,   mu.f + beta.f) - CV2B(n.cf,   mu.f)
-
-      delta[i] <- dydx_t1 - dydx_t0
+      delta[i] <- CV2B(n.star, mu.cf + beta.f) - CV2B(n.cf, mu.cf + beta.f)
 
     } else if(ystat=="VarB") {
 
-      dydx_t1 <- VarB(n.star, mu.f + beta.f) - VarB(n.star, mu.f)
-      dydx_t0 <- VarB(n.cf,   mu.f + beta.f) - VarB(n.cf,   mu.f)
-
-      delta[i] <- dydx_t1 - dydx_t0
+      delta[i] <- VarB(n.star, mu.cf + beta.f) - VarB(n.cf, mu.cf + beta.f)
 
     } else if(ystat=="CV2W") {
 
-      dydx_t1 <- CV2W(n.star, mu.f + beta.f, sigma.f + lambda.f) - CV2W(n.star, mu.f, sigma.f)
-      dydx_t0 <- CV2W(n.cf,   mu.f + beta.f, sigma.f + lambda.f) - CV2W(n.cf,   mu.f, sigma.f)
-
-      delta[i] <- dydx_t1 - dydx_t0
+      delta[i] <- CV2W(n.star, mu.cf + beta.f, sigma.cf + lambda.f)  - CV2W(n.cf, mu.cf + beta.f, sigma.cf + lambda.f)
 
     } else if(ystat=="VarW") {
 
-      dydx_t1 <- VarW(n.star, sigma.f + lambda.f) - VarW(n.star, sigma.f)
-      dydx_t0 <- VarW(n.cf,   sigma.f + lambda.f) - VarW(n.cf,   sigma.f)
-
-      delta[i] <- dydx_t1 - dydx_t0
+      delta[i] <- VarW(n.star, sigma.cf + lambda.f) - VarW(n.cf, sigma.cf + lambda.f)
 
     }
 
