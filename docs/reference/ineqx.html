@@ -101,7 +101,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home"></span>
+    <span class="fa fa-home"></span>
      
   </a>
 </li>
@@ -154,14 +154,17 @@
     </div>
 
     <pre class="usage"><span class='fu'>ineqx</span><span class='op'>(</span>
-  <span class='va'>x</span>,
+  x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  t <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>y</span>,
   ystat <span class='op'>=</span> <span class='st'>"CV2"</span>,
-  controls <span class='op'>=</span> <span class='cn'>NULL</span>,
   groupvar <span class='op'>=</span> <span class='cn'>NULL</span>,
   timevar <span class='op'>=</span> <span class='cn'>NULL</span>,
-  timesp <span class='op'>=</span> <span class='cn'>T</span>,
-  cf <span class='op'>=</span> <span class='fl'>1</span>,
+  ref <span class='op'>=</span> <span class='cn'>NULL</span>,
+  controls <span class='op'>=</span> <span class='cn'>NULL</span>,
+  weights <span class='op'>=</span> <span class='cn'>NULL</span>,
+  AME_mu <span class='op'>=</span> <span class='cn'>NULL</span>,
+  AME_sigma <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>dat</span>
 <span class='op'>)</span></pre>
 
@@ -170,31 +173,47 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>Explanatory variable</p></td>
+      <td><p>Character string. Treatment variable. Values must be binary (0/1)</p></td>
+    </tr>
+    <tr>
+      <th>t</th>
+      <td><p>Character string. Before/after variable. Values must be binary (0/1)</p></td>
     </tr>
     <tr>
       <th>y</th>
-      <td><p>Dependent variable</p></td>
+      <td><p>Character string. Dependent variable. Can only be c.x</p></td>
     </tr>
     <tr>
       <th>ystat</th>
       <td><p>Character string. Either "Var" or "CV2". Choose to analyze the effect of x on the variance or squared coefficient of variation</p></td>
     </tr>
     <tr>
-      <th>controls</th>
-      <td><p>Character vector with additional control variables. E.g. c("age", "sex", ...)</p></td>
-    </tr>
-    <tr>
       <th>groupvar</th>
-      <td><p>Grouping variable to decompose variance into within- and between-group components.</p></td>
+      <td><p>Character string. Must be i.x. Grouping variable to decompose variance into within- and between-group components.</p></td>
     </tr>
     <tr>
       <th>timevar</th>
-      <td><p>Time variable to analyze change over time</p></td>
+      <td><p>Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.</p></td>
     </tr>
     <tr>
-      <th>cf</th>
-      <td><p>Number. Reference time.</p></td>
+      <th>ref</th>
+      <td><p>Number, vector, or list. Counterfactual reference point. See details.</p></td>
+    </tr>
+    <tr>
+      <th>controls</th>
+      <td><p>Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)</p></td>
+    </tr>
+    <tr>
+      <th>weights</th>
+      <td><p>Character string. Weight variable.</p></td>
+    </tr>
+    <tr>
+      <th>AME_mu</th>
+      <td><p>Dataframe with average marginal effects (Mu)</p></td>
+    </tr>
+    <tr>
+      <th>AME_sigma</th>
+      <td><p>Dataframe with average marginal effects (Sigma)</p></td>
     </tr>
     <tr>
       <th>dat</th>
@@ -208,14 +227,18 @@
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>The main function of <code>ineqx</code>. [...]</p>
+<p><b>Counterfactual reference point (ref)</b></p>
+<p><code>ref</code> can either be a number, c(number, "variable name"), or list(n=c(...), mu=c(...), sigma=c(...), beta=c(...), lambda=c(...)). [...]</p>
+<p><b>Return</b></p>
+<p>...</p>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Benjamin Rosche &lt;benjamin.rosche@gmail.com&gt;</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>incdat</span><span class='op'>)</span>
-<span class='va'>decomp1</span> <span class='op'>&lt;-</span> <span class='fu'>ineqx</span><span class='op'>(</span><span class='va'>child</span>, <span class='va'>inc</span>, ystat<span class='op'>=</span><span class='st'>"CV2"</span>, groupvar<span class='op'>=</span><span class='va'>SES</span>, timevar<span class='op'>=</span><span class='va'>year</span>, cf<span class='op'>=</span><span class='fl'>1</span>, <span class='va'>incdat</span><span class='op'>)</span>
-</div><div class='co'>#&gt; <span class='error'>Error in dplyr::rename(., x = {    {        x    }}, y = {    {        y    }}, group = {    {        groupvar    }}, time = {    {        timevar    }}): </span>argument "dat" is missing, with no default</div><div class='input'>
+<span class='va'>decomp1</span> <span class='op'>&lt;-</span> <span class='fu'>ineqx</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='co'>#&gt; <span class='error'>Error in dissectVar(y, cicheck = "c"): </span>argument "y" is missing, with no default</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
