@@ -37,7 +37,7 @@
 
 ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, weights=NULL, controls=NULL, ref=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = incdat; x="i.x"; t="i.t"; y="inc"; ystat="CV2"; groupvar="group"; timevar="i.year"; ref=list(beta=c(0,0,0)); controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
+  # dat = dat.dWB1; x="i.x"; t="i.t"; y="inc"; ystat="Var"; groupvar="group"; timevar="i.year"; ref=1; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
   # dat = dat.f1; x=NULL; t=NULL; y="earnwk_hh"; ystat="CV2"; groupvar="f_SES"; timevar="i.year2"; ref=1990; controls=NULL; weights="earnwt"; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #

@@ -101,7 +101,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home"></span>
+    <span class="fa fa-home"></span>
      
   </a>
 </li>
@@ -179,7 +179,7 @@
     </tr>
     <tr>
       <th>type</th>
-      <td><p>Character string. Plot type. Choose from: dMuSigma, dB, dW, dD, dO, dT</p></td>
+      <td><p>Character string. Plot type. Choose from: dMuP, dMuT, dSigmaP, dSigmaT, dWP, dWT, dBP, dBT, dDP, dDT, dO, dT, dPA</p></td>
     </tr>
     <tr>
       <th>yint</th>
@@ -230,6 +230,14 @@
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>Returns a ggplot2 object</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p><b>Interpretation of the y-axis</b></p>
+<p>The interpretation of <code>yint=1</code> (default) is in absolute points of CV2{W/B/T}.</p>
+<p>The interpretation of <code>yint=2</code></p><ul>
+<li><p>For <code>plot(ineqx.out, type="dBP")</code> or <code>plot(ineqx.out, type="dBT")</code>, it is the change in the proportion of dB/CV2B, dD/CV2B relative to the reference value given in <code>ref</code>. The interpretation of <code>dB</code> is analogous.</p></li>
+<li><p>For <code>plot(ineqx.out, type="dT")</code>, it is the change in the proportion of dW/CV2T, dB/CV2T, dD/CV2T, dT/CV2T relative to the reference value given in ref.</p></li>
+</ul><p>In the example, the CV2 is used as inequality statistic. But the interpretation for the variance as inequality statistic is analogous.</p>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Benjamin Rosche &lt;benjamin.rosche@gmail.com&gt;</p>
@@ -237,7 +245,7 @@
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>incdat</span><span class='op'>)</span>
 <span class='va'>i1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ineqx.html'>ineqx</a></span><span class='op'>(</span><span class='va'>incdat</span>, <span class='va'>by</span>, <span class='va'>inc</span>, groupvar <span class='op'>=</span> <span class='va'>SES</span>, timevar <span class='op'>=</span> <span class='va'>year</span><span class='op'>)</span>
-</div><div class='co'>#&gt; <span class='error'>Error in dplyr::rename(., x = {    {        x    }}, y = {    {        y    }}, group = {    {        groupvar    }}, time = {    {        timevar    }}): </span>argument "dat" is missing, with no default</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>i1</span>, type<span class='op'>=</span><span class='st'>"dMuSigma2"</span><span class='op'>)</span>
+</div><div class='co'>#&gt; <span class='warning'>Warning: </span>the condition has length &gt; 1 and only the first element will be used</div><div class='co'>#&gt; <span class='warning'>Warning: </span>the condition has length &gt; 1 and only the first element will be used</div><div class='co'>#&gt; <span class='warning'>Warning: </span>the condition has length &gt; 1 and only the first element will be used</div><div class='co'>#&gt; <span class='warning'>Warning: </span>the condition has length &gt; 1 and only the first element will be used</div><div class='co'>#&gt; <span class='error'>Error in as.symbol(sub("(c|i).?\\.", "", x)): </span>variable names are limited to 10000 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>i1</span>, type<span class='op'>=</span><span class='st'>"dMuSigma2"</span><span class='op'>)</span>
 </div><div class='co'>#&gt; <span class='error'>Error in plot(i1, type = "dMuSigma2"): </span>object 'i1' not found</div><div class='input'>
 </div></pre>
   </div>

@@ -1,4 +1,4 @@
-pandoc: 2.11.2
+pandoc: 2.14.0.3
 pkgdown: 1.6.1.9001
 pkgdown_sha: b94fe3407a0b40a968425a64cdf7ae0c6705b1b1
 articles:
@@ -6,7 +6,7 @@ articles:
   faq: faq.html
   installation: installation.html
   model: model.html
-last_built: 2021-06-09T17:52Z
+last_built: 2021-10-18T15:25Z
 urls:
   reference: https://benrosche.github.io/ineqx/reference
   article: https://benrosche.github.io/ineqx/articles
