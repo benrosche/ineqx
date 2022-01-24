@@ -100,7 +100,8 @@ ineqx <- function(x=NULL, t=NULL, y, ystat="CV2", groupvar=NULL, timevar=NULL, w
     dat %>%
     dplyr::select({{ x }}, {{ t }}, {{ y }}, {{ groupvar }}, {{ timevar }}, {{ weights }}, !!controls) %>%
     rename_with(~paste0("c",1:length(controls)), .cols = controls) %>%
-    dplyr::rename(x={{ x }}, t={{ t }}, y={{ y }}, w = {{ weights }}, group={{ groupvar }}, time={{ timevar }})
+    dplyr::rename(x={{ x }}, t={{ t }}, y={{ y }}, w = {{ weights }}, group={{ groupvar }}, time={{ timevar }}) %>%
+    drop_na()
 
   # Add variable: xt (= treatment * before/after)
   dat <- if(!is.null(t)) dat %>% dplyr::mutate(xt=x*t) else dat %>% dplyr::mutate(xt=x)

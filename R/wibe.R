@@ -61,7 +61,11 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, weights=NULL, dat, smoothD
   # ============================================================================================== #
 
   # Rename variables and filter NAs to avoid creating another grouping level
-  dat <- dat %>% dplyr::rename(group:={{ groupvar }}, time:={{ timevar }}, y:={{ y }}, w := {{ weights }}) %>% filter(!is.na(group))
+  dat <-
+    dat %>%
+    dplyr::select({{ groupvar }}, {{ timevar }}, {{ y }}, {{ weights }}) %>%
+    dplyr::rename(group:={{ groupvar }}, time:={{ timevar }}, y:={{ y }}, w:={{ weights }}) %>%
+    drop_na()
 
   # Weights
   if(is.null(weights)) dat <- dat %>% dplyr::mutate(w=1)
