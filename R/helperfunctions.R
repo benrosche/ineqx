@@ -613,19 +613,19 @@ dYdD <- function(dat, ystat, partial=F) {
 
     if(ystat=="VarW") {
 
-      delta[i] <- VarW(n.f, sigma.star) - VarW(n.f, sigma.cf)
+      delta[i] <- VarW(n.f, sigma.star) - VarW(n.f, sigma.cf) - (VarW(n.cf, sigma.star) - VarW(n.cf, sigma.cf))
 
     } else if(ystat=="VarB") {
 
-      delta[i] <- VarB(n.f, mu.star) - VarB(n.f, mu.cf)
+      delta[i] <- VarB(n.f, mu.star) - VarB(n.f, mu.cf) - (VarB(n.cf, mu.star) - VarB(n.cf, mu.cf))
 
     } else if(ystat=="CV2W") {
 
-      delta[i] <- CV2W(n.f, mu.star, sigma.star) - CV2W(n.f, mu.cf, sigma.cf)
+      delta[i] <- CV2W(n.f, mu.star, sigma.star) - CV2W(n.f, mu.cf, sigma.cf) - (CV2W(n.cf, mu.star, sigma.star) - CV2W(n.cf, mu.cf, sigma.cf))
 
     } else if(ystat=="CV2B") {
 
-      delta[i] <- CV2B(n.f, mu.star) - CV2B(n.f, mu.cf)
+      delta[i] <- CV2B(n.f, mu.star) - CV2B(n.f, mu.cf) - (CV2B(n.cf, mu.star) - CV2B(n.cf, mu.cf))
 
     }
 
