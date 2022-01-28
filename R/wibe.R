@@ -3,8 +3,8 @@
 #' @description [...]
 #'
 #' @param y Dependent variable
-#' @param groupvar Grouping variable to decompose variance into within- and between-group components
-#' @param timevar Time variable to analyze change over time
+#' @param group Grouping variable to decompose variance into within- and between-group components
+#' @param time Time variable to analyze change over time
 #' @param weights Probability weights
 #' @param dat Dataframe
 #' @param smoothDat Logical. Should data be smoothed?
@@ -14,7 +14,7 @@
 #' @return List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.
 #'
 #' @examples data(incdat)
-#' wibe1 <- wibe(y="inc", groupvar="SES", timevar="year", dat=dat1)
+#' wibe1 <- wibe(y="inc", group="SES", time="year", dat=dat1)
 #'
 #' @export wibe
 #'
@@ -23,9 +23,9 @@
 #' @details
 #' ...
 
-wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, weights=NULL, dat, smoothDat=F, ref=F, long=F) {
+wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, ref=F, long=F) {
 
-  # dat <- dat.f1; timevar <- NULL; groupvar <- "i.f_SES"; y <- "earnwk_hh"; weights="earnwt"; ref <- F; smoothDat <- F
+  # dat <- dat.f1; time <- NULL; group <- "i.f_SES"; y <- "earnwk_hh"; weights="earnwt"; ref <- F; smoothDat <- F
 
   # ============================================================================================== #
   # Dissect input ----
@@ -37,23 +37,23 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, weights=NULL, dat, smoothD
   y <- dissectVar(y, cicheck="c")[[1]]
 
   # Group
-  if(is.null(rlang::enexpr(groupvar))) {
+  if(is.null(rlang::enexpr(group))) {
     dat <- dat %>% dplyr::mutate(group=1)
-    groupvar <- substitute(group)
+    group <- substitute(group)
   }
-  groupvar <- dissectVar(groupvar, cicheck="i")[[1]]
+  group <- dissectVar(group, cicheck="i")[[1]]
 
   # Time
-  if(is.null(rlang::enexpr(timevar))) {
+  if(is.null(rlang::enexpr(time))) {
     dat <- dat %>% dplyr::mutate(time=1)
-    timevar <- substitute(time)
+    time <- substitute(time)
   }
-  timevar <- dissectVar(timevar, cicheck="i")[[1]]
+  time <- dissectVar(time, cicheck="i")[[1]]
 
   # Check whether variables are in the dataset
   if(!as.character(y) %in% names(dat)) stop(paste0(y, " not in dataset"))
-  if(!as.character(groupvar) %in% names(dat)) stop(paste0(groupvar, " not in dataset"))
-  if(!as.character(timevar) %in% names(dat)) stop(paste0(timevar, " not in dataset"))
+  if(!as.character(group) %in% names(dat)) stop(paste0(group, " not in dataset"))
+  if(!as.character(time) %in% names(dat)) stop(paste0(time, " not in dataset"))
   if(!is.null(weights)) if(!as.character(weights) %in% names(dat)) stop(paste0(weights, " not in dataset"))
 
   # ============================================================================================== #
@@ -63,8 +63,8 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, weights=NULL, dat, smoothD
   # Rename variables and filter NAs to avoid creating another grouping level
   dat <-
     dat %>%
-    dplyr::select({{ groupvar }}, {{ timevar }}, {{ y }}, {{ weights }}) %>%
-    dplyr::rename(group:={{ groupvar }}, time:={{ timevar }}, y:={{ y }}, w:={{ weights }}) %>%
+    dplyr::select({{ group }}, {{ time }}, {{ y }}, {{ weights }}) %>%
+    dplyr::rename(group:={{ group }}, time:={{ time }}, y:={{ y }}, w:={{ weights }}) %>%
     drop_na()
 
   # Weights
@@ -193,14 +193,14 @@ wibe <- function(y=NULL, groupvar=NULL, timevar=NULL, weights=NULL, dat, smoothD
   dat.between <-
     dat.between %>%
     dplyr::rename(
-      !!enquo(timevar) := time,
-      !!enquo(groupvar) := group
+      !!enquo(time) := time,
+      !!enquo(group) := group
     )
 
   dat.total <-
     dat.total %>%
     dplyr::rename(
-      !!enquo(timevar) := time
+      !!enquo(time) := time
     )
 
   return(list("By group and time"=dat.between, "By time"=dat.total))
