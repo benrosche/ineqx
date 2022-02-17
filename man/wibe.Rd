@@ -6,8 +6,9 @@
 \usage{
 wibe(
   y = NULL,
-  groupvar = NULL,
-  timevar = NULL,
+  group = NULL,
+  time = NULL,
+  weights = NULL,
   dat,
   smoothDat = F,
   ref = F,
@@ -17,9 +18,11 @@ wibe(
 \arguments{
 \item{y}{Dependent variable}
 
-\item{groupvar}{Grouping variable to decompose variance into within- and between-group components}
+\item{group}{Grouping variable to decompose variance into within- and between-group components}
 
-\item{timevar}{Time variable to analyze change over time}
+\item{time}{Time variable to analyze change over time}
+
+\item{weights}{Probability weights}
 
 \item{dat}{Dataframe}
 
@@ -40,7 +43,7 @@ List of length 2. Element 1 returns the decomposition by group and time. Element
 }
 \examples{
 data(incdat)
-wibe1 <- wibe(dat, y=inc, groupvar=SES, timevar=year)
+wibe1 <- wibe(y="inc", group="SES", time="year", dat=dat1)
 
 }
 \author{

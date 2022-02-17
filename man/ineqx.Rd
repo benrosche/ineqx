@@ -2,41 +2,44 @@
 % Please edit documentation in R/ineqx.R
 \name{ineqx}
 \alias{ineqx}
-\title{Variance function regression + decomposition of the variance and sq. coefficient of variation}
+\title{Descriptive and causal variance decomposition}
 \usage{
 ineqx(
-  x = NULL,
-  t = NULL,
+  treat = NULL,
+  post = NULL,
   y,
-  ystat = "CV2",
-  groupvar = NULL,
-  timevar = NULL,
-  ref = NULL,
-  controls = NULL,
+  ystat = "Var",
+  group = NULL,
+  time = NULL,
   weights = NULL,
+  controls = NULL,
+  decomp = "post",
+  ref = NULL,
   AME_mu = NULL,
   AME_sigma = NULL,
   dat
 )
 }
 \arguments{
-\item{x}{Character string. Treatment variable. Values must be binary (0/1)}
+\item{treat}{Character string. Treatment variable. Values must be 0/1}
 
-\item{t}{Character string. Before/after variable. Values must be binary (0/1)}
+\item{post}{Character string. Before/after variable. Values must be 0/1}
 
-\item{y}{Character string. Dependent variable. Can only be c.x}
+\item{y}{Character string. Dependent variable. Variable must be continuous.}
 
-\item{ystat}{Character string. Either "Var" or "CV2". Choose to analyze the effect of x on the variance or squared coefficient of variation}
+\item{ystat}{Character string. Either "Var" (default) or "CV2". Choose to analyze (the effect of x on) the variance or squared coefficient of variation.}
 
-\item{groupvar}{Character string. Must be i.x. Grouping variable to decompose variance into within- and between-group components.}
+\item{group}{Character string. Variable must be categorical. Grouping variable to decompose variance into within- and between-group components.}
 
-\item{timevar}{Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.}
+\item{time}{Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.}
 
-\item{ref}{Number, vector, or list. Counterfactual reference point. See details.}
+\item{weights}{Character string. Weight variable.}
 
 \item{controls}{Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)}
 
-\item{weights}{Character string. Weight variable.}
+\item{decomp}{Character string. Either "post" (default) or "effect".}
+
+\item{ref}{Number, vector, or list. Counterfactual reference point. See details.}
 
 \item{AME_mu}{Dataframe with average marginal effects (Mu)}
 
@@ -45,10 +48,10 @@ ineqx(
 \item{dat}{Dataframe}
 }
 \value{
-List with six elements: pred_mu, pred_sigma, dW, dB, dD, dT. See details.
+List with six elements: dMu, dSigma, dW, dB, dCP, dT. See details.
 }
 \description{
-The ineqx package implements Rosche (2021). [...]
+The ineqx package implements Rosche (202X). [...]
 }
 \details{
 The main function of \code{ineqx}. [...]
@@ -63,7 +66,7 @@ The main function of \code{ineqx}. [...]
 }
 \examples{
 data(incdat)
-decomp1 <- ineqx()
+decomp1 <- ineqx(...)
 
 }
 \author{

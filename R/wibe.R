@@ -25,7 +25,7 @@
 
 wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, ref=F, long=F) {
 
-  # dat <- dat.f1; time <- NULL; group <- "i.f_SES"; y <- "earnwk_hh"; weights="earnwt"; ref <- F; smoothDat <- F
+  # dat <- dat.dWB1 %>% dplyr::filter(x==1); time <- "year"; group <- "i.group"; y <- "c.inc"; weights=NULL; ref <- 1; smoothDat <- F
 
   # ============================================================================================== #
   # Dissect input ----

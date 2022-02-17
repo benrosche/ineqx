@@ -2,21 +2,21 @@
 #'
 #' @description The ineqx package implements Rosche (202X). [...]
 #'
-#' @param treat Character string. Treatment variable. Values must be binary (0/1)
-#' @param post Character string. Before/after variable. Values must be binary (0/1)
-#' @param y Character string. Dependent variable. Can only be c.x
-#' @param ystat Character string. Either "Var" or "CV2". Choose to analyze the effect of x on the variance or squared coefficient of variation
-#' @param group Character string. Must be i.x. Grouping variable to decompose variance into within- and between-group components.
+#' @param treat Character string. Treatment variable. Values must be 0/1
+#' @param post Character string. Before/after variable. Values must be 0/1
+#' @param y Character string. Dependent variable. Variable must be continuous.
+#' @param ystat Character string. Either "Var" (default) or "CV2". Choose to analyze (the effect of x on) the variance or squared coefficient of variation.
+#' @param group Character string. Variable must be categorical. Grouping variable to decompose variance into within- and between-group components.
 #' @param time Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.
-#' @param decomp Character string. Either "pre", "post", or "effect".
-#' @param ref Number, vector, or list. Counterfactual reference point. See details.
-#' @param controls Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)
 #' @param weights Character string. Weight variable.
+#' @param controls Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)
+#' @param decomp Character string. Either "post" (default) or "effect".
+#' @param ref Number, vector, or list. Counterfactual reference point. See details.
 #' @param AME_mu Dataframe with average marginal effects (Mu)
 #' @param AME_sigma Dataframe with average marginal effects (Sigma)
 #' @param dat Dataframe
 #'
-#' @return List with six elements: pred_mu, pred_sigma, dW, dB, dCD, dT. See details.
+#' @return List with six elements: dMu, dSigma, dW, dB, dCP, dT. See details.
 #'
 #' @examples data(incdat)
 #' decomp1 <- ineqx(...)
@@ -38,7 +38,7 @@
 
 ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, weights=NULL, controls=NULL, decomp="post", ref=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = incdat; treat="i.x"; post="i.t"; y="inc"; ystat="Var"; group="group"; time="i.year"; ref=1; decomp="post"; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
+  # dat = dat.WX2; treat=NULL; post=NULL; y="inc"; ystat="Var"; group="group"; time="i.year"; ref=1; decomp="effect"; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #
   # Dissect input ----
@@ -83,6 +83,7 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     if(!0 %in% post_levels | length(post_levels)==1) stop(paste0(post, " must contain 0 (pre) and at least one other value (post)."))
     if(length(post_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", post_levels[post_levels!=0], sep=" "), "as post has multiple post-treatment values.")
   }
+  if(!as.character(decomp) %in% c("post", "effect")) stop("decomp must be 'post' or 'effect'.")
   if(!as.character(y) %in% names(dat)) stop(paste0(y, " not in dataset."))
   if(!as.character(group) %in% names(dat)) stop(paste0(group, " not in dataset."))
   if(!is.null(weights)) if(!as.character(weights) %in% names(dat)) stop(paste0(weights, " not in dataset."))
@@ -156,9 +157,9 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     AME_mu    <- suppressWarnings( calcAME("tp", "group", "time", what="mu", vfr, dat) )
     AME_sigma <- suppressWarnings( calcAME("tp", "group", "time", what="sigma", vfr, dat) )
 
-  } else if(notreat & is.null(AME_mu) & is.null(AME_sigma)) {
+  } else if(notreat) {
 
-    # If notreat, AME is empty
+    # If notreat, AME must be empty
 
     AME_mu <- list()
     AME_mu[[1]] <-
@@ -175,6 +176,8 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
 
   } else {
 
+    # manual AME_mu + AME_sigma
+
     AME_mu[[1]]    <- AME_mu[[1]] %>% dplyr::rename(time = {{ time }}, group = {{ group }})
     AME_mu[[2]]    <- AME_mu[[2]] %>% dplyr::rename(time = {{ time }})
     AME_sigma[[1]] <- AME_sigma[[1]] %>% dplyr::rename(time = {{ time }}, group = {{ group }})
@@ -188,57 +191,42 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
 
   message("Performing decomposition ...")
 
-  # Decompose data pre- and post treatment
+  ## Calculate within/between variance (pre-treatment, post-treatment and their difference = effect) ----
+
   if(!is.null(treat)) {
 
-    # Filter expression
+    # Filter to differentiate treat=t/post=NULL and treat=t/post=p
     if(nopost) {
-      f0 <- "treat==0" # untreated
-      f1 <- "treat>0"  # treated
+      f.pre  <- "treat==0" # untreated
+      f.post <- "treat>0"  # treated
     } else {
-      f0 <- "treat>0&tp==0" # treated, pre-treatment
-      f1 <- "treat>0&tp>0"  # treated, post-treatment
+      f.pre  <- "treat>0&tp==0" # treated, pre-treatment
+      f.post <- "treat>0&tp>0"  # treated, post-treatment
     }
 
-    n.pt <- dat %>% dplyr::filter(eval(parse(text=f1))) %>% group_by(time, group) %>% dplyr::summarise(n=n()) # post-treatment n
-
-    wibe.xpv0 <-
-      wibe(y="y", group="group", time="time", weights=w, dat=dat %>% dplyr::filter(eval(parse(text=f0))))[[1]] %>%
-      dplyr::select(-n) %>%
-      inner_join(n.pt, by=c("time", "group")) %>%
-      dplyr::relocate(n, .after = "group")
-
-    # > Pre-treatment mu + sigma but post-treatment n.
-    # > This is because AME_mu and AME_sigma calculate the treatment effect as pre-treatment mu + beta
-    # > However, only those who get the treatment, will affect inequality, which is why we need post-treatment n
-    # > mutate(n=...) is important for x=x, t=NULL. When t is also specified, the mutation of n does
-    #   not make a difference as f0/f1 both lead to the same n.
-
-    # ------ #
-
-    wibe.xpv1 <- wibe(y="y", group="group", time="time", weights=w, dat=dat %>% dplyr::filter(eval(parse(text=f1))))[[2]]
+    wibe.pre <- wibe(y="y", group="group", time="time", weights=w, dat=dat %>% dplyr::filter(eval(parse(text=f.pre))))
+    wibe.post <- wibe(y="y", group="group", time="time", weights=w, dat=dat %>% dplyr::filter(eval(parse(text=f.post))))
+    wibe.add  <- wibe.post[[2]] # will be added to tables in dW, dW etc (=wibe.post[[2]])
 
   } else {
 
-    wibe.xpv0 <- wibe(y="y", group="group", time="time", weights=w, dat=dat)[[1]]
-    wibe.xpv1 <- wibe(y="y", group="group", time="time", weights=w, dat=dat)[[2]]
+    f.post <- TRUE # no filter
+
+    wibe.pre  <- wibe(y="y", group="group", time="time", weights=w, dat=dat)
+    wibe.post <- wibe(y="y", group="group", time="time", weights=w, dat=dat)
+    wibe.add  <- wibe.post[[2]]
 
   }
 
-  ## Gather information t (=0) and t+1 (=1) --------------------------------------------------------
-
-  dat01 <- calc01(group="group", time="time", ref=ref, wibe.xpv0=wibe.xpv0, AME_mu=AME_mu, AME_sigma=AME_sigma, dat=dat)
-
-  # Add time = 0 if manual references are provided
+  # If manual references are provided, the implied inequality must be calculated
   if(refm) {
 
     ref <- 0
-
     dat0 <- dat01 %>% dplyr::filter(time==0) %>% dplyr::select(time, group, ends_with("1"))
 
-    # Calculate inequality at time 0
-    wibe.xpv1 <-
-      wibe.xpv1 %>%
+    # Calculate post-treatment inequality at time 0
+    wibe.post <-
+      wibe.post %>%
       add_row(
         tibble(time=0,
                N=sum(dat0$n1),
@@ -256,48 +244,118 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
 
   }
 
+  # If effect decomposition is desired, the difference of post and pre must be calculated
+  if(!notreat & decomp=="effect") {
+
+    if(ystat=="Var") {
+
+      wibe.add <-
+        wibe.pre[[1]] %>% dplyr::select(time, group, n, mu, sigma2) %>%
+        inner_join(wibe.post[[1]] %>% dplyr::select(time, group, n, mu, sigma2), by=c("group","time"), suffix = c(".pre", ".post")) %>%
+        group_by(time) %>%
+        dplyr::mutate(pi.post=n.post/sum(n.post)) %>%
+        dplyr::summarize(
+          VarW=sum(pi.post*(sigma2.post-sigma2.pre)),
+          VarB=sum(pi.post*((mu.post-sum(pi.post*mu.post))^2-(mu.pre-sum(pi.post*mu.pre))^2))
+          ) %>%
+        ungroup() %>%
+        dplyr::mutate(VarT=VarW+VarB) %>%
+        dplyr::select(time, VarW, VarB, VarT)
+      # correct!
+
+    }
+    if(ystat=="CV2") {
+
+      wibe.add <-
+        wibe.pre[[1]] %>% dplyr::select(time, group, n, mu, sigma2) %>%
+        inner_join(wibe.post[[1]] %>% dplyr::select(time, group, n, mu, sigma2), by=c("group","time"), suffix = c(".pre", ".post")) %>%
+        group_by(time) %>%
+        dplyr::mutate(pi.post=n.post/sum(n.post), pi.pre=n.pre/sum(n.pre)) %>%
+        dplyr::summarize(
+          CV2W=sum(pi.post*(sigma2.post-sigma2.pre))/sum(pi.post^2*(mu.post^2-mu.pre^2)),
+          CV2B=sum(pi.post*((mu.post-sum(pi.post*mu.post))^2-(mu.pre-sum(pi.post*mu.pre))^2))/sum(pi.post^2*(mu.post^2-mu.pre)^2),
+        ) %>%
+        ungroup() %>%
+        dplyr::mutate(CV2T=CV2W+CV2B) %>%
+        dplyr::select(time, CV2W, CV2B, CV2T)
+
+      # incorrect! NEEDS TO BE FIXED
+
+    }
+
+  }
+
+  ## Gather information on t0 and t1 ---------------------------------------------------------------
+
+  wibe.pre_postn <-
+    wibe.pre[[1]] %>%
+    dplyr::select(-n) %>%
+    inner_join(
+      dat %>% dplyr::filter(eval(parse(text=f.post))) %>% group_by(time, group) %>% dplyr::summarise(n=n()), # post-treatment n
+      by=c("time", "group"))
+
+  # > pre-treatment mu + sigma because AME_mu and AME_sigma calculate the treatment effect on pre-treatment mu + beta
+  # > post-treatment n because only those who get the treatment will affect inequality
+
+  dat01 <- calc01(group="group", time="time", ref=ref, wibe.pre=wibe.pre_postn, AME_mu=AME_mu, AME_sigma=AME_sigma, notime=notime, dat=dat)
+
   ## Calculate impact ------------------------------------------------------------------------------
 
   # Within
-  dW.out <-
-    dWB(ystat=ystat, wb="w", notreat=notreat, dat01=dat01) %>%
+  deltaW <-
+    deltaWB(ystat=ystat, wb="w", decomp=decomp, notreat=notreat, dat01=dat01) %>%
     purrr::map(
       .f = function(x) {
         x %>%
-          left_join(wibe.xpv1 %>% dplyr::select(time, paste0(ystat, c("W","T"))), by=c("time")) %>%
+          left_join(wibe.add %>% dplyr::select(time, paste0(ystat, "W"), paste0(ystat, "T")), by=c("time")) %>%
           ungroup()
       })
 
 
   # Between
-  dB.out <-
-    dWB(ystat=ystat, wb="b", notreat=notreat, dat01=dat01) %>%
+  deltaB <-
+    deltaWB(ystat=ystat, wb="b", decomp=decomp, notreat=notreat, dat01=dat01) %>%
     purrr::map(
       .f = function(x) {
         x %>%
-          left_join(wibe.xpv1 %>% dplyr::select(time, paste0(ystat, c("B","T"))), by=c("time")) %>%
+          left_join(wibe.add %>% dplyr::select(time, paste0(ystat, "B"), paste0(ystat, "T")), by=c("time")) %>%
           ungroup()
       })
 
-  # Compositional + Demographic
-  dCD.out <- dCD(notreat, dW.out, dB.out)
+  # Compositional
+  deltaC <- deltaC(notreat, deltaW, deltaB)
+
+  # Pre-treatment
+  if(!is.null(treat)) {
+    deltaP <- deltaP(notreat, deltaW, deltaB)
+  } else {
+    deltaP <- NULL
+  }
 
   # Total
-  dT.out <- dT(notreat, dW.out, dB.out)
-  dT.out[[1]] <- if(ystat == "CV2") dT.out[[1]] %>% dplyr::mutate(dCV2T=CV2T-CV2T[time == ref[1]]) else dT.out[[1]] %>% dplyr::mutate(dVarT=VarT-VarT[time == ref[1]]) # add actual change in inequality
+  deltaT <- deltaT(notreat, deltaW, deltaB)
+  if(ystat=="Var") deltaT[[1]] <- deltaT[[1]] %>% dplyr::mutate(dVarT=VarT-VarT[time == ref[1]])
+  if(ystat=="CV2") deltaT[[1]] <- deltaT[[1]] %>% dplyr::mutate(dCV2T=CV2T-CV2T[time == ref[1]])
 
   # ---------------------------------------------------------------------------------------------- #
   # Rename variables again and return output ----
   # ---------------------------------------------------------------------------------------------- #
 
-  # Rename
-
+  # Function to rename variables within list
   rnm <- function(input, time, group) {
 
-    if(!is.null(group)) input[[1]] <- input[[1]] %>% dplyr::rename(!!enquo(group) := group)
-    if(!is.null(time))  input[[1]] <- input[[1]] %>% dplyr::rename(!!enquo(time) := time)
+    if(!is.null(input)) {
 
-    if(!is.null(time))  input[[2]] <- input[[2]] %>% dplyr::rename(!!enquo(time) := time)
+      if(!is.null(group)) input[[1]] <- input[[1]] %>% dplyr::rename(!!enquo(group) := group)
+      if(!is.null(time))  input[[1]] <- input[[1]] %>% dplyr::rename(!!enquo(time) := time)
+
+      if(!is.null(time))  input[[2]] <- input[[2]] %>% dplyr::rename(!!enquo(time) := time)
+
+    } else {
+
+      input <- NULL
+
+    }
 
     return(input)
 
@@ -305,17 +363,18 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
 
   AME_mu    <- rnm(AME_mu, {{ time }}, {{ group }})
   AME_sigma <- rnm(AME_sigma, {{ time }}, {{ group }})
-  dW.out    <- rnm(dW.out, {{ time }}, {{ group }})
-  dB.out    <- rnm(dB.out, {{ time }}, {{ group }})
-  dCD.out   <- rnm(dCD.out, {{ time }}, {{ group }})
-  dT.out    <- rnm(dT.out, {{ time }}, NULL)
+  deltaW    <- rnm(deltaW, {{ time }}, {{ group }})
+  deltaB    <- rnm(deltaB, {{ time }}, {{ group }})
+  deltaC    <- rnm(deltaC, {{ time }}, {{ group }})
+  deltaP    <- rnm(deltaP, {{ time }}, {{ group }})
+  deltaT    <- rnm(deltaT, {{ time }}, NULL)
 
   # Return
 
-  vars <-  rlang::enexprs(treat, post, y, group, time, ystat, ref) %>% as.character()
-  names(vars) <- c("treat", "post", "y", "group", "time", "ystat", "ref")
+  vars <-  rlang::enexprs(treat, post, y, group, time, ystat, decomp, ref) %>% as.character()
+  names(vars) <- c("treat", "post", "y", "group", "time", "ystat", "decomp", "ref")
 
-  out <- list("vars"=vars, "dMu"=AME_mu, "dSigma"=AME_sigma, "dW"=dW.out, "dB"=dB.out, "dCD"=dCD.out, "dT"=dT.out)
+  out <- list("vars"=vars, "dMu"=AME_mu, "dSigma"=AME_sigma, "dW"=deltaW, "dB"=deltaB, "dC"=deltaC, "dP"=deltaP, "dT"=deltaT)
   class(out) <- "ineqx"
 
   message("Done.")

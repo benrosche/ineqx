@@ -88,4 +88,17 @@ crDat <- function(N.T, N.G, LP_n, LP_x, LP_mu, LP_sigma, x_const=F, t_vals=c(0,1
 
 }
 
-
+# testDat <-
+#   crDat(
+#   N.T=5,
+#   N.G=3,
+#   LP_x = c("0.1", "0.1", "0.1"),
+#   LP_n = c("1000", "1000", "1000-(year>3)*800"),
+#   LP_mu = "10+100*(group==2)*(year>2)+100*(group==1)*x*t+150*(group==2)*x*t+20*(group==3)*x*t*year",
+#   LP_sigma = "1+10*(group==1)*x*t+10*(group==2)*x*t+10*(group==3)*x*t+10*(group==3)*x*t*year",
+#   x_const=F,
+#   t_vals=c(0,1),
+#   yp1=F,
+#   seed=T,
+#   sav=F
+# )
