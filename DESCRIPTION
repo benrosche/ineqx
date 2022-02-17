@@ -10,6 +10,7 @@ Encoding: UTF-8
 LazyData: true
 Depends: 
     tidyr,
+    plyr,
     dplyr,
     zeallot,
     ggplot2,
@@ -18,7 +19,7 @@ Depends:
     gamlss
 URL: http://benrosche.com/projects/ineqx/
 BugReports: https://github.com/benrosche/ineqx/issues
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Authors@R: person("Benjamin", "Rosche", role=c("aut", "cre"), 
     email="benjamin.rosche@gmail.com", comment=c(ORCID="0000-0001-5196-625X"))
 Suggests: 

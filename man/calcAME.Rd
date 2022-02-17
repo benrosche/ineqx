@@ -4,14 +4,14 @@
 \alias{calcAME}
 \title{Calculate AME}
 \usage{
-calcAME(x, groupvar, timevar, what, vfr, dat)
+calcAME(treat, group, time, what, vfr, dat)
 }
 \arguments{
-\item{x}{Character string. Treatment variable.}
+\item{treat}{Character string. Treatment variable.}
 
-\item{groupvar}{Grouping variable}
+\item{group}{Grouping variable}
 
-\item{timevar}{Time variable}
+\item{time}{Time variable}
 
 \item{what}{"Mu" or "Sigma"}
 
@@ -28,7 +28,7 @@ List of length 2. Element 1 returns AME by group and time. Elements 2 returns th
 \examples{
 data(incdat)
 vfr <- gamlss()
-AME_mu <- calcAME("x", groupvar=SES, timevar=year, what="mu", vfr, incdat)
+AME_mu <- calcAME("treat", group="SES", time="year", what="mu", vfr, incdat)
 
 }
 \author{

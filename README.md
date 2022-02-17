@@ -1,3 +1,11 @@
-### ineqx: Treatment effects on within- and between-group inequality
 
-I am currently in the process of creating this website.
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# <img src="man/figures/ineqx-hexagon.png" align="right" />
+
+### Descriptive and causal variance decomposition
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+Description
