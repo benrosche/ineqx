@@ -3,7 +3,7 @@
 
 # <img src="man/figures/ineqx-hexagon.png" align="right" />
 
-### Descriptive and causal variance decomposition
+### ineqx: Descriptive and causal variance decompositions
 
 The ineqx package allows to analyze how inequality in an outcome (e.g.,
 income) splits into inequality within and between groups (e.g., gender).
@@ -18,7 +18,8 @@ inequality by solely analyzing mean differences between groups.
 Approaches that do allow examining both changes in within- and
 between-group inequality (e.g., Western & Bloome 2009), in turn, are
 limited in addressing causal questions about why inequality is changing.
-Rosche (2022) introduces a novel approach to analyzing how a treatment
+
+Rosche (202X) introduces a novel approach to analyzing how a treatment
 variable affects both changes in within- and between-group inequality
 and decomposing these changes into compositional and behavioral effects.
 The procedure combines a classic variance decomposition with the
@@ -27,11 +28,11 @@ however, the method allows analyzing treatment effects not only on the
 mean but on the whole conditional distribution.
 
 The ineqx packages implements both the descriptive (Western & Bloome
-2009) and causal variance decomposition (Rosche 2022). The package
+2009) and causal variance decomposition (Rosche 202X). The package
 allows decomposing both the variance and the squared coefficient of
-variation (*C**V*<sup>2</sup>).
+variation (CV<sup>2</sup>).
 
-With the ineqx package you can analyze
+<u>With the ineqx package you can analyze</u>
 
 -   how overall inequality at a single point in time splits into a
     within- and between-group component (e.g., Does income inequality
@@ -48,7 +49,7 @@ With the ineqx package you can analyze
 
 ### Shiny app illustrating the approach
 
-SHINY
+\[SHINY\]
 
 This is how the `ineqx()` function looks like:
 
