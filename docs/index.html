@@ -94,8 +94,28 @@
 <img src="reference/figures/ineqx-hexagon.png" align="right"><a class="anchor" aria-label="anchor" href="#section"></a>
 </h1></div>
 <div class="section level3">
-<h3 id="descriptive-and-causal-variance-decomposition">Descriptive and causal variance decomposition<a class="anchor" aria-label="anchor" href="#descriptive-and-causal-variance-decomposition"></a>
+<h3 id="ineqx-descriptive-and-causal-variance-decompositions">ineqx: Descriptive and causal variance decompositions<a class="anchor" aria-label="anchor" href="#ineqx-descriptive-and-causal-variance-decompositions"></a>
 </h3>
+<p>The ineqx package allows to analyze how inequality in an outcome (e.g., income) splits into inequality within and between groups (e.g., gender). It is possible to decompose inequality at a single point in time and to decompose changes in inequality over time. In addition to this descriptive decomposition, the ineqx packages makes it also possible to analyze how treatment effects (i.e., binary predictors) impact within- and between-group inequality and how this effect changes over time.</p>
+<p>Existing approaches to analyzing inequality often ignore within-group inequality by solely analyzing mean differences between groups. Approaches that do allow examining both changes in within- and between-group inequality (e.g., Western &amp; Bloome 2009), in turn, are limited in addressing causal questions about why inequality is changing.</p>
+<p>Rosche (202X) introduces a novel approach to analyzing how a treatment variable affects both changes in within- and between-group inequality and decomposing these changes into compositional and behavioral effects. The procedure combines a classic variance decomposition with the Kitagawa-Blinder-Oaxaca (KBO) decomposition approach. Compared to KBO, however, the method allows analyzing treatment effects not only on the mean but on the whole conditional distribution.</p>
+<p>The ineqx packages implements both the descriptive (Western &amp; Bloome 2009) and causal variance decomposition (Rosche 202X). The package allows decomposing both the variance and the squared coefficient of variation (CV<sup>2</sup>).</p>
+<p><u>With the ineqx package you can analyze</u></p>
+<ul>
+<li>how overall inequality at a single point in time splits into a within- and between-group component (e.g., Does income inequality differ more within or between gender categories?)</li>
+<li>whether the overall change in inequality over time stems from changes in within-group inequality, between-group inequality, or changes in the composition of the groups (e.g., )</li>
+<li>the degree to which changes in inequality are due to changes in the effect of a treatment (i.e., binary predictor) on within- and between-group inequality, due to changes in the composition of the groups, and due to changes in pre-treatment inequality</li>
+<li>analyze the effect of a treatment on inequality (i.e. variability in an outcome) rather than just the mean</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="shiny-app-illustrating-the-approach">Shiny app illustrating the approach<a class="anchor" aria-label="anchor" href="#shiny-app-illustrating-the-approach"></a>
+</h3>
+<p>[SHINY]</p>
+<p>This is how the <code><a href="reference/ineqx.html">ineqx()</a></code> function looks like:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">incdat</span><span class="op">)</span>
+<span class="fu"><a href="reference/ineqx.html">ineqx</a></span><span class="op">(</span>treat<span class="op">=</span><span class="st">"X"</span>, post<span class="op">=</span><span class="st">"post_X"</span>, y<span class="op">=</span><span class="st">"income"</span>, ystat<span class="op">=</span><span class="st">"Var"</span>, group<span class="op">=</span><span class="st">"female"</span>, time<span class="op">=</span><span class="st">"year"</span>, ref<span class="op">=</span><span class="fl">1990</span>, <span class="va">dat</span><span class="op">)</span></code></pre></div>
 <!-- badges: start -->
 <!-- badges: end -->
 </div>
