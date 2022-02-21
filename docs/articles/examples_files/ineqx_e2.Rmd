@@ -1,0 +1,76 @@
+
+library(haven)
+library(dplyr)
+library(ineqx)
+
+setwd("C:/Users/benja/OneDrive - Cornell University/GitHub/earningsinequality")
+
+data <-
+  read_dta("./data/cps_sheela.dta") %>%
+  dplyr::filter(N==2, bystart<=0) %>%
+  group_by(id) %>% dplyr::mutate(n=row_number(), N=n()) %>% ungroup()
+
+nonmothers <-
+  data %>%
+  dplyr::select(id, year, n, mother) %>%
+  dplyr::filter(mother==0, n==1) %>%
+  group_by(year) %>%
+  slice_sample(n=1000) %>%
+  ungroup() %>%
+  dplyr::mutate(sample=1) %>%
+  dplyr::select(id, sample)
+
+data_cps <-
+  data %>%
+  left_join(nonmothers, by="id") %>%
+  dplyr::mutate(
+    sample=case_when(
+      is.na(sample) & mother==1 ~ 1,
+      is.na(sample) & mother == 0 ~ 0,
+      TRUE ~ sample)) %>%
+  dplyr::filter(sample==1) %>%
+  dplyr::mutate(
+    bym_age = byear*mother*age
+  )
+
+f1a <- ineqx(treat="i.mother", post="i.byear", y="earnweekf", ystat="CV2", decomp="post", group = "i.SES", time = "c3.year", weights="earnwtf", controls = c("c3.famsize", "i.married", "i.single", "c3.age", "i.edu", "i.white", "c.bym_age"), ref=2, dat=data_cps)
+
+f1b <- ineqx(treat="i.mother", post="i.byear", y="earnweekf", ystat="Var", decomp="post", group = "i.SES", time = "c3.year", weights="earnwtf", controls = c("c3.famsize", "i.married", "i.single", "c3.age", "i.edu", "i.white", "c.bym_age"), ref=2, dat=data_cps)
+
+f1c <- ineqx(treat="i.mother", post="i.byear", y="lnearnweekf", ystat="Var", decomp="post", group = "i.SES", time = "c3.year", weights="earnwtf", controls = c("c3.famsize", "i.married", "i.single", "c3.age", "i.edu", "i.white", "c.bym_age"), ref=2, dat=data_cps)
+
+p5a <-
+  plot(f1a, type = "dT", yint=2) +
+  geom_hline(yintercept=100, color="red") +
+  #scale_y_continuous(limits=c(70,120), breaks=seq(75,115,5)) +
+  scale_color_manual(values=c("#1a476f", "#90353b", "#55752f", "#e37e00", "#ffd200")) +
+  labs(y="Change in CV2") + theme(legend.position="bottom")
+
+p5b <-
+  plot(f1b, type = "dT", yint=2) +
+  geom_hline(yintercept=100, color="red") +
+  #scale_y_continuous(limits=c(70,120), breaks=seq(75,115,5)) +
+  scale_color_manual(values=c("#1a476f", "#90353b", "#55752f", "#e37e00", "#ffd200")) +
+  labs(y="Change in Var") + theme(legend.position="bottom")
+
+p5c <-
+  plot(f1c, type = "dT", yint=2) +
+  geom_hline(yintercept=100, color="red") +
+  #scale_y_continuous(limits=c(70,120), breaks=seq(75,115,5)) +
+  scale_color_manual(values=c("#1a476f", "#90353b", "#55752f", "#e37e00", "#ffd200")) +
+  labs(y="Change in VL") + theme(legend.position="none")
+
+ggsave(
+  "C:/Users/benja/OneDrive - Cornell University/GitHub/earningsinequality/output/graphs/F5.png",
+  plot_grid(plot_grid(p5a, p5b, p5c, labels="AUTO", nrow=1), get_legend(p5a + theme(legend.position="bottom")), nrow = 2, rel_heights = c(2, .1)),
+  width = 9,
+  height = 4,
+  units='in',
+  dpi=300
+)
+
+
+
+
+
+
