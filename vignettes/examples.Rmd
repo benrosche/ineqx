@@ -2,7 +2,7 @@
 title: "Examples"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{examples}
+  %\VignetteIndexEntry{Examples}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -31,7 +31,6 @@ First, I load a reduced version of the Current Population Survey (CPS) containin
 library(ineqx)
 
 data("cps_sample")
-
 ```
 
 In this dataset, women are grouped into low, medium, and high economic position by the total annual income of the household they lead or belong. They cutoff points are the 20 and 80 percentiles in each year.
@@ -39,7 +38,6 @@ In this dataset, women are grouped into low, medium, and high economic position 
 Let us now calculate how much inequality there is within and between those groups:
 
 ```{r}
-
 dat.wibe <- wibe(y="earnweekf", group = "SES", time = "i.year", weights = "earnwtf", long=T, dat=cps_sample)
 ```
 
@@ -48,7 +46,6 @@ The `wibe()` function takes the information on outcome (y), grouping structure (
 Let us first plot the mean and variance of women's earnings by economic position over time:
 
 ```{r}
-
 ggplot(data=
          dat.wibe[[1]] %>% 
          dplyr::filter(variable %in% c("mu", "sigma2")), 
@@ -59,7 +56,6 @@ ggplot(data=
   scale_x_continuous(limits = c(1980, 2020)) +
   labs(x="", y="Mean and variance of women's earnings", color="Total household income") +
   theme(legend.position = "bottom")
-
 ```
 
 The ensuing development of within and between-group inequality over time:
@@ -87,14 +83,12 @@ Finally, let us analyze the degree to which inequality has been changing due to
 - changes in the composition of groups
 
 ```{r}
-
 dat.ineqx <- ineqx(y="earnweekf", ystat="CV2", group = "SES", time = "i.year", ref=1982, weights= "earnwtf", dat = cps_sample)
 
 plot(dat.ineqx, type = "dT", yint = 2) + 
   geom_hline(yintercept=100, color="red") + 
   scale_y_continuous(breaks=seq(80,140,5)) +
   labs(y="Change in CV2 in % of 1982 level") 
-
 ```
 
 We can see that inequality in women's earnings increased by 35% between 1982 and 2022. 
