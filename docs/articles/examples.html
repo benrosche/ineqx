@@ -132,7 +132,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">2020</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">"Mean and variance of women's earnings"</span>, color<span class="op">=</span><span class="st">"Total household income"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="examples_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<p><img src="examples_files/figure-html/fig1-1.png" width="75%" style="display: block; margin: auto;"></p>
 <p>The ensuing development of within and between-group inequality over time:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span>
@@ -144,7 +144,7 @@
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1980</span>, <span class="fl">2020</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x<span class="op">=</span><span class="st">""</span>, y<span class="op">=</span><span class="st">"CV2"</span>, subtitle <span class="op">=</span> <span class="st">"Earnings inequality among women in low-, medium-, and high-income households"</span>, color<span class="op">=</span><span class="st">"Total household income"</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="examples_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p><img src="examples_files/figure-html/fig2-1.png" width="75%" style="display: block; margin: auto;"></p>
 <p>Instead of the variance, I ask for the squared coefficient of variation as measure of inequality (<span class="math inline">\(CV^{2}=\sigma^{2}/\mu^{2}\)</span>), which equals the variance divided by the squared mean. This is preferable when decomposing variation into within- and between-group components to not have the group with the highest income dominate the decomposition.</p>
 <p>We can see that women in low-, medium-, and high-income households differ much more within each group than between. For men, it is the other way around (not shown).</p>
 <p>Finally, let us analyze the degree to which inequality has been changing due to</p>
@@ -154,25 +154,62 @@
 <li>changes in the composition of groups</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">dat.ineqx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>y<span class="op">=</span><span class="st">"earnweekf"</span>, ystat<span class="op">=</span><span class="st">"CV2"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"i.year"</span>, ref<span class="op">=</span><span class="fl">1982</span>, weights<span class="op">=</span> <span class="st">"earnwtf"</span>, dat <span class="op">=</span> <span class="va">cps_sample</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">dat.ineqx1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>y<span class="op">=</span><span class="st">"earnweekf"</span>, ystat<span class="op">=</span><span class="st">"CV2"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"i.year"</span>, weights<span class="op">=</span> <span class="st">"earnwtf"</span>, ref<span class="op">=</span><span class="fl">1983</span>, dat <span class="op">=</span> <span class="va">cps_sample</span><span class="op">)</span>
 <span class="co">#&gt; Performing decomposition ...</span>
 <span class="co">#&gt; Done.</span>
 
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat.ineqx</span>, type <span class="op">=</span> <span class="st">"dT"</span>, yint <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> 
+<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat.ineqx1</span>, type <span class="op">=</span> <span class="st">"dT"</span>, yint <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept<span class="op">=</span><span class="fl">100</span>, color<span class="op">=</span><span class="st">"red"</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>breaks<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">80</span>,<span class="fl">140</span>,<span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y<span class="op">=</span><span class="st">"Change in CV2 in % of 1982 level"</span><span class="op">)</span> </code></pre></div>
-<p><img src="examples_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
-<p>We can see that inequality in women’s earnings increased by 35% between 1982 and 2022. We can also see that group-compositional changes only played a minor role in this change. While between 1982 and 2008, increases in within- and between-group inequality contributed to overall inequality similarly, since 2008, the increase in within-group inequality is noticeably higher.</p>
+<p><img src="examples_files/figure-html/fig3-1.png" width="75%" style="display: block; margin: auto;"></p>
+<p>We can see that inequality in women’s earnings increased by 35% between 1980 and 2020. We can also see that group-compositional changes only played a minor role in this change. While between 1980 and 2008, increases in within- and between-group inequality contributed to overall inequality similarly, since 2008, the increase in within-group inequality is noticeably higher.</p>
 </div>
 <div class="section level3">
 <h3 id="e2">Decomposition of the motherhood effect<a class="anchor" aria-label="anchor" href="#e2"></a>
 </h3>
 <p>The R file of this example can be found <a href="https://benrosche.github.io/rmm/articles/examples_files/ineqx_e2.Rmd" class="external-link">here</a>.</p>
-<p>Let us know find out how the changing impact of motherhood on women’s earnings has contributed to this development.</p>
-<p>TBC</p>
+<p>Let us now find out how the changing impact of motherhood on women’s earnings has contributed to this development.</p>
+<p>To perform a causal variance decomposition, we specify three additional arguments:</p>
+<ul>
+<li>the treatment variable (<code>treat="mother"</code>)</li>
+<li>a post-treatment indicator (<code>post="byear"</code>) to estimate the difference in differences (optional)</li>
+<li>whether change in the effect itself (<code>decomp="effect"</code>) or the change in post-treatment inequality due to treatment (<code>decomp = "post"</code>) is to be analyzed</li>
+</ul>
+<p>Since motherhood is not random, I add several important controls to substantiate the treatment effect estimates: family size, married, single, age, education, race, and an interaction of byear, mother, and age (bym_age).</p>
+<p>In order to speed up estimation, we use<code>year3</code> as time variable, which splits years in three-year intervals and estimate an effect for each value of year3. This is done with <code>i.year3</code> (adapted from Stata). We could have also specified a linear effect with <code>c.year</code>, or a B-splines of degree 3 with <code>c3.year</code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="op">?</span><span class="va">ineqx</span></code></pre></div>
+<code class="sourceCode R"><span class="va">dat.ineqx2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>y<span class="op">=</span><span class="st">"earnweekf"</span>, ystat<span class="op">=</span><span class="st">"CV2"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"i.year3"</span>, treat<span class="op">=</span><span class="st">"mother"</span>, post<span class="op">=</span><span class="st">"byear"</span>, decomp<span class="op">=</span><span class="st">"post"</span>, weights<span class="op">=</span> <span class="st">"earnwtf"</span>, ref<span class="op">=</span><span class="fl">1983</span>, dat <span class="op">=</span> <span class="va">cps_sample</span><span class="op">)</span>
+<span class="co">#&gt; Running variance function regression ...</span>
+<span class="co">#&gt; GAMLSS-RS iteration 1: Global Deviance = 7685936572 </span>
+<span class="co">#&gt; GAMLSS-RS iteration 2: Global Deviance = 7685904851 </span>
+<span class="co">#&gt; GAMLSS-RS iteration 3: Global Deviance = 7685904851 </span>
+<span class="co">#&gt; GAMLSS-RS iteration 4: Global Deviance = 7685904851</span>
+<span class="co">#&gt; Computing average marginal effects ...</span>
+<span class="co">#&gt; Performing decomposition ...</span>
+<span class="co">#&gt; Done.</span></code></pre></div>
+<p>Let us first look at the treatment effect estimates on mean and variance by group over time</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat.ineqx2</span>, type <span class="op">=</span> <span class="st">"dMuP"</span><span class="op">)</span> </code></pre></div>
+<p><img src="examples_files/figure-html/fig4-1.png" width="75%" style="display: block; margin: auto;"></p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat.ineqx2</span>, type <span class="op">=</span> <span class="st">"dSigmaP"</span><span class="op">)</span></code></pre></div>
+<p><img src="examples_files/figure-html/fig5-1.png" width="75%" style="display: block; margin: auto;"></p>
+<p>We can see that the effect of motherhood on mean earnings hasn’t changed much over time. The effect of motherhood on the variance, however, has decreased over time, especially for women in medium- and high-income households.</p>
+<p>The ensuing consequences for post-birth inequality can be plotted with <code>plot(ineqx.obj, type="dT")</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">dat.ineqx2</span>, type <span class="op">=</span> <span class="st">"dT"</span>, yint <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="co"># ggplot object</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept<span class="op">=</span><span class="fl">100</span>, color<span class="op">=</span><span class="st">"red"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>y<span class="op">=</span><span class="st">"Change in CV2 in % of 1982 level"</span><span class="op">)</span></code></pre></div>
+<p><img src="examples_files/figure-html/fig6-1.png" width="75%" style="display: block; margin: auto;"></p>
+<p>As detailed in the Rosche (202X), the ineqx package splits the total effect of treatment on inequality into</p>
+<ul>
+<li>within-group effect:</li>
+<li>between-group effect</li>
+<li>compositional effect</li>
+<li>pre-treatment effect (change in pre-treatment mean and variance that affects the impact of treatment)</li>
+</ul>
+<p>Our analysis shows that the effect of motherhood on earnings inequality among women has decreased between 1980 and 2020. While pre-treatment, compositional, and between-group effect have not changed dramatically, changes in earnings following motherhood have brought women’s earnings within each income group closer together in the last decade. The sq. coef. of var. has decreased by 2 points, which is about 50% of its original value.</p>
 </div>
   </div>
 
