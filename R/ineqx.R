@@ -38,7 +38,7 @@
 
 ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, weights=NULL, controls=NULL, decomp="post", ref=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = dat.WX2; treat=NULL; post=NULL; y="inc"; ystat="Var"; group="group"; time="i.year"; ref=1; decomp="effect"; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
+  # dat = cps_sample; treat="mother"; post="byear"; y="earnweekf"; ystat="Var"; group="SES"; time="c.year"; ref=list(beta=c(0,0,0), lambda=c(0,0,0)); decomp="effect"; controls=NULL; weights="earnwtf"; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #
   # Dissect input ----
@@ -99,8 +99,9 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
   # Rename variables in dat
   dat <-
     dat %>%
+    dplyr::mutate(across(everything(), as.vector)) %>% # remove labels and other attributes
     dplyr::select({{ treat }}, {{ post }}, {{ y }}, {{ group }}, {{ time }}, {{ weights }}, all_of(controls)) %>%
-    rename_with(~paste0("c",1:length(controls)), .cols = all_of(controls)) %>%
+    dplyr::rename_with(~paste0("c",1:length(controls)), .cols = all_of(controls)) %>%
     dplyr::rename(treat={{ treat }}, post={{ post }}, y={{ y }}, w = {{ weights }}, group={{ group }}, time={{ time }}) %>%
     drop_na()
 
@@ -218,32 +219,6 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
 
   }
 
-  # If manual references are provided, the implied inequality must be calculated
-  if(refm) {
-
-    ref <- 0
-    dat0 <- dat01 %>% dplyr::filter(time==0) %>% dplyr::select(time, group, ends_with("1"))
-
-    # Calculate post-treatment inequality at time 0
-    wibe.post <-
-      wibe.post %>%
-      add_row(
-        tibble(time=0,
-               N=sum(dat0$n1),
-               gmu=sum(dat0$n1/sum(dat0$n1)*(dat0$mu1+dat0$beta1)),
-               VarW=VarW(dat0$n1, dat0$sigma1+dat0$lambda1),
-               VarB=VarB(dat0$n1, dat0$mu1+dat0$beta1),
-               CV2W=CV2W(dat0$n1, dat0$mu1+dat0$beta1, dat0$sigma1+dat0$lambda1),
-               CV2B=CV2B(dat0$n1, dat0$mu1+dat0$beta1),
-               VarWBRatio=VarW/VarB,
-               CV2WBRatio=CV2W/CV2B,
-               VarT=VarW+VarB,
-               CV2T=CV2W+CV2B)
-      ) %>%
-      arrange(time)
-
-  }
-
   # If effect decomposition is desired, the difference of post and pre must be calculated
   if(!notreat & decomp=="effect") {
 
@@ -298,6 +273,31 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
   # > post-treatment n because only those who get the treatment will affect inequality
 
   dat01 <- calc01(group="group", time="time", ref=ref, wibe.pre=wibe.pre_postn, AME_mu=AME_mu, AME_sigma=AME_sigma, notime=notime, dat=dat)
+
+  # If manual references are provided, the implied inequality must be calculated
+  if(refm) {
+
+    ref <- 0
+    dat0 <- dat01 %>% dplyr::filter(time==0) %>% dplyr::select(time, group, ends_with("1"))
+
+    wibe.post <-
+      wibe.post %>%
+      add_row(
+        tibble(time=0,
+               N=sum(dat0$n1),
+               gmu=sum(dat0$n1/sum(dat0$n1)*(dat0$mu1+dat0$beta1)),
+               VarW=VarW(dat0$n1, dat0$sigma1+dat0$lambda1),
+               VarB=VarB(dat0$n1, dat0$mu1+dat0$beta1),
+               CV2W=CV2W(dat0$n1, dat0$mu1+dat0$beta1, dat0$sigma1+dat0$lambda1),
+               CV2B=CV2B(dat0$n1, dat0$mu1+dat0$beta1),
+               VarWBRatio=VarW/VarB,
+               CV2WBRatio=CV2W/CV2B,
+               VarT=VarW+VarB,
+               CV2T=CV2W+CV2B)
+      ) %>%
+      arrange(time)
+
+  }
 
   ## Calculate impact ------------------------------------------------------------------------------
 
