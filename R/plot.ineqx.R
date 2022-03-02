@@ -276,17 +276,12 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
                  x=get(timevar),
                  color=factor(delta,
                               levels = c("dW", "dB", "dC", "dT"),
-                              labels = c("within", "between", "compositional", "total")),
-                 size=factor(delta,
-                             levels = c("dW", "dB", "dC", "dT"),
-                             labels = c("within", "between", "compositional", "total"))
+                              labels = c("within", "between", "compositional", "total"))
                )) +
         ggpubr_ineqx +
         scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#000000")) +
-        scale_size_manual(values = c(0.75,0.75,0.75,1.2)) +
         labs(title=ifelse(is.null(titl), "", titl[1]),
              color="",
-             size="",
              x=ifelse(is.null(xlab), "", xlab),
              y=ifelse(is.null(ylab), "dT", ylab[1])) +
         NULL
@@ -301,17 +296,12 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
                  x=get(timevar),
                  color=factor(delta,
                               levels=c("dW", "dB", "dC", "dP", "dT"),
-                              labels = c("within", "between", "compositional", "pre-treatment", "total")),
-                 size=factor(delta,
-                             levels=c("dW", "dB", "dC", "dP", "dT"),
-                             labels = c("within", "between", "compositional", "pre-treatment", "total"))
+                              labels = c("within", "between", "compositional", "pre-treatment", "total"))
                )) +
         ggpubr_ineqx +
         scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#F8766D", "#000000")) +
-        scale_size_manual(values = c(0.75,0.75,0.75,0.75,1.2)) +
         labs(title=ifelse(is.null(titl), "", titl[1]),
              color="",
-             size="",
              x=ifelse(is.null(xlab), "", xlab),
              y=ifelse(is.null(ylab), "dT", ylab[1])) +
         NULL
@@ -319,10 +309,10 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
     }
 
     if(yint==1) {
-      p1 <- p1 + geom_line(aes(y=value))
+      p1 <- p1 + geom_line(aes(y=value), size=1)
     } else if(yint==2) {
       ystatvar <- as.symbol(paste0(ystat, substr(type, 2,2)))
-      p1 <- p1 + geom_line(aes(y= (1 + value / ( {{ ystatvar }} - value )) * 100))
+      p1 <- p1 + geom_line(aes(y= (1 + value / ( {{ ystatvar }} - value )) * 100), size=1)
 
     }
 
@@ -372,7 +362,6 @@ plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NUL
       ggpubr_ineqx +
       labs(title=ifelse(is.null(titl), "", titl[2]),
            color="",
-           size="",
            x=ifelse(is.null(xlab), "", xlab),
            y=ifelse(is.null(ylab), "%", ylab[2])) +
       NULL
