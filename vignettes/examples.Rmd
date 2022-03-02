@@ -143,4 +143,6 @@ As detailed in the Rosche (202X), the ineqx package splits the total effect of t
 - compositional effect
 - pre-treatment effect (change in pre-treatment mean and variance that affects the impact of treatment)
 
-Our analysis shows that the effect of motherhood on earnings inequality among women has decreased between 1980 and 2020. While pre-treatment, compositional, and between-group effect have not changed dramatically, changes in earnings following motherhood have brought women's earnings within each income group closer together in the last decade. The sq. coef. of var. has decreased by 2 points, which is about 50% of its original value.
+Our analysis shows that the effect of motherhood on earnings inequality among women has decreased between 1980 and 2020. While pre-treatment, compositional, and between-group effect have not changed dramatically, changes in earnings following motherhood have brought women's earnings within each income group closer together in the last decade. 
+
+These results comes quite close to the results presented in Rosche (202X) in which the full CPS dataset and a more thoughtful identification approach is used.

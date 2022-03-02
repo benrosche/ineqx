@@ -280,23 +280,30 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     ref <- 0
     dat0 <- dat01 %>% dplyr::filter(time==0) %>% dplyr::select(time, group, ends_with("1"))
 
-    wibe.post <-
-      wibe.post %>%
-      add_row(
-        tibble(time=0,
-               N=sum(dat0$n1),
-               gmu=sum(dat0$n1/sum(dat0$n1)*(dat0$mu1+dat0$beta1)),
-               VarW=VarW(dat0$n1, dat0$sigma1+dat0$lambda1),
-               VarB=VarB(dat0$n1, dat0$mu1+dat0$beta1),
-               CV2W=CV2W(dat0$n1, dat0$mu1+dat0$beta1, dat0$sigma1+dat0$lambda1),
-               CV2B=CV2B(dat0$n1, dat0$mu1+dat0$beta1),
-               VarWBRatio=VarW/VarB,
-               CV2WBRatio=CV2W/CV2B,
-               VarT=VarW+VarB,
-               CV2T=CV2W+CV2B)
-      ) %>%
-      arrange(time)
-
+    if(ystat=="Var") {
+      wibe.add <-
+        wibe.add %>%
+        add_row(
+          tibble(
+            time=0,
+            VarW=VarW(dat0$n1, dat0$sigma1+dat0$lambda1),
+            VarB=VarB(dat0$n1, dat0$mu1+dat0$beta1),
+            VarT=VarW+VarB
+          )) %>%
+        arrange(time)
+    }
+    if(ystat=="CV2") {
+      wibe.add <-
+        wibe.add %>%
+        add_row(
+          tibble(
+            time=0,
+            CV2W=CV2W(dat0$n1, dat0$mu1+dat0$beta1, dat0$sigma1+dat0$lambda1),
+            CV2B=CV2B(dat0$n1, dat0$mu1+dat0$beta1),
+            CV2T=CV2W+CV2B
+          )) %>%
+        arrange(time)
+    }
   }
 
   ## Calculate impact ------------------------------------------------------------------------------
@@ -310,7 +317,6 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
           left_join(wibe.add %>% dplyr::select(time, paste0(ystat, "W"), paste0(ystat, "T")), by=c("time")) %>%
           ungroup()
       })
-
 
   # Between
   deltaB <-
