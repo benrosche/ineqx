@@ -1,8 +1,8 @@
 ---
-title: "installation"
+title: "Installation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{installation}
+  %\VignetteIndexEntry{Installation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,6 +14,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, echo=FALSE, message=FALSE}
-library(ineqx)
-```
+### Installation consists of two steps:
+
+1. Install devtools if necessary: ```install.packages("devtools")```
+2. Install ineqx: ```devtools::install_github("benrosche/ineqx")```
+
+### Notes:
+
+- In some cases, dependencies must be installed or are updated before `ineqx` can be installed. 
+- If you get ```Error: (converted from warning) ...```, you can set ```Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")```
