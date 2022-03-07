@@ -1,4 +1,4 @@
-#' @title Descriptive and causal variance decomposition
+#' @title Descriptive and causal variance decompositions
 #'
 #' @description The ineqx package implements Rosche (202X). [...]
 #'
@@ -38,7 +38,7 @@
 
 ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, weights=NULL, controls=NULL, decomp="post", ref=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = cps_sample; treat="mother"; post="byear"; y="earnweekf"; ystat="Var"; group="SES"; time="c.year"; ref=list(beta=c(0,0,0), lambda=c(0,0,0)); decomp="effect"; controls=NULL; weights="earnwtf"; AME_mu=NULL; AME_sigma=NULL
+  # dat = cps_sample; treat="mother"; post="byear"; y="earnweekf"; ystat="CV2"; group="SES"; time="i.year10"; ref=1980; decomp="effect"; controls=NULL; weights="earnwtf"; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #
   # Dissect input ----
