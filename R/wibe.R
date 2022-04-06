@@ -23,9 +23,9 @@
 #' @details
 #' ...
 
-wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, ref=F, long=F) {
+wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, ref=F, long=F, dat) {
 
-  # dat <- dat.dWB1 %>% dplyr::filter(x==1); time <- "year"; group <- "i.group"; y <- "c.inc"; weights=NULL; ref <- 1; smoothDat <- F
+  # dat <- data %>% dplyr::filter(n==1, bystart<=4); time <- "i.year5"; group <- "SES"; y <- "earnweekf"; weights=NULL; ref <- F; smoothDat <- F
 
   # ============================================================================================== #
   # Dissect input ----
@@ -65,7 +65,7 @@ wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, 
     dat %>%
     dplyr::select({{ group }}, {{ time }}, {{ y }}, {{ weights }}) %>%
     dplyr::rename(group:={{ group }}, time:={{ time }}, y:={{ y }}, w:={{ weights }}) %>%
-    drop_na()
+    tidyr::drop_na()
 
   # Weights
   if(is.null(weights)) dat <- dat %>% dplyr::mutate(w=1)
@@ -80,7 +80,7 @@ wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, 
 
   dat.between <-
     tibble() %>%
-    expand(time=min(time_levels):max(time_levels), group=group_levels) %>%
+    tidyr::expand(time=time_levels, group=group_levels) %>%
     left_join(
       dat %>%
         group_by(time, group) %>%
@@ -101,26 +101,6 @@ wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, 
 
   # Weights follow Stata's sum command:
   # https://www.stata.com/support/faqs/statistics/weights-and-summary-statistics/
-
-  # Replace n, mu, sigma2, and CV2 with smoothed versions?
-  if(smoothDat==T) {
-
-    # Creates a smoothed version of "var"
-    loess.pred <- function(.dat, var) {
-      # Function arguments
-      # var: string
-      # Returns predictions of the same size as .dat
-      return(predict(loess(as.formula(paste(var, "~ time + group + time*group")), control=loess.control(surface="direct"), .dat), .dat))
-    }
-
-    dat.between <-
-      dat.between %>%
-      mutate(n=loess.pred(., "n")) %>% # I replace the actual values with a smoothed version from loess
-      mutate(mu=loess.pred(., "mu")) %>%
-      mutate(sigma=loess.pred(., "sigma")) %>%
-      mutate(sigma2=loess.pred(., "sigma2")) %>%
-      mutate(CV2=loess.pred(., "CV2"))
-  }
 
   # ============================================================================================== #
   # Create dat.total ----
@@ -186,8 +166,8 @@ wibe <- function(y=NULL, group=NULL, time=NULL, weights=NULL, dat, smoothDat=F, 
 
   }
 
-  if(long==T) dat.between <- dat.between %>% pivot_longer(cols=c(-time, -group), names_to = "variable", values_to = "value")
-  if(long==T) dat.total <- dat.total %>% pivot_longer(cols=c(-time), names_to = "variable", values_to = "value")
+  if(long==T) dat.between <- dat.between %>% tidyr::pivot_longer(cols=c(-time, -group), names_to = "variable", values_to = "value")
+  if(long==T) dat.total <- dat.total %>% tidyr::pivot_longer(cols=c(-time), names_to = "variable", values_to = "value")
 
   # Rename variables back to their original names
   dat.between <-

@@ -90,7 +90,7 @@ calcAME <- function(treat, group, time, what, vfr, dat) {
       group_by(across(all_of(c(time, group)))) %>%
       dplyr::summarise(n=n/sum(n)) %>%
       dplyr::mutate(rn=row_number()) %>%
-      pivot_wider(names_prefix="n.", names_from = rn, values_from = n)
+      tidyr::pivot_wider(names_prefix="n.", names_from = rn, values_from = n)
 
     # Calculate effect by time and group
     AME[[1]] <-
@@ -126,7 +126,7 @@ calcAME <- function(treat, group, time, what, vfr, dat) {
       group_by(across(all_of(c(time)))) %>%
       dplyr::summarise(n=n/sum(n)) %>%
       dplyr::mutate(rn=row_number()) %>%
-      pivot_wider(names_prefix="n.", names_from = rn, values_from = n)
+      tidyr::pivot_wider(names_prefix="n.", names_from = rn, values_from = n)
 
     # Calculate effect by time
     AME[[2]] <-

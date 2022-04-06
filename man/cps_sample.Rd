@@ -5,7 +5,7 @@
 \alias{cps_sample}
 \title{CPS sample}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 102176 rows and 31 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 65562 rows and 32 columns.
 }
 \source{
 \href{https://cps.ipums.org/cps/}{CPS Website}
