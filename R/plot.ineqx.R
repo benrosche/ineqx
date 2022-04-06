@@ -4,22 +4,12 @@
 #'
 #' @param ineqx.out ineqx.out object from ineqx()
 #' @param type Character string. Plot type. Choose from: dMuP, dMuT, dSigmaP, dSigmaT, dWP, dWT, dBP, dBT, dPP, dPT, dT, dPA
-#' @param yint Either 1 or 2. Choose reported effect value. 1: Effect in units of ystat. 2: Effect as change in percent since 'cf' (reference time)
-#' @param xlab Character string. x-axis label.
-#' @param ylab Vector of length 2 with character strings. y-axis label. c("y1lab", "y2lab")
-#' @param llab Vector of length equal to the number of levels of groupvar. Group labels. c("grouplbl1", "grouplbl2", "grouplbl3", ...)
-#' @param titl Character string of length 2. Plot titles. c("titl1", "titl2")
-#' @param xlim Sequence of numbers.breaks at x-axis. seq(2000,2020, 5)
-#' @param hline Number or FALSE. Horizontal line at specified value.
-#' @param se Logical. Display standard errors?
-#' @param lowess Logical. Display lowess smoother?
-#' @param legend Logical. Display legend?
-#' @param sav Logical. Save as .png in working directory?
+#' @param yscale Either 1 or 2. Choose value on y-axis. 1: Effect in units of ystat. 2: Effect as \% of value at reference time (ref)
 #'
 #' @return Returns a ggplot2 object
 #'
 #' @examples data(incdat)
-#' i1 <- ineqx(incdat, by, inc, groupvar = SES, timevar = year)
+#' i1 <- ineqx(y=inc, group=SES, time=year, ref=1, dat=incdat)
 #' plot(i1, type="dMuSigma2")
 #'
 #' @export plot.ineqx
@@ -29,419 +19,249 @@
 #'
 #' @details
 #'
-#' \bold{Interpretation of the y-axis}
+#' The y-axis can be scaled in two ways:
 #'
-#' The interpretation of \code{yint=1} (default) is in absolute points of CV2\{W/B/T\}.
-#'
-#' The interpretation of \code{yint=2}
-#' \itemize{
-#'   \item For \code{plot(ineqx.out, type="dBP")} or \code{plot(ineqx.out, type="dBT")}, it is the change in the proportion of dB/CV2B, dP/CV2B relative to the reference value given in \code{ref}. The interpretation of \code{dB} is analogous.
-#'   \item For \code{plot(ineqx.out, type="dT")}, it is the change in the proportion of dW/CV2T, dB/CV2T, dP/CV2T, dT/CV2T relative to the reference value given in ref.
-#'   }
-#' In the example, the CV2 is used as inequality statistic. But the interpretation for the variance as inequality statistic is analogous.
-#'
+#' \code{yscale=1} (default): absolute points of Var or CV2.\cr
+#' \code{yscale=2}: \% of the value of Var or CV2 at reference time. \cr
+#' (Total Var or CV2 with \code{type="dT"} and within-group & between-group Var or CV2 with \code{type="dW"} & \code{type="dB"}, respectively.)
 
-plot.ineqx <- function(ineqx.out, type, yint=1, xlab=NULL, ylab=NULL, llab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
+plot.ineqx <- function(ineqx.out, type, yscale=1) {
 
-  # ineqx.out = f1; type="dT"; xlab="x"; ylab=c("y1", "y2"); llab=c("a", "b", "c"); titl=c("T1", "T2"); xlim=seq(1,3,1); hline=0; se=F; lowess=T; legend=T; sav=F
-
+  # ---------------------------------------------------------------------------------------------- #
   # Checks
-  if(class(ineqx.out)!="ineqx") stop("Must be given an ineqx.out object.")
-  if(is.null(ineqx.out$vars["time"])) stop("For plotting, ineqx() must include a timevar.")
-  if(!stringr::str_detect(type, "dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dCP|dCT|dPP|dPT|dT|dTS|dPA")) stop("type must be dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dCP|dCT|dPP|dPT|dT|dTS|dPA.")
-  if(isTRUE(hline)) stop("hline must be a value, e.g. 0.")
+  # ---------------------------------------------------------------------------------------------- #
 
-  # Call function according to plot type
+  if(class(ineqx.out)!="ineqx") stop("Must be given an ineqx.out object.")
+  if(is.null(ineqx.out$vars["time"])) stop("For plotting, ineqx() must include a time variable.")
+  if(!stringr::str_detect(type, "dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dCP|dCT|dPP|dPT|dT|dTS|dPA")) stop("type must be dMuP|dMuT|dSigmaP|dSigmaT|dWP|dWT|dBP|dBT|dCP|dCT|dPP|dPT|dT|dTS|dPA.")
+
+  # ---------------------------------------------------------------------------------------------- #
+  # Variables
+  # ---------------------------------------------------------------------------------------------- #
+
+  treatvar <- ineqx.out$vars[["treat"]]
+  groupvar <- ineqx.out$vars[["group"]]
+  timevar <- ineqx.out$vars[["time"]]
+  ystat <- ineqx.out$vars[["ystat"]]
+  ystatvar <- rlang::sym(paste0(ystat, substr(type,2,2)))
+  typevar <-  rlang::sym(substr(type, 1,2))
+
+  # ---------------------------------------------------------------------------------------------- #
+  # ggplot theme
+  # ---------------------------------------------------------------------------------------------- #
+
+  theme_ineqx <-
+    theme_bw() +
+    theme(
+      text = element_text(size = 15),
+      plot.title = element_text(face="bold", hjust = 0.5),
+      axis.title.x = element_text(face="bold"),
+      axis.title.y = element_text(face="bold"),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(color="black", size = 15),
+      panel.grid = element_line(size=0.25),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "#A9A9A9", linetype = 2),
+      panel.grid.major.x = element_blank(),
+      panel.border = element_blank(),
+      legend.title = element_text(face="bold"),
+      legend.text = element_text(face="bold"),
+      legend.position="bottom",
+      legend.margin=margin(-20,0,0,0),
+      legend.box.margin=margin(0,0,0,0),
+      legend.key.width=unit(1.4,"cm"),
+      strip.background=element_rect(fill="white", color="white"),
+      strip.text=element_text(face="bold", colour = "black", size=rel(1.2)))
+  theme_set(theme_ineqx)
+  update_geom_defaults("line", list(size = 1))
+
+  # ---------------------------------------------------------------------------------------------- #
+  # Plots
+  # ---------------------------------------------------------------------------------------------- #
+
   if(type %in% c("dMuP", "dMuT", "dSigmaP", "dSigmaT")) {
 
-    out <- plot_dMuSigma(ineqx.out, type=type, xlab=xlab, ylab=ylab, llab=llab, titl=titl, xlim=xlim, hline=hline, se=se, lowess=lowess, legend=legend, sav=sav)
+    # -------------------------------------------------------------------------------------------- #
+    # dMu, dSigma ----
+    # -------------------------------------------------------------------------------------------- #
+
+    # Data
+    if(startsWith(type, "dMu")) {
+      dat <- ineqx.out$dMu
+      ylab <- "Mu"
+    }
+    if(startsWith(type, "dSigma")) {
+      dat <- ineqx.out$dSigma
+      ylab <- "Sigma"
+    }
+
+    # Plot
+    if(endsWith(type, "P")) {
+      out <-
+        ggplot(data=dat[[1]], aes(x=get(timevar), y=effect, color=as.factor(get(groupvar)), linetype=as.factor(get(groupvar)))) +
+        geom_line() +
+        geom_point() +
+        theme_ineqx +
+        scale_linetype_manual(values=c(1,3,2,4,6)) +
+        labs(x="", y=ylab, color=as.character(groupvar), linetype=as.character(groupvar)) +
+        NULL
+    }
+    if(endsWith(type, "T")) {
+      out <-
+        ggplot(data=dat[[2]], aes(x=get(timevar), y=effect)) +
+        geom_line() +
+        geom_point() +
+        theme_ineqx +
+        scale_linetype_manual(values=c(1,3,2,4,6)) +
+        labs(x="", y=ylab) +
+        NULL
+    }
 
   } else if(type %in% c("dWP", "dWT", "dBP", "dBT", "dCP", "dCT", "dPP", "dPT")) {
 
-    out <- plot_dWBCP(ineqx.out, type=type, yint=yint, xlab=xlab, ylab=ylab, llab=llab, titl=titl, xlim=xlim, hline=hline, se=se, lowess=lowess, legend=legend, sav=sav)
+    # -------------------------------------------------------------------------------------------- #
+    # dW, dB, dC, dP ----
+    # -------------------------------------------------------------------------------------------- #
 
-  } else if(type %in% c("dT", "dTS")) {
+    if(type %in% c("dWP", "dBP", "dCP", "dPP")) {
 
-    out <- plot_dT(ineqx.out, type=type, yint=yint, xlab=xlab, ylab=ylab, titl=titl, xlim=xlim, hline=hline, se=se, lowess=lowess, legend=legend, sav=sav)
+      # Data
+      dat <- ineqx.out[[typevar]][[1]]
+      if(yscale==1) dat <- dat %>% dplyr::mutate(y={{ typevar }})
+      if(yscale==2) dat <- dat %>% dplyr::mutate(y=( 1 + {{ typevar }}/({{ ystatvar }}-{{ typevar }}) ) * 100)
+
+      # Plot
+      out <-
+        ggplot(data=dat, aes(x=get(timevar), y=y, color=factor(get(groupvar)), linetype=factor(get(groupvar)))) +
+        geom_line() +
+        geom_point() +
+        theme_ineqx +
+        scale_linetype_manual(values=c(1,3,2,4,6)) +
+        labs(x="", y=as.character(typevar), color=as.character(groupvar), linetype=as.character(groupvar))
+
+    } else if(type %in% c("dWT", "dBT", "dCT", "dPT")) {
+
+      # Data
+      dat <- ineqx.out[[typevar]][[2]]
+      if(yscale==1) dat <- dat %>% dplyr::mutate(y={{ typevar }})
+      if(yscale==2) dat <- dat %>% dplyr::mutate(y=( 1 + {{ typevar }}/({{ ystatvar }}-{{ typevar }}) ) * 100)
+
+      # Plot
+      out <-
+        ggplot(data=dat, aes(x=get(timevar), y=y)) +
+        geom_line() +
+        geom_point() +
+        theme_ineqx +
+        scale_linetype_manual(values=c(1,3,2,4,6)) +
+        labs(x="", y=as.character(typevar))
+
+    }
+
+  } else if(type %in% c("dT")) {
+
+    # -------------------------------------------------------------------------------------------- #
+    # dT ----
+    # -------------------------------------------------------------------------------------------- #
+
+    # Data
+    if(treatvar=="NULL") {
+      dat <-
+        ineqx.out[["dT"]][[1]] %>%
+        tidyr::pivot_longer(c("dW", "dB", "dC", "dT"), names_to = "delta", values_to = "value") %>%
+        dplyr::mutate(delta=factor(delta, levels=c("dT", "dW", "dB", "dC"), labels = c("total", "within", "between", "compositional"), ordered = T))
+    }
+    if(treatvar!="NULL") {
+      dat <-
+        ineqx.out[["dT"]][[1]] %>%
+        tidyr::pivot_longer(c("dW", "dB", "dC", "dP", "dT"), names_to = "delta", values_to = "value") %>%
+        dplyr::mutate(delta=factor(delta, levels=c("dT", "dW", "dB", "dC", "dP"), labels = c("total", "within", "between", "compositional", "pre-treatment"), ordered = T))
+    }
+
+    # y-axis scaling
+    if(yscale==1) dat <- dat %>% dplyr::mutate(y=value)
+    if(yscale==2) dat <- dat %>% dplyr::mutate(y=( 1 + value/(.data[[paste0(ystat,"T")]]-value ) ) * 100)
+
+    # Plot
+    out <-
+      ggplot(
+        data=dat,
+        aes(
+          x=get(timevar),
+          y=y,
+          color=delta,
+          linetype=delta
+        )) +
+      geom_line() +
+      geom_point() +
+      theme_ineqx +
+      scale_linetype_manual(values=c(1,3,2,4,6)) +
+      labs(x="", y="", color="", linetype="") +
+      NULL
+
+  } else if(type=="dTS") {
+
+    # -------------------------------------------------------------------------------------------- #
+    # dTS ----
+    # -------------------------------------------------------------------------------------------- #
+
+    # Data
+    if(treatvar=="NULL") {
+      dat <-
+        ineqx.out[["dT"]][[2]] %>%
+        dplyr::filter(!is.nan(share)) %>%
+        dplyr::mutate(delta=factor(delta, levels=c("dW", "dB", "dC"), labels = c("within", "between", "compositional"), ordered = T))
+    }
+    if(treatvar!="NULL")  {
+      dat <-
+        ineqx.out[["dT"]][[2]] %>%
+        dplyr::filter(!is.nan(share)) %>%
+        dplyr::mutate(delta=factor(delta, levels=c("dW", "dB", "dC", "dP"), labels = c("within", "between", "compositional", "pre-treatment"), ordered = T))
+    }
+
+    # Plot
+    out <-
+      ggplot(
+        data=dat,
+        aes(
+          x=get(timevar),
+          y=share*100,
+          color=delta,
+          linetype=delta
+        )) +
+      geom_line() +
+      geom_point() +
+      theme_ineqx +
+      scale_linetype_manual(values=c(1,3,2,4,6)) +
+      labs(x="", y="% of total effect", color="", linetype="") +
+      NULL
 
   } else if(type=="dPA") {
 
-    out <- plot_dPA(ineqx.out, xlab=xlab, xlim=xlim, sav=sav)
+    # -------------------------------------------------------------------------------------------- #
+    # dPA ----
+    # -------------------------------------------------------------------------------------------- #
 
-  } else out <- NULL
+    # Data
+    delta <- c("dT", "dW", "dB", "dC", "dP", paste0("d", ystat, "T"))
+    dat <-
+      ineqx.out$dT[[1]] %>%
+      tidyr::pivot_longer(cols=all_of(delta), names_to="delta", values_to = "value") %>%
+      dplyr::mutate(delta=factor(delta, levels = delta, ordered = T))
+
+    # Plot
+    out <-
+      ggplot(dat, aes(x=get(timevar), y=value, color=delta, linetype=delta)) +
+      geom_line() +
+      theme_ineqx +
+      scale_linetype_manual(values=c(1,3,2,4,6)) +
+      labs(x="", y=paste0("Change in ", ystat, "T"), color="", linetype="")
+
+  } else {
+
+    out <- NULL
+
+  }
 
   return(out)
-
-}
-
-# ================================================================================================ #
-# Plot types
-# ================================================================================================ #
-
-# plot_dMuSigma
-
-plot_dMuSigma <- function(ineqx.out, type=type, xlab=NULL, ylab=NULL, llab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
-
-  # ggplot theme
-  ggpubr_ineqx <-
-    theme_pubr() +
-    theme(panel.grid.major.x = element_blank() , panel.grid.major.y = element_line(size=.1, color="grey", linetype = "dashed"),
-          legend.position="bottom", legend.margin=margin(-20,0,0,0), legend.box.margin=margin(0,0,0,0))
-
-  theme_set(ggpubr_ineqx)
-
-  # Variable names
-  x <- ineqx.out$vars[["treat"]]
-  y <- ineqx.out$vars[["y"]]
-  groupvar <- ineqx.out$vars[["group"]]
-  timevar <- ineqx.out$vars[["time"]]
-  ystat <- ineqx.out$vars[["ystat"]]
-
-  # ggplot variables
-  if(is.null(titl)) titl <- ""
-  if(is.null(xlab)) xlab <- ""
-  if(startsWith(type, "dMu")) {
-    p1.dat <- ineqx.out$dMu
-    if(is.null(ylab)) ylab <- "Mu"
-  } else if(startsWith(type, "dSigma")) {
-    p1.dat <- ineqx.out$dSigma
-    if(is.null(ylab)) ylab <- "Sigma"
-  }
-
-  # Plot
-  if(endsWith(type, "P")) p1 <- ggplot(data=p1.dat[[1]], aes(x=get(timevar), y=effect, color=as.factor(get(groupvar))))
-  if(endsWith(type, "T")) p1 <- ggplot(data=p1.dat[[2]], aes(x=get(timevar), y=effect))
-  p1 <-
-    p1 +
-    geom_line(alpha=1) + geom_point(alpha=1) +
-    ggpubr_ineqx +
-    labs(title=ifelse(is.null(titl), "", titl[1]),
-         color="",
-         x=ifelse(is.null(xlab), "", xlab),
-         y=ifelse(is.null(ylab), "Mu", ylab[1])) +
-    NULL
-
-  # Additions
-  if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
-  if(!is.null(llab))  p1 <- p1 + scale_colour_discrete(labels = llab)
-  if(!isFALSE(hline)) p1 <- p1 + geom_hline(yintercept = hline, col="red")
-  if(se==T)           p1 <- p1 + geom_ribbon(aes(ymin=beta-se, ymax=beta+se), linetype = 0, alpha = 0.1)
-  if(lowess==T)       p1 <- p1 + geom_smooth(method = "loess", se=F, size = 1.5)
-
-  # Save?
-  if(sav==TRUE) {
-    ggsave(
-      paste0("./", type, ".png"),
-      p1,
-      width = 6,
-      height = 4,
-      units='in',
-      dpi=300
-    )
-  }
-
-  return(p1)
-
-}
-
-
-# plot_dWBCP
-
-plot_dWBCP <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, llab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
-
-  # ineqx.out = wb.ineqx; type="dT"; yint=2; xlab=NULL; ylab=""; tlab=c("By economic position", "Total"); llab=c("low", "medium", "high"); titl="Test"; hline=0; legend=T; sav=F; dim=c(11,5)
-
-  # ---------------------------------------------------------------------------------------------- #
-  # 2do:
-  # - implement se
-  # ---------------------------------------------------------------------------------------------- #
-
-  # ggplot theme
-  ggpubr_ineqx <-
-    theme_pubr() +
-    theme(panel.grid.major.x = element_blank() , panel.grid.major.y = element_line(size=.1, color="grey", linetype = "dashed"),
-          legend.position="bottom", legend.margin=margin(-20,0,0,0), legend.box.margin=margin(0,0,0,0))
-
-  theme_set(ggpubr_ineqx)
-
-  # Variable names
-  x <- ineqx.out$vars[["treat"]]
-  y <- ineqx.out$vars[["y"]]
-  groupvar <- ineqx.out$vars[["group"]]
-  timevar <- ineqx.out$vars[["time"]]
-  ystat <- ineqx.out$vars[["ystat"]]
-  ystatvar <- paste0(ystat, substr(type, 2,2))
-  typevar <-  rlang::sym(substr(type, 1,2))
-  listvar <- if(as.character(typevar) %in% c("dC", "dP")) substitute(dCP) else typevar
-
-  # By group or total?
-
-  if(type %in% c("dWP", "dBP", "dCP", "dPP")) {
-
-    # Data
-    impact <- ineqx.out[[listvar]][[1]]
-
-    # Plot
-    p1 <-
-      ggplot(data=
-               impact,
-             aes(x=get(timevar), color=factor(get(groupvar)))) +
-      ggpubr_ineqx + theme(legend.position="bottom") +
-      labs(title=ifelse(is.null(titl), "", titl[1]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), as.character(typevar), ylab[1])) +
-      NULL
-
-  } else if(type %in% c("dWT", "dBT", "dCT", "dPT")) {
-
-    # Data
-    impact.total <- ineqx.out[[listvar]][[2]]
-
-    # Plot
-    p1 <-
-      ggplot(data=
-               impact.total,
-             aes(x=get(timevar))) +
-      ggpubr_ineqx + theme(legend.position="bottom") +
-      labs(title=ifelse(is.null(titl), "", titl[2]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), as.character(typevar), ylab[2])) +
-      NULL
-
-  }
-
-  # y-axis
-  if(yint==1) {
-    p1 <- p1 + geom_line(aes(y={{ typevar }}))
-  } else if(yint==2) {
-    p1 <- p1 + geom_line(aes(y= (1 + {{ typevar }} / ( {{ ystatvar }} - {{ typevar }} )) * 100))
-  }
-
-  if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
-  if(!is.null(llab))  p1 <- p1 + scale_colour_discrete(labels = llab)
-  if(!isFALSE(hline)) p1 <- p1 + geom_hline(yintercept = hline, col="red")
-
-  # Save?
-  if(sav==TRUE) {
-
-    ggsave(
-      paste0("./", type, ".png"),
-      p1,
-      width = 6,
-      height = 4,
-      units='in',
-      dpi=300
-    )
-  }
-
-  return(p1)
-
-}
-
-# plot_dT
-
-plot_dT <- function(ineqx.out, type=type, yint=1, xlab=NULL, ylab=NULL, titl=NULL, xlim=NULL, hline=F, se=F, lowess=F, legend=T, sav=F) {
-
-  # ggplot theme
-  ggpubr_ineqx <-
-    theme_pubr() +
-    theme(panel.grid.major.x = element_blank() , panel.grid.major.y = element_line(size=.1, color="grey", linetype = "dashed"),
-          legend.position="bottom", legend.margin=margin(-20,0,0,0), legend.box.margin=margin(0,0,0,0))
-
-  theme_set(ggpubr_ineqx)
-
-  # Variable names
-  x <- ineqx.out$vars[["treat"]]
-  y <- ineqx.out$vars[["y"]]
-  groupvar <- ineqx.out$vars[["group"]]
-  timevar <- ineqx.out$vars[["time"]]
-  ystat <- ineqx.out$vars[["ystat"]]
-
-  # Plot total ----------------------------------------------------------------------------------- #
-
-  if(type=="dT") {
-
-    # Data
-    total  <- ineqx.out[["dT"]][[1]]
-
-    if(x=="NULL") {
-
-      p1 <-
-        ggplot(data=
-                 total %>%
-                 pivot_longer(c("dW", "dB", "dC", "dT"), names_to = "delta", values_to = "value"),
-               aes(
-                 x=get(timevar),
-                 color=factor(delta,
-                              levels = c("dW", "dB", "dC", "dT"),
-                              labels = c("within", "between", "compositional", "total"))
-               )) +
-        ggpubr_ineqx +
-        scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#000000")) +
-        labs(title=ifelse(is.null(titl), "", titl[1]),
-             color="",
-             x=ifelse(is.null(xlab), "", xlab),
-             y=ifelse(is.null(ylab), "dT", ylab[1])) +
-        NULL
-
-    } else {
-
-      p1 <-
-        ggplot(data=
-                 total %>%
-                 pivot_longer(c("dW", "dB", "dC", "dP", "dT"), names_to = "delta", values_to = "value"),
-               aes(
-                 x=get(timevar),
-                 color=factor(delta,
-                              levels=c("dW", "dB", "dC", "dP", "dT"),
-                              labels = c("within", "between", "compositional", "pre-treatment", "total"))
-               )) +
-        ggpubr_ineqx +
-        scale_color_manual(values = c("#00BA38", "#619CFF", "#FF61C3", "#F8766D", "#000000")) +
-        labs(title=ifelse(is.null(titl), "", titl[1]),
-             color="",
-             x=ifelse(is.null(xlab), "", xlab),
-             y=ifelse(is.null(ylab), "dT", ylab[1])) +
-        NULL
-
-    }
-
-    if(yint==1) {
-      p1 <- p1 + geom_line(aes(y=value), size=1)
-    } else if(yint==2) {
-      ystatvar <- as.symbol(paste0(ystat, substr(type, 2,2)))
-      p1 <- p1 + geom_line(aes(y= (1 + value / ( {{ ystatvar }} - value )) * 100), size=1)
-
-    }
-
-    if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
-    if(!isFALSE(hline)) p1 <- p1 + geom_hline(yintercept = hline, col="red")
-
-  }
-
-  # Plot shares ---------------------------------------------------------------------------------- #
-
-  if(type=="dTS") {
-
-    shares <- ineqx.out[["dT"]][[2]] %>% dplyr::filter(!is.nan(share))
-
-    # Effect of X?
-    xnotNULL <- ("dP" %in% names(ineqx.out$dT[[1]]))
-
-    if(xnotNULL) {
-
-      p1 <-
-        ggplot(data=shares,
-               aes(
-                 x=get(timevar),
-                 y=share*100,
-                 color=factor(d,
-                              levels=c("dW", "dB", "dC", "dP", "dP"),
-                              labels = c("within", "between", "compositional", "pre-treatment", "pre-x"))
-               ))
-
-    } else {
-
-      p1 <-
-        ggplot(data=shares,
-               aes(
-                 x=get(timevar),
-                 y=share*100,
-                 color=factor(d,
-                              levels=c("dW", "dB", "dC", "dP"),
-                              labels = c("within", "between", "pre-treatment", "demographic"))
-               ))
-
-    }
-
-    p1 <-
-      p1 +
-      geom_line(size=1) +
-      ggpubr_ineqx +
-      labs(title=ifelse(is.null(titl), "", titl[2]),
-           color="",
-           x=ifelse(is.null(xlab), "", xlab),
-           y=ifelse(is.null(ylab), "%", ylab[2])) +
-      NULL
-
-    if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
-    if(!isFALSE(hline)) p1 <- p1 + geom_hline(yintercept = hline, col="red")
-    if(lowess==T)       p1 <- p1 + geom_smooth(method = "loess", se=F, size = 1.5)
-
-  }
-
-  # Save? ---------------------------------------------------------------------------------------- #
-
-  if(sav==T) {
-    ggsave(
-      "./output/graphs/dT.png",
-      p1,
-      width = 12,
-      height = 4,
-      units='in',
-      dpi=300
-    )
-  }
-
-  return(p1)
-
-}
-
-plot_dPA <- function(ineqx.out, xlab, xlim, sav=F) {
-
-  # ggplot theme
-  ggpubr_ineqx <-
-    theme_pubr() +
-    theme(panel.grid.major.x = element_blank() , panel.grid.major.y = element_line(size=.1, color="grey", linetype = "dashed"),
-          legend.position="bottom", legend.margin=margin(-20,0,0,0), legend.box.margin=margin(0,0,0,0))
-
-  theme_set(ggpubr_ineqx)
-
-  # Variable names
-  ystat   <- ineqx.out$vars[["ystat"]]
-  timevar <- ineqx.out$vars[["time"]]
-
-  # Data for ggplot
-  lvls <- c("dW", "dB", "dC", "dP", "dT", paste0("d", ystat, "T"))
-  dat.plt <-
-    ineqx.out$dT[[1]] %>%
-    pivot_longer(cols=lvls, names_to="name", values_to = "value") %>%
-    dplyr::mutate(name=factor(name, levels = lvls, ordered = T))
-
-  # Create Plot
-  p1 <-
-    ggplot(dat.plt, aes(x=get(timevar), y=value, linetype=name, color=name)) +
-    ggpubr_ineqx +
-    geom_line() +
-    labs(title="Predicted change",
-         x=ifelse(is.null(xlab), "", xlab),
-         y=paste0("Change in ", ystat, "T"),
-         color="",
-         linetype="") +
-    theme(legend.position="bottom")
-
-  # Legend
-  p1 <-
-    p1 +
-    scale_color_manual(values = c("dW" = "#00BA38", "dB" = "#619CFF", "dC" = "#FF61C3", "dP" = "#F8766D", "dT" = "#000000", "dVarT" = "#FFDA00", "dCV2T" = "#FFDA00")) +
-    scale_linetype_manual(values = c("dW" = "solid", "dB" = "solid", "dC" = "solid", "dP" = "solid", "dT" = "solid", "dVarT" = "dashed", "dCV2T" = "dashed"))
-
-  if(!is.null(xlim))  p1 <- p1 + scale_x_continuous(breaks = xlim)
-
-  # Save?
-  if(sav==T) {
-    ggsave(
-      "./output/graphs/dPA.png",
-      p1,
-      width = 6,
-      height = 4,
-      units='in',
-      dpi=300
-    )
-  }
-
-  return(p1)
 
 }

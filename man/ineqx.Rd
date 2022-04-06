@@ -2,7 +2,7 @@
 % Please edit documentation in R/ineqx.R
 \name{ineqx}
 \alias{ineqx}
-\title{Descriptive and causal variance decomposition}
+\title{Descriptive and causal variance decompositions}
 \usage{
 ineqx(
   treat = NULL,

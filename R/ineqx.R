@@ -103,7 +103,7 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     dplyr::select({{ treat }}, {{ post }}, {{ y }}, {{ group }}, {{ time }}, {{ weights }}, all_of(controls)) %>%
     dplyr::rename_with(~paste0("c",1:length(controls)), .cols = all_of(controls)) %>%
     dplyr::rename(treat={{ treat }}, post={{ post }}, y={{ y }}, w = {{ weights }}, group={{ group }}, time={{ time }}) %>%
-    drop_na()
+    tidyr::drop_na()
 
   # Add variable: treat*post
   dat <- if(!is.null(post)) dat %>% dplyr::mutate(tp=treat*post) else dat %>% dplyr::mutate(tp=treat)
@@ -155,8 +155,8 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     message("Computing average marginal effects ...")
     # 2do: add SE with predict(,se.fit = T)
 
-    AME_mu    <- suppressWarnings( calcAME("tp", "group", "time", what="mu", vfr, dat) )
-    AME_sigma <- suppressWarnings( calcAME("tp", "group", "time", what="sigma", vfr, dat) )
+    AME_mu    <- suppressWarnings( calcAME(treat="tp", group="group", time="time", what="mu", vfr, dat) )
+    AME_sigma <- suppressWarnings( calcAME(treat="tp", group="group", time="time", what="sigma", vfr, dat) )
 
   } else if(notreat) {
 
@@ -165,12 +165,12 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     AME_mu <- list()
     AME_mu[[1]] <-
       tibble() %>%
-      expand(time=time_levels, group=group_levels) %>%
+      tidyr::expand(time=time_levels, group=group_levels) %>%
       dplyr::mutate(effect=0)
 
     AME_mu[[2]] <-
       tibble() %>%
-      expand(time=time_levels) %>%
+      tidyr::expand(time=time_levels) %>%
       dplyr::mutate(effect=0)
 
     AME_sigma <- AME_mu

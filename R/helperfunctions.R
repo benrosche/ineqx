@@ -83,7 +83,7 @@ calc01 <- function(group, time, ref, wibe.pre, AME_mu, AME_sigma, notime, dat) {
 
   dat0 <-
     tibble() %>%
-    expand(time=min(time_levels):max(time_levels), group=group_levels) %>%
+    tidyr::expand(time=min(time_levels):max(time_levels), group=group_levels) %>%
     inner_join(tibble(group=group_levels, n0=n), by="group") %>%
     inner_join(tibble(group=group_levels, mu0=mu), by="group") %>%
     inner_join(tibble(group=group_levels, sigma0=sigma), by="group") %>%
@@ -112,7 +112,7 @@ calc01 <- function(group, time, ref, wibe.pre, AME_mu, AME_sigma, notime, dat) {
 
   dat01 <-
     tibble() %>%
-    expand(time=min(time_levels):max(time_levels), group=group_levels) %>%
+    tidyr::expand(time=min(time_levels):max(time_levels), group=group_levels) %>%
     inner_join(wibe.pre %>% dplyr::select(time, group, n, mu, sigma) %>% dplyr::rename(n1 = n, mu1 =  mu, sigma1 = sigma), by=c("time", "group")) %>% # factual n, mu, sigma
     left_join(AME_mu[[1]] %>% dplyr::mutate(effect = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% dplyr::rename(beta1=effect), by=c("time", "group")) %>% # factual beta
     left_join(AME_sigma[[1]] %>% dplyr::mutate(effect = rowSums(dplyr::across(c(everything(), -time, -group)))) %>% dplyr::rename(lambda1=effect), by=c("time", "group")) %>% # factual lambda
@@ -167,11 +167,11 @@ deltaWB <- function(ystat, wb, decomp, notreat, dat01) {
     impact.partial <-
       dat01 %>%
       group_by(time) %>% # so that ~ fcts are executed by year
-      nest() %>%
+      tidyr::nest() %>%
       dplyr::mutate("d{wb}" := purrr::map(.x = data, ~ dYdX(ystat=paste0(ystat,wb), partial = T, .x))) %>%
       dplyr::mutate(dC = purrr::map(.x = data, ~ dYdXdC(ystat=paste0(ystat,wb), decomp=decomp, partial = T, .x))) %>%
       dplyr::mutate(dP = purrr::map(.x = data, ~ dYdXdP(ystat=paste0(ystat,wb), decomp=decomp, partial = T, .x))) %>%
-      unnest(cols = c(data, starts_with("d"))) %>%
+      tidyr::unnest(cols = c(data, starts_with("d"))) %>%
       ungroup() %>%
       dplyr::select(time, group, starts_with("d"))
 
@@ -179,11 +179,11 @@ deltaWB <- function(ystat, wb, decomp, notreat, dat01) {
     impact.total <-
       dat01 %>%
       group_by(time) %>%
-      nest() %>%
+      tidyr::nest() %>%
       dplyr::mutate("d{wb}" := purrr::map(.x = data, ~ dYdX(ystat=paste0(ystat,wb), partial = F, .x))) %>%
       dplyr::mutate(dC = purrr::map(.x = data, ~ dYdXdC(ystat=paste0(ystat,wb), decomp=decomp, partial = F, .x))) %>%
       dplyr::mutate(dP = purrr::map(.x = data, ~ dYdXdP(ystat=paste0(ystat,wb), decomp=decomp, partial = F, .x))) %>%
-      unnest(cols = c(data, starts_with("d"))) %>%
+      tidyr::unnest(cols = c(data, starts_with("d"))) %>%
       dplyr::filter(row_number()==1) %>%
       ungroup() %>%
       dplyr::select(time, starts_with("d"))
@@ -195,20 +195,20 @@ deltaWB <- function(ystat, wb, decomp, notreat, dat01) {
     impact.partial <-
       dat01 %>%
       group_by(time) %>%
-      nest() %>%
+      tidyr::nest() %>%
       dplyr::mutate("d{wb}" := purrr::map(.x = data, ~ dYdP(ystat=paste0(ystat,wb), partial = T, .x))) %>%
       dplyr::mutate(dC = purrr::map(.x = data, ~ dYdC(ystat=paste0(ystat,wb), partial = T, .x))) %>%
-      unnest(cols = c(data, starts_with("d"))) %>%
+      tidyr::unnest(cols = c(data, starts_with("d"))) %>%
       ungroup() %>%
       dplyr::select(time, group, starts_with("d"))
 
     impact.total <-
       dat01 %>%
       group_by(time) %>%
-      nest() %>%
+      tidyr::nest() %>%
       dplyr::mutate("d{wb}" := purrr::map(.x = data, ~ dYdP(ystat=paste0(ystat,wb), partial = F, .x))) %>%
       dplyr::mutate(dC = purrr::map(.x = data, ~ dYdC(ystat=paste0(ystat,wb), partial = F, .x))) %>%
-      unnest(cols = c(data, starts_with("d"))) %>%
+      tidyr::unnest(cols = c(data, starts_with("d"))) %>%
       dplyr::filter(row_number()==1) %>%
       ungroup() %>%
       dplyr::select(time, starts_with("d"))
@@ -311,7 +311,7 @@ deltaT <- function(notreat, deltaW.out, deltaB.out) {
     dplyr::mutate(abssum=rowSums(across(c(everything(), -time)))) %>%
     dplyr::mutate(across(c(everything(), -time), ~.x/abssum)) %>%
     dplyr::select(-abssum) %>%
-    pivot_longer(cols=-time, names_to="d", values_to="share")
+    tidyr::pivot_longer(cols=-time, names_to="delta", values_to="share")
 
   return(list(total, shares))
 

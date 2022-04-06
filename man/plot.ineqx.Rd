@@ -4,48 +4,14 @@
 \alias{plot.ineqx}
 \title{plot function}
 \usage{
-\method{plot}{ineqx}(
-  ineqx.out,
-  type,
-  yint = 1,
-  xlab = NULL,
-  ylab = NULL,
-  llab = NULL,
-  titl = NULL,
-  xlim = NULL,
-  hline = F,
-  se = F,
-  lowess = F,
-  legend = T,
-  sav = F
-)
+\method{plot}{ineqx}(ineqx.out, type, yscale = 1)
 }
 \arguments{
 \item{ineqx.out}{ineqx.out object from ineqx()}
 
 \item{type}{Character string. Plot type. Choose from: dMuP, dMuT, dSigmaP, dSigmaT, dWP, dWT, dBP, dBT, dPP, dPT, dT, dPA}
 
-\item{yint}{Either 1 or 2. Choose reported effect value. 1: Effect in units of ystat. 2: Effect as change in percent since 'cf' (reference time)}
-
-\item{xlab}{Character string. x-axis label.}
-
-\item{ylab}{Vector of length 2 with character strings. y-axis label. c("y1lab", "y2lab")}
-
-\item{llab}{Vector of length equal to the number of levels of groupvar. Group labels. c("grouplbl1", "grouplbl2", "grouplbl3", ...)}
-
-\item{titl}{Character string of length 2. Plot titles. c("titl1", "titl2")}
-
-\item{xlim}{Sequence of numbers.breaks at x-axis. seq(2000,2020, 5)}
-
-\item{hline}{Number or FALSE. Horizontal line at specified value.}
-
-\item{se}{Logical. Display standard errors?}
-
-\item{lowess}{Logical. Display lowess smoother?}
-
-\item{legend}{Logical. Display legend?}
-
-\item{sav}{Logical. Save as .png in working directory?}
+\item{yscale}{Either 1 or 2. Choose value on y-axis. 1: Effect in units of ystat. 2: Effect as \% of value at reference time (ref)}
 }
 \value{
 Returns a ggplot2 object
@@ -54,20 +20,15 @@ Returns a ggplot2 object
 [...]
 }
 \details{
-\bold{Interpretation of the y-axis}
+The y-axis can be scaled in two ways:
 
-The interpretation of \code{yint=1} (default) is in absolute points of CV2\{W/B/T\}.
-
-The interpretation of \code{yint=2}
-\itemize{
-  \item For \code{plot(ineqx.out, type="dBP")} or \code{plot(ineqx.out, type="dBT")}, it is the change in the proportion of dB/CV2B, dP/CV2B relative to the reference value given in \code{ref}. The interpretation of \code{dB} is analogous.
-  \item For \code{plot(ineqx.out, type="dT")}, it is the change in the proportion of dW/CV2T, dB/CV2T, dP/CV2T, dT/CV2T relative to the reference value given in ref.
-  }
-In the example, the CV2 is used as inequality statistic. But the interpretation for the variance as inequality statistic is analogous.
+\code{yscale=1} (default): absolute points of Var or CV2.\cr
+\code{yscale=2}: \% of the value of Var or CV2 at reference time. \cr
+(Total Var or CV2 with \code{type="dT"} and within-group & between-group Var or CV2 with \code{type="dW"} & \code{type="dB"}, respectively.)
 }
 \examples{
 data(incdat)
-i1 <- ineqx(incdat, by, inc, groupvar = SES, timevar = year)
+i1 <- ineqx(y=inc, group=SES, time=year, ref=1, dat=incdat)
 plot(i1, type="dMuSigma2")
 
 }
