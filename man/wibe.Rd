@@ -9,10 +9,9 @@ wibe(
   group = NULL,
   time = NULL,
   weights = NULL,
-  dat,
-  smoothDat = F,
   ref = F,
-  long = F
+  long = F,
+  dat
 )
 }
 \arguments{
@@ -24,13 +23,13 @@ wibe(
 
 \item{weights}{Probability weights}
 
-\item{dat}{Dataframe}
-
-\item{smoothDat}{Logical. Should data be smoothed?}
-
 \item{ref}{Number or FALSE. Should values be reported in reference to a specific time?}
 
 \item{long}{Logical. Should output be in long format?}
+
+\item{dat}{Dataframe}
+
+\item{smoothDat}{Logical. Should data be smoothed?}
 }
 \value{
 List of length 2. Element 1 returns the decomposition by group and time. Elements 2 returns the decomposition by time.

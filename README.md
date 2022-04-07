@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# <img src="man/figures/ineqx-hexagon.png" align="right" />
+# <img src="man/figures/ineqx-hexagon.png" width="200" align="right" />
 
 ### ineqx: Descriptive and causal variance decompositions
 
@@ -48,7 +48,14 @@ variation
 -   analyze the effect of a treatment on inequality (i.e. variability in
     an outcome) rather than just the mean
 
-### Shiny app illustrating the approach
+This is how the `ineqx()` function looks like:
+
+``` r
+data(incdat)
+ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
+```
+
+### Try the ineqx package in this Shiny app:
 
 <style>
 iframe {
@@ -58,13 +65,6 @@ iframe {
 }
 </style>
 <iframe src="https://benrosche.shinyapps.io/ineqx-app/" />
-
-This is how the `ineqx()` function looks like:
-
-``` r
-data(incdat)
-ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
-```
 
 ### Developers
 

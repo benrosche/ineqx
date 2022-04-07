@@ -19,7 +19,13 @@
 #' @return List with six elements: dMu, dSigma, dW, dB, dCP, dT. See details.
 #'
 #' @examples data(incdat)
-#' decomp1 <- ineqx(...)
+#' # Descriptive variance decomposition
+#' decomp_descr <- ineqx(y="inc", group="group", time="i.year", ref=1, dat=incdat)
+#' plot(decomp_descr, type="dT")
+#'
+#' # Causal variance decomposition
+#' decomp_treat <- ineqx(treat="x", post="t", y="inc", group="group", time="i.year", ref=1, dat=incdat)
+#' plot(decomp_treat, type="dT")
 #'
 #' @export ineqx
 #'

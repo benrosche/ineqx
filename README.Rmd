@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# <img src="man/figures/ineqx-hexagon.png" align="right" />
+# <img src="man/figures/ineqx-hexagon.png" width="200" align="right" />
 
 ### ineqx: Descriptive and causal variance decompositions
 
@@ -32,7 +32,14 @@ The ineqx packages implements both the descriptive (Western & Bloome 2009) and c
 - the degree to which changes in inequality are due to changes in the effect of a treatment (i.e., binary predictor) on within- and between-group inequality, due to changes in the composition of the groups, and due to changes in pre-treatment inequality
 - analyze the effect of a treatment on inequality (i.e. variability in an outcome) rather than just the mean
 
-### Shiny app illustrating the approach
+This is how the ```ineqx()``` function looks like:
+
+``` r 
+data(incdat)
+ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
+```
+
+### Try the ineqx package in this Shiny app:
 
 <style>
 iframe {
@@ -43,14 +50,6 @@ iframe {
 </style>
 
 <iframe src="https://benrosche.shinyapps.io/ineqx-app/" />
-
-
-This is how the ```ineqx()``` function looks like:
-
-``` r 
-data(incdat)
-ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
-```
 
 ### Developers
 
