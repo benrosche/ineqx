@@ -19,7 +19,10 @@ knitr::opts_chunk$set(
 1. Install devtools if necessary: ```install.packages("devtools")```
 2. Install ineqx: ```devtools::install_github("benrosche/ineqx")```
 
+
+
 ### Notes:
 
+- The library is still in development. Several features are not yet working. Please contact me if you have any questions or need support with implementation.
 - In some cases, dependencies must be installed or are updated before `ineqx` can be installed. 
 - If you get ```Error: (converted from warning) ...```, you can set ```Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")```

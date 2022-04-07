@@ -48,13 +48,14 @@ ineqx(
 \item{dat}{Dataframe}
 }
 \value{
-List with six elements: dMu, dSigma, dW, dB, dCP, dT. See details.
+List with eight elements: "vars", "dMu", "dSigma", "dW", "dB", "dC", "dP", "dT". See details.
 }
 \description{
 The ineqx package implements Rosche (202X). [...]
 }
 \details{
 The main function of \code{ineqx}. [...]
+
 
 \bold{Counterfactual reference point (ref)}
 
