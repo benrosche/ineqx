@@ -1,6 +1,6 @@
 #' @title theme_ineqx
-#' @description ggplot theme used for the plotting
-#' @examples theme_ineqx()
+#' @description ggplot theme used for the plotting. Note that `theme_ineqx` rather than `theme_ineqx()` must be used.
+#' @examples theme_ineqx
 #' @export theme_ineqx
 #' @author Benjamin Rosche <benjamin.rosche@@gmail.com>
 theme_ineqx <-
