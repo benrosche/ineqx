@@ -5,7 +5,7 @@ account: benrosche
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6033137
-bundleId: 5776039
+bundleId: 5776100
 url: https://benrosche.shinyapps.io/ineqx-app/
-when: 1649369035.5601
-lastSyncTime: 1649369035.5611
+when: 1649370970.63859
+lastSyncTime: 1649370970.63859
