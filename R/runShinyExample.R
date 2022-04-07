@@ -6,7 +6,7 @@
 runShinyExample <- function() {
   appDir <- system.file("ineqx-app", "app.R", package = "ineqx")
   if (appDir == "") {
-    stop("Could not find example directory. Try re-installing `mypackage`.", call. = FALSE)
+    stop("Could not find example directory. Try re-installing `ineqx`.", call. = FALSE)
   }
 
   shiny::runApp(appDir, display.mode = "normal")

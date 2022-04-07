@@ -55,7 +55,7 @@ data(incdat)
 ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
 ```
 
-### Try the ineqx package in this Shiny app:
+### Try the ineqx package in this Shiny app
 
 <style>
 iframe {
