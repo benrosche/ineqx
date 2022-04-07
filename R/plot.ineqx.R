@@ -50,29 +50,6 @@ plot.ineqx <- function(ineqx.out, type, yscale=1) {
   # ggplot theme
   # ---------------------------------------------------------------------------------------------- #
 
-  theme_ineqx <-
-    theme_bw() +
-    theme(
-      text = element_text(size = 15),
-      plot.title = element_text(face="bold", hjust = 0.5),
-      axis.title.x = element_text(face="bold"),
-      axis.title.y = element_text(face="bold"),
-      axis.line = element_line(color = "black"),
-      axis.text=element_text(color="black", size = 15),
-      panel.grid = element_line(size=0.25),
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_line(color = "#A9A9A9", linetype = 2),
-      panel.grid.major.x = element_blank(),
-      panel.border = element_blank(),
-      legend.title = element_text(face="bold"),
-      legend.text = element_text(face="bold"),
-      legend.position="bottom",
-      legend.margin=margin(-20,0,0,0),
-      legend.box.margin=margin(0,0,0,0),
-      legend.key.width=unit(1.4,"cm"),
-      strip.background=element_rect(fill="white", color="white"),
-      strip.text=element_text(face="bold", colour = "black", size=rel(1.2)))
-  theme_set(theme_ineqx)
   update_geom_defaults("line", list(size = 1))
 
   # ---------------------------------------------------------------------------------------------- #
@@ -242,18 +219,23 @@ plot.ineqx <- function(ineqx.out, type, yscale=1) {
     # -------------------------------------------------------------------------------------------- #
 
     # Data
-    delta <- c("dT", "dW", "dB", "dC", "dP", paste0("d", ystat, "T"))
+    if(treatvar!="NULL") {
+      delta <- c("dT", "dW", "dB", "dC", "dP", paste0("d", ystat, "T"))
+    } else {
+      delta <- c("dT", "dW", "dB", "dC", paste0("d", ystat, "T"))
+    }
+
     dat <-
       ineqx.out$dT[[1]] %>%
       tidyr::pivot_longer(cols=all_of(delta), names_to="delta", values_to = "value") %>%
-      dplyr::mutate(delta=factor(delta, levels = delta, ordered = T))
+      dplyr::mutate(delta=factor(delta, levels = !!delta, ordered = T))
 
     # Plot
     out <-
       ggplot(dat, aes(x=get(timevar), y=value, color=delta, linetype=delta)) +
       geom_line() +
       theme_ineqx +
-      scale_linetype_manual(values=c(1,3,2,4,6)) +
+      scale_linetype_manual(values=c(1,3,2,4,6,5)) +
       labs(x="", y=paste0("Change in ", ystat, "T"), color="", linetype="")
 
   } else {

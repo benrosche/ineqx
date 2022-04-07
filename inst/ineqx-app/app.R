@@ -373,7 +373,7 @@ shinyApp(
 
       # Output ineqxplot ------------------------------------------------------------------------- #
 
-      output$ineqxplot <- renderPlot({ plot(ineqx.out, type="dT") })
+      output$ineqxplot <- renderPlot({ plot(ineqx.out, type="dT") + scale_x_continuous(breaks=seq(1,4,1)) })
 
       # Output table ----------------------------------------------------------------------------- #
 

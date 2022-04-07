@@ -16,7 +16,7 @@
 #' @param AME_sigma Dataframe with average marginal effects (Sigma)
 #' @param dat Dataframe
 #'
-#' @return List with six elements: dMu, dSigma, dW, dB, dCP, dT. See details.
+#' @return List with eight elements: "vars", "dMu", "dSigma", "dW", "dB", "dC", "dP", "dT". See details.
 #'
 #' @examples data(incdat)
 #' # Descriptive variance decomposition
@@ -33,6 +33,7 @@
 #'
 #' @details
 #' The main function of \code{ineqx}. [...]
+#'
 #'
 #' \bold{Counterfactual reference point (ref)}
 #'
