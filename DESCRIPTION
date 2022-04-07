@@ -18,7 +18,6 @@ Imports:
     purrr,
     rlang,
     tidyr,
-    shinyjs,
     DT
 URL: http://benrosche.com/projects/ineqx/
 BugReports: https://github.com/benrosche/ineqx/issues
