@@ -61,7 +61,6 @@ shinyApp(
           box(
             width=NULL,
             htmlOutput("explanation_output3"), # explanation
-            #uiOutput("selectbox"),
             DT::dataTableOutput("ineqxtable") # output table
           )
         ),
@@ -105,9 +104,10 @@ shinyApp(
             title=paste0("Time ", i),
             if(isTRUE(input$causal)) {
               fluidRow(
-                h4("Pre-treatment inequality"),
+                h4("Pre-treatment inequality", style="color: #000000; text-align: center;"),
                 box(
                   title = "Mu",
+                  style="color: #000000;",
                   width = 12,
                   status = "primary",
                   solidHeader = TRUE,
@@ -116,15 +116,17 @@ shinyApp(
                 ),
                 box(
                   title = "Sigma",
+                  style="color: #000000;",
                   width = 12,
                   status = "success",
                   solidHeader = TRUE,
                   collapsible = TRUE,
                   tags_sigma
                 ),
-                h4("Treatment effect"),
+                h4("Treatment effects", style="color: #000000; text-align: center;"),
                 box(
                   title = "Beta",
+                  style="color: #000000;",
                   width = 12,
                   status = "primary",
                   solidHeader = TRUE,
@@ -133,6 +135,7 @@ shinyApp(
                 ),
                 box(
                   title = "Lambda",
+                  style="color: #000000;",
                   width = 12,
                   status = "success",
                   solidHeader = TRUE,
@@ -144,6 +147,7 @@ shinyApp(
               fluidRow(
                 box(
                   title = "Mu",
+                  style="color: #000000;",
                   width=12,
                   status = "primary",
                   solidHeader = TRUE,
@@ -152,6 +156,7 @@ shinyApp(
                 ),
                 box(
                   title = "Sigma",
+                  style="color: #000000;",
                   width=12,
                   status = "success",
                   solidHeader = TRUE,
