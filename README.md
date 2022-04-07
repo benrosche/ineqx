@@ -9,9 +9,9 @@ The ineqx package allows to analyze how inequality in an outcome (e.g.,
 income) splits into inequality within and between groups (e.g., gender).
 It is possible to decompose inequality at a single point in time and to
 decompose changes in inequality over time. In addition to this
-descriptive decomposition, the ineqx packages makes it also possible to
-analyze how treatment effects (i.e., binary predictors) impact within-
-and between-group inequality and how this effect changes over time.
+descriptive decomposition, the ineqx packages allows to analyze how
+treatment effects (i.e., binary predictors) impact within- and
+between-group inequality and how this effect changes over time.
 
 Existing approaches to analyzing inequality often ignore within-group
 inequality by solely analyzing mean differences between groups.
@@ -30,7 +30,8 @@ mean but on the whole conditional distribution.
 The ineqx packages implements both the descriptive (Western & Bloome
 2009) and causal variance decomposition (Rosche 202X). The package
 allows decomposing both the variance and the squared coefficient of
-variation (CV<sup>2</sup>).
+variation
+(![\\text{CV}^{2}](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Ctext%7BCV%7D%5E%7B2%7D "\text{CV}^{2}")).
 
 <u>With the ineqx package you can analyze</u>
 
@@ -49,7 +50,14 @@ variation (CV<sup>2</sup>).
 
 ### Shiny app illustrating the approach
 
-\[SHINY\]
+<style>
+iframe {
+  width: 100%;
+  height: 1000px;
+  border: none;
+}
+</style>
+<iframe src="https://benrosche.shinyapps.io/ineqx-app/" />
 
 This is how the `ineqx()` function looks like:
 
@@ -57,9 +65,6 @@ This is how the `ineqx()` function looks like:
 data(incdat)
 ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
 ```
-
-<!-- badges: start -->
-<!-- badges: end -->
 
 ### Developers
 

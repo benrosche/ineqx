@@ -1,3 +1,13 @@
+library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
+library(shinyjs)
+library(DT)
+library(tidyr)
+library(ineqx)
+library(ggplot2)
+library(ggthemes)
+
 shinyApp(
 
   ui = dashboardPage(

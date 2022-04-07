@@ -85,7 +85,7 @@ Finally, let us analyze the degree to which inequality has been changing due to
 ```{r, fig3, fig.width = 8, fig.height = 4, out.width = '75%', dpi=200, fig.align = "center"}
 dat.ineqx1 <- ineqx(y="earnweekf", ystat="CV2", group = "SES", time = "i.year", weights= "earnwtf", ref=1983, dat = cps_sample)
 
-plot(dat.ineqx1, type = "dT", yint = 2) + 
+plot(dat.ineqx1, type = "dT", yscale = 2) + 
   geom_hline(yintercept=100, color="red") + 
   scale_y_continuous(breaks=seq(80,140,5)) +
   labs(y="Change in CV2 in % of 1982 level") 
@@ -131,7 +131,7 @@ The effect of motherhood on the variance, however, has decreased over time, espe
 The ensuing consequences for post-birth inequality can be plotted with `plot(ineqx.obj, type="dT")`:
 
 ```{r, fig6, fig.width = 8, fig.height = 4, out.width = '75%', dpi=200, fig.align = "center"}
-plot(dat.ineqx2, type = "dT", yint = 2) + # ggplot object
+plot(dat.ineqx2, type = "dT", yscale = 2) + # ggplot object
   geom_hline(yintercept=100, color="red") +
   labs(y="Change in CV2 in % of 1982 level")
 ```

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 ### ineqx: Descriptive and causal variance decompositions
 
-The ineqx package allows to analyze how inequality in an outcome (e.g., income) splits into inequality within and between groups (e.g., gender). It is possible to decompose inequality at a single point in time and to decompose changes in inequality over time. In addition to this descriptive decomposition, the ineqx packages makes it also possible to analyze how treatment effects (i.e., binary predictors) impact within- and between-group inequality and how this effect changes over time.
+The ineqx package allows to analyze how inequality in an outcome (e.g., income) splits into inequality within and between groups (e.g., gender). It is possible to decompose inequality at a single point in time and to decompose changes in inequality over time. In addition to this descriptive decomposition, the ineqx packages allows to analyze how treatment effects (i.e., binary predictors) impact within- and between-group inequality and how this effect changes over time.
 
 Existing approaches to analyzing inequality often ignore within-group inequality by solely analyzing mean differences between groups. Approaches that do allow examining both changes in within- and between-group inequality (e.g., Western & Bloome 2009), in turn, are limited in addressing causal questions about why inequality is changing. 
 
@@ -34,7 +34,15 @@ The ineqx packages implements both the descriptive (Western & Bloome 2009) and c
 
 ### Shiny app illustrating the approach
 
-[SHINY]
+<style>
+iframe {
+  width: 100%;
+  height: 1000px;
+  border: none;
+}
+</style>
+
+<iframe src="https://benrosche.shinyapps.io/ineqx-app/" />
 
 
 This is how the ```ineqx()``` function looks like:
@@ -43,10 +51,6 @@ This is how the ```ineqx()``` function looks like:
 data(incdat)
 ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="year", ref=1990, dat)
 ```
-
-<!-- badges: start -->
-
-<!-- badges: end -->
 
 ### Developers
 
