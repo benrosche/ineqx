@@ -78,21 +78,7 @@
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="co"># S3 method for ineqx</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>
-  <span class="va">ineqx.out</span>,
-  <span class="va">type</span>,
-  yint <span class="op">=</span> <span class="fl">1</span>,
-  xlab <span class="op">=</span> <span class="cn">NULL</span>,
-  ylab <span class="op">=</span> <span class="cn">NULL</span>,
-  llab <span class="op">=</span> <span class="cn">NULL</span>,
-  titl <span class="op">=</span> <span class="cn">NULL</span>,
-  xlim <span class="op">=</span> <span class="cn">NULL</span>,
-  hline <span class="op">=</span> <span class="cn">F</span>,
-  se <span class="op">=</span> <span class="cn">F</span>,
-  lowess <span class="op">=</span> <span class="cn">F</span>,
-  legend <span class="op">=</span> <span class="cn">T</span>,
-  sav <span class="op">=</span> <span class="cn">F</span>
-<span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ineqx.out</span>, <span class="va">type</span>, yscale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -101,28 +87,8 @@
 <dd><p>ineqx.out object from ineqx()</p></dd>
 <dt>type</dt>
 <dd><p>Character string. Plot type. Choose from: dMuP, dMuT, dSigmaP, dSigmaT, dWP, dWT, dBP, dBT, dPP, dPT, dT, dPA</p></dd>
-<dt>yint</dt>
-<dd><p>Either 1 or 2. Choose reported effect value. 1: Effect in units of ystat. 2: Effect as change in percent since 'cf' (reference time)</p></dd>
-<dt>xlab</dt>
-<dd><p>Character string. x-axis label.</p></dd>
-<dt>ylab</dt>
-<dd><p>Vector of length 2 with character strings. y-axis label. c("y1lab", "y2lab")</p></dd>
-<dt>llab</dt>
-<dd><p>Vector of length equal to the number of levels of groupvar. Group labels. c("grouplbl1", "grouplbl2", "grouplbl3", ...)</p></dd>
-<dt>titl</dt>
-<dd><p>Character string of length 2. Plot titles. c("titl1", "titl2")</p></dd>
-<dt>xlim</dt>
-<dd><p>Sequence of numbers.breaks at x-axis. seq(2000,2020, 5)</p></dd>
-<dt>hline</dt>
-<dd><p>Number or FALSE. Horizontal line at specified value.</p></dd>
-<dt>se</dt>
-<dd><p>Logical. Display standard errors?</p></dd>
-<dt>lowess</dt>
-<dd><p>Logical. Display lowess smoother?</p></dd>
-<dt>legend</dt>
-<dd><p>Logical. Display legend?</p></dd>
-<dt>sav</dt>
-<dd><p>Logical. Save as .png in working directory?</p></dd>
+<dt>yscale</dt>
+<dd><p>Either 1 or 2. Choose value on y-axis. 1: Effect in units of ystat. 2: Effect as % of value at reference time (ref)</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -130,11 +96,9 @@
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p><b>Interpretation of the y-axis</b></p>
-<p>The interpretation of <code>yint=1</code> (default) is in absolute points of CV2{W/B/T}.</p>
-<p>The interpretation of <code>yint=2</code></p><ul><li><p>For <code>plot(ineqx.out, type="dBP")</code> or <code>plot(ineqx.out, type="dBT")</code>, it is the change in the proportion of dB/CV2B, dP/CV2B relative to the reference value given in <code>ref</code>. The interpretation of <code>dB</code> is analogous.</p></li>
-<li><p>For <code>plot(ineqx.out, type="dT")</code>, it is the change in the proportion of dW/CV2T, dB/CV2T, dP/CV2T, dT/CV2T relative to the reference value given in ref.</p></li>
-</ul><p>In the example, the CV2 is used as inequality statistic. But the interpretation for the variance as inequality statistic is analogous.</p>
+    <p>The y-axis can be scaled in two ways:</p>
+<p><code>yscale=1</code> (default): absolute points of Var or CV2.<br><code>yscale=2</code>: % of the value of Var or CV2 at reference time. <br>
+(Total Var or CV2 with <code>type="dT"</code> and within-group &amp; between-group Var or CV2 with <code>type="dW"</code> &amp; <code>type="dB"</code>, respectively.)</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -144,8 +108,8 @@
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">incdat</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">i1</span> <span class="op">&lt;-</span> <span class="fu"><a href="ineqx.html">ineqx</a></span><span class="op">(</span><span class="va">incdat</span>, <span class="va">by</span>, <span class="va">inc</span>, groupvar <span class="op">=</span> <span class="va">SES</span>, timevar <span class="op">=</span> <span class="va">year</span><span class="op">)</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in ineqx(incdat, by, inc, groupvar = SES, timevar = year):</span> unused arguments (groupvar = SES, timevar = year)</span>
+<span class="r-in"><span class="va">i1</span> <span class="op">&lt;-</span> <span class="fu"><a href="ineqx.html">ineqx</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">inc</span>, group<span class="op">=</span><span class="va">SES</span>, time<span class="op">=</span><span class="va">year</span>, ref<span class="op">=</span><span class="fl">1</span>, dat<span class="op">=</span><span class="va">incdat</span><span class="op">)</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dissectVar(y, cicheck = "c"):</span> object 'inc' not found</span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">i1</span>, type<span class="op">=</span><span class="st">"dMuSigma2"</span><span class="op">)</span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in plot(i1, type = "dMuSigma2"):</span> object 'i1' not found</span>
 <span class="r-in"></span>
