@@ -24,7 +24,7 @@ shinyApp(
       collapsed = FALSE,
       materialSwitch("causal", "Causal variance decomposition", status="success"), # toggle
       selectInput("ng", "Number of groups", c(2,3,4), selected=2),
-      selectInput("nt", "Number of timepoints", c(1,2,3,4), selected=3),
+      selectInput("nt", "Number of timepoints", c(1,2,3,4), selected=4),
       uiOutput("tabbox")
     ),
 
@@ -41,9 +41,10 @@ shinyApp(
             status = "warning",
             solidHeader = TRUE,
             collapsible = TRUE,
-            htmlOutput("explanation_input"), # input plot
-            actionButton("runineqx", "Run ineqx") # button
+            htmlOutput("explanation_input") # input plot
           ),
+          actionButton("runineqx", "Run ineqx"), # button
+          HTML("<br /><br />"),
           box(
             width=NULL,
             plotOutput("inputplot") # input plot
@@ -61,7 +62,8 @@ shinyApp(
           box(
             width=NULL,
             htmlOutput("explanation_output3"), # explanation
-            DT::dataTableOutput("ineqxtable") # output table
+            htmlOutput("output3"), # last output
+            htmlOutput("selectbox")
           )
         ),
       )
@@ -79,23 +81,35 @@ shinyApp(
 
       for (i in seq_len(input$nt)){
 
-        tags_mu <- tagList()
-        for (j in 1:input$ng) {
-          tags_mu[[j]] <- sliderInput(paste0("m",i,j), paste0("Mu ", j), min = -50, max = 50, value = 0+10*j)
-        }
-        tags_sigma <- tagList()
-        for (j in seq_len(input$ng)) {
-          tags_sigma[[j]] <- sliderInput(paste0("s",i,j), paste0("Sigma ", j), min = 5, max = 10, value = 0+1*j)
-        }
+
         # Include beta and lambda
         if(isTRUE(input$causal)) {
+
+          tags_mu <- tagList()
+          for (j in 1:input$ng) {
+            tags_mu[[j]] <- sliderInput(paste0("m",i,j), paste0("Mu ", j), min = -30, max = 30, value = -1+j)
+          }
+          tags_sigma <- tagList()
+          for (j in seq_len(input$ng)) {
+            tags_sigma[[j]] <- sliderInput(paste0("s",i,j), paste0("Sigma ", j), min = 6, max = 12, value = 5+j)
+          }
           tags_beta <- tagList()
           for (j in seq_len(input$ng)) {
-            tags_beta[[j]] <- sliderInput(paste0("b",i,j), paste0("Beta ", j), min = -10, max = 10, value = 0)
+            tags_beta[[j]] <- sliderInput(paste0("b",i,j), paste0("Beta ", j), min = -10, max = 10, value = 1-6*(j==1)+5*(i-1)*(j==1))
           }
           tags_lambda <- tagList()
           for (j in seq_len(input$ng)) {
-            tags_lambda[[j]] <- sliderInput(paste0("l",i,j), paste0("Lambda ", j), min = -1, max = 1, value = 0)
+            tags_lambda[[j]] <- sliderInput(paste0("l",i,j), paste0("Lambda ", j), min = -2, max = 2, value = -3+j+0.5*(i-1)*(j==1), step=0.5)
+          }
+
+        } else {
+          tags_mu <- tagList()
+          for (j in 1:input$ng) {
+            tags_mu[[j]] <- sliderInput(paste0("m",i,j), paste0("Mu ", j), min = -30, max = 30, value = 0+10*(j-1)+10*(i-1)*(j==1))
+          }
+          tags_sigma <- tagList()
+          for (j in seq_len(input$ng)) {
+            tags_sigma[[j]] <- sliderInput(paste0("s",i,j), paste0("Sigma ", j), min = 6, max = 12, value = 6+1*(j-1)+2*(i-1)*(j==1))
           }
         }
 
@@ -112,6 +126,7 @@ shinyApp(
                   status = "primary",
                   solidHeader = TRUE,
                   collapsible = TRUE,
+                  collapsed = FALSE,
                   tags_mu
                 ),
                 box(
@@ -121,6 +136,7 @@ shinyApp(
                   status = "success",
                   solidHeader = TRUE,
                   collapsible = TRUE,
+                  collapsed = FALSE,
                   tags_sigma
                 ),
                 h4("Treatment effects", style="color: #000000; text-align: center;"),
@@ -131,6 +147,7 @@ shinyApp(
                   status = "primary",
                   solidHeader = TRUE,
                   collapsible = TRUE,
+                  collapsed = FALSE,
                   tags_beta
                 ),
                 box(
@@ -140,6 +157,7 @@ shinyApp(
                   status = "success",
                   solidHeader = TRUE,
                   collapsible = TRUE,
+                  collapsed = FALSE,
                   tags_lambda
                 )
               )
@@ -152,6 +170,7 @@ shinyApp(
                   status = "primary",
                   solidHeader = TRUE,
                   collapsible = TRUE,
+                  collapsed = FALSE,
                   tags_mu
                 ),
                 box(
@@ -161,6 +180,7 @@ shinyApp(
                   status = "success",
                   solidHeader = TRUE,
                   collapsible = TRUE,
+                  collapsed = FALSE,
                   tags_sigma
                 )
               )
@@ -187,7 +207,7 @@ shinyApp(
         <h4>Define inequality across groups and time</h4>
         Next you choose the level of inequality across groups and time.
         Each tab represents one timepoint. For each timepoint and group, you choose the mean and standard deviation of, say, income, which defines the disparities in incomes within and between groups before treatment.
-        Then you define the effect of treatment on those means (=beta) and standard deviations (=lambda).
+        Then you define the effect of treatment on those means (=beta) and standard deviations (=lambda). While the ineqx package can estimate treatment effects for you, in this example, we assume the true values to be known.
         The plot on the right-hand side visualizes the chosen values.
         As a default, the effect of treatment is 0. If you specify a nonzero treatment effect, you will see that the post-treatment distributions are represented by a dashed distribution.
         <br /><br />
@@ -201,7 +221,7 @@ shinyApp(
         Next you choose the level of inequality across groups and time.
         Each tab represents one timepoint. For each timepoint and group, you choose the mean and standard deviation of, say, income, which defines the disparities in incomes within and between groups.
         The plot on the right-hand side visualizes the chosen values.
-        <br /><br />Okay, you can go ahead now and run the ineqx package!<br /><br />")
+        <br /><br />Okay, you can go ahead now and run the ineqx package!")
       }
 
     })
@@ -216,9 +236,9 @@ shinyApp(
 
       # Plot defaults
       p <-
-        ggplot(data = data.frame(x = c(-90, 90)), aes(x)) +
+        ggplot(data = data.frame(x = c(-70, 70)), aes(x)) +
         labs(x="", y="", color="", linetype="") +
-        scale_x_continuous(breaks = seq(-90,90,15)) +
+        scale_x_continuous(breaks = seq(-100,100,10)) +
         scale_y_continuous(limits=c(0, 0.1), breaks = NULL) +
         scale_linetype_manual(values=c("dashed", "solid"), guide = guide_legend(reverse = TRUE)) +
         theme_bw() +
@@ -295,8 +315,8 @@ shinyApp(
 
     observeEvent(input$runineqx,{
 
-      set.seed(1)
-      n <- 100
+      set.seed(2)
+      n <- 1000
 
       dat <-
         tibble() %>%
@@ -339,20 +359,51 @@ shinyApp(
       }
 
       if(isTRUE(input$causal)) {
-        ineqx.out <- ineqx(treat="x", y="y", group="group", time="i.time", AME_mu=AME_mu, AME_sigma=AME_sigma, ref=1, dat=dat)
+
+        ineqx.out <- ineqx(treat="x", y="y", ystat="Var", group="group", time="i.time", AME_mu=AME_mu, AME_sigma=AME_sigma, ref=1, dat=dat)
+
+        wibe.out  <-
+          wibe(y="y", group="group", time="i.time", long=T, dat=
+                 dat %>%
+                 dplyr::filter(x==0))[[2]] %>%
+          dplyr::filter(variable %in% c("VarW", "VarB", "VarT")) %>%
+          dplyr::mutate(x=0) %>%
+          add_row(
+            wibe(y="y", group="group", time="i.time", long=T, dat=
+                   dat %>%
+                   dplyr::filter(x==1))[[2]] %>%
+              dplyr::filter(variable %in% c("VarW", "VarB", "VarT")) %>%
+              dplyr::mutate(x=1)
+          )
+
       } else {
-        wibe.out  <- wibe(y="y", group="group", time="i.time", long=T, dat=dat)[[2]] %>% dplyr::filter(variable %in% c("VarW", "VarB", "VarT"))
-        ineqx.out <- ineqx(y="y", group="group", time="i.time", ref=1, dat=dat)
+
+        ineqx.out <- ineqx(y="y", ystat="Var", group="group", time="i.time", ref=1, dat=dat)
+
+        wibe.out  <-
+          wibe(y="y", group="group", time="i.time", long=T, dat=dat)[[2]] %>%
+          dplyr::filter(variable %in% c("VarW", "VarB", "VarT"))
+
       }
 
       # Output wibeplot -------------------------------------------------------------------------- #
 
       output$wibeplot <- renderPlot({
-        ggplot(aes(x=time, y=value, color=factor(variable, levels = c("VarB", "VarW", "VarT"))), data = wibe.out) +
+
+        if(isTRUE(input$causal)) {
+          p <- ggplot(aes(x=time, y=value, color=factor(variable, levels = c("VarB", "VarW", "VarT")), linetype=factor(x, levels = c(0,1), labels = c("pre", "post"))), data = wibe.out)
+        } else {
+          p <- ggplot(aes(x=time, y=value, color=factor(variable, levels = c("VarB", "VarW", "VarT"))), data = wibe.out)
+        }
+
+        p <-
+          p +
           geom_line() +
-          labs(x="Time", y="Variance", color="") +
+          labs(x="Time", y="Variance", color="", linetype="") +
           scale_color_manual(values=c("#F8766D", "#00BFC4", "#000000")) +
+          scale_linetype_manual(values = c("solid", "dashed")) +
           scale_x_continuous(breaks=seq(1:4)) +
+          #scale_y_continuous(limits = c(0, 500)) +
           theme_bw() +
           theme(
             text = element_text(size = 15),
@@ -374,6 +425,9 @@ shinyApp(
             legend.key.width=unit(1.2,"cm"),
             strip.background=element_rect(fill="white", color="white"),
             strip.text=element_text(face="bold", colour = "black", size=rel(1.2)))
+
+        p
+
         })
 
       # Output ineqxplot ------------------------------------------------------------------------- #
@@ -382,7 +436,21 @@ shinyApp(
 
       # Output table ----------------------------------------------------------------------------- #
 
-      output$ineqxtable <- DT::renderDataTable(DT::datatable(ineqx.out$dT[[1]] %>% dplyr::mutate(across(where(is.numeric), round, digits=2)), options = list(pageLength = 5, dom = 'tip'), selection = "none", rownames = FALSE))
+      output$output3 <- renderUI({
+
+        if(input$select_output3==1) {
+          DT::renderDataTable(DT::datatable(ineqx.out$dT[[1]] %>% dplyr::mutate(across(where(is.numeric), round, digits=2)), options = list(pageLength = 5, dom = 'tip'), selection = "none", rownames = FALSE))
+        } else if(input$select_output3==2){
+          renderPlot({ plot(ineqx.out, type="dPA") + scale_x_continuous(breaks=seq(1,4,1)) })
+        } else if(input$select_output3==3){
+          renderPlot({ plot(ineqx.out, type="dTS") })
+        } else if(input$select_output3==4){
+          renderPlot({ plot(ineqx.out, type="dMuP") + labs(color="", group="", linetype="") })
+        } else if(input$select_output3==5){
+          renderPlot({ plot(ineqx.out, type="dSigmaP") + labs(color="", group="", linetype="") })
+        }
+
+      })
 
       # Output explanation 1 --------------------------------------------------------------------- #
 
@@ -399,10 +467,10 @@ shinyApp(
                This plot displays the results of the causal variance decomposition.
                The change of four quantities are visualized:
                <ul>
-                <li><b>The between-group effect</b>: How much did the total variance change due to changes in the effect of treatment on between-group inequality?</li>
-                <li><b>The within-group effect</b>: How much did the total variance change due to changes in the effect of treatment on within-group inequality?</li>
-                <li><b>The compositional-group effect</b>: How much did the total variance change due to changes in the composition of groups? This value is zero because groups sizes are constant in the example.</li>
-                <li><b>The pre-treatment effect</b>: How much did the total variance change due to changes in pre-treatment inequality?</li>
+                <li><b>The between-group effect</b>: How much did the treatment effect on the variance change due to changes in the effect of treatment on between-group inequality?</li>
+                <li><b>The within-group effect</b>: How much did the treatment effect on the variance change due to changes in the effect of treatment on within-group inequality?</li>
+                <li><b>The compositional-group effect</b>: How much did the treatment effect on the variance change due to changes in the composition of groups? This value is zero because groups sizes are constant in the example.</li>
+                <li><b>The pre-treatment effect</b>: How much did the treatment effect on the variance change due to changes in pre-treatment inequality? (Note that this quantity can fluctuate due to the probabilistic nature of the distributions.)</li>
                </ul>")
         } else {
           HTML("<h4>Decomposition results</h4>
@@ -416,23 +484,40 @@ shinyApp(
         }
       })
 
+      # Output explanation 3 --------------------------------------------------------------------- #
+
       output$explanation_output3 <- renderUI({
 
-       tagList(
-         HTML("<h4>The ineqx package offers different table and plot types to facilitate interpretation</h4>
-               Here you can see the same output as above in table form. Choose from the list to explore other output types:<br /><br />"),
-         selectInput(
-           inputId="select_output3",
-           label="Select other output types",
-           choices = list(
-             "Table \"Total\"" = 1,
-             "Plot \"Total\"" = 2,
-             "Plot \"Shares\"" = 3,
-             "Plot \"Treatment effect on Mu\"" = 4,
-             "Plot \"Treatment effect on Sigma\"" = 5),
-           selected = 1)
-       )
+        tagList(
+          HTML("<h4>The ineqx package offers different table and plot types to facilitate interpretation</h4>"),
+          if(input$select_output3==1) {
+            HTML("This table displays the same output as the plot above.")
+          } else if(input$select_output3==2){
+            HTML("In this plot, the change in total variance is also displayed to examine how big the changes due to treatment are compared to the overall change of the variance.")
+          } else if(input$select_output3==3){
+            HTML("This plot displays how big within-group, between-group, compositional, and pre-treatment effects are relative to each other in absolute values.")
+          } else if(input$select_output3==4){
+            HTML("This plot displays the treatment effects on the mean. In a real application those values would be estimated.")
+          } else if(input$select_output3==5){
+            HTML("This plot displays the treatment effects on the variance. In a real application those values would be estimated.")
+          }
+        )
 
+      })
+
+      # Output Selectbox ------------------------------------------------------------------------- #
+
+      output$selectbox <- renderUI({
+        selectInput(
+          inputId="select_output3",
+          label="Choose from list to see other output types",
+          choices = list(
+            "Table \"Total\"" = 1,
+            "Plot \"Total\"" = 2,
+            "Plot \"Shares\"" = 3,
+            "Plot \"Treatment effect on Mu\"" = 4,
+            "Plot \"Treatment effect on Sigma\"" = 5),
+          selected = 1)
       })
 
     })
