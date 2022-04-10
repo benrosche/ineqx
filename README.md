@@ -16,8 +16,10 @@ between-group inequality and how this effect changes over time.
 Existing approaches to analyzing inequality often ignore within-group
 inequality by solely analyzing mean differences between groups.
 Approaches that do allow examining both changes in within- and
-between-group inequality (e.g., Western & Bloome 2009), in turn, are
-limited in addressing causal questions about why inequality is changing.
+between-group inequality (e.g., [Western & Bloome
+2009](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x)),
+in turn, are limited in addressing causal questions about why inequality
+is changing.
 
 [Rosche (2022)](https://osf.io/preprints/socarxiv/f53kz/) introduces a
 novel approach to analyzing how a treatment variable affects both
