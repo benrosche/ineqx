@@ -19,19 +19,21 @@ Approaches that do allow examining both changes in within- and
 between-group inequality (e.g., Western & Bloome 2009), in turn, are
 limited in addressing causal questions about why inequality is changing.
 
-Rosche (202X) introduces a novel approach to analyzing how a treatment
-variable affects both changes in within- and between-group inequality
-and decomposing these changes into compositional and behavioral effects.
-The procedure combines a classic variance decomposition with the
+[Rosche (2022)](https://osf.io/preprints/socarxiv/f53kz/) introduces a
+novel approach to analyzing how a treatment variable affects both
+changes in within- and between-group inequality and decomposing these
+changes into compositional and behavioral effects. The procedure
+combines a classic variance decomposition with the
 Kitagawa-Blinder-Oaxaca (KBO) decomposition approach. Compared to KBO,
 however, the method allows analyzing treatment effects not only on the
 mean but on the whole conditional distribution.
 
-The ineqx packages implements both the descriptive (Western & Bloome
-2009) and causal variance decomposition (Rosche 202X). The package
-allows decomposing both the variance and the squared coefficient of
-variation
-(![\\text{CV}^{2}](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Ctext%7BCV%7D%5E%7B2%7D "\text{CV}^{2}")).
+The ineqx packages implements both the descriptive ([Western & Bloome
+2009](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x))
+and causal variance decomposition ([Rosche
+2022](https://osf.io/preprints/socarxiv/f53kz/)). The package allows
+decomposing both the variance and the squared coefficient of variation
+(CV<sup>2</sup>).
 
 <u>With the ineqx package you can analyze</u>
 
