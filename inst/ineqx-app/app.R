@@ -6,6 +6,7 @@ library(tidyr)
 library(ineqx)
 library(ggplot2)
 library(ggthemes)
+# rsconnect::deployApp("C:/Users/benja/OneDrive - Cornell University/GitHub/ineqx/inst/ineqx-app")
 
 shinyApp(
 
@@ -41,30 +42,17 @@ shinyApp(
             status = "warning",
             solidHeader = TRUE,
             collapsible = TRUE,
-            htmlOutput("explanation_input") # input plot
+            htmlOutput("explanation_input")
           ),
-          actionButton("runineqx", "Run ineqx"), # button
+          actionButton("runineqx", "Run ineqx"), # run button
           HTML("<br /><br />"),
           box(
             width=NULL,
-            plotOutput("inputplot") # input plot
+            plotOutput("plot_input")
           ),
-          box(
-            width=NULL,
-            htmlOutput("explanation_output1"), # explanation
-            plotOutput("wibeplot"), # output wibeplot
-          ),
-          box(
-            width=NULL,
-            htmlOutput("explanation_output2"), # explanation
-            plotOutput("ineqxplot") # output ineqxplot
-          ),
-          box(
-            width=NULL,
-            htmlOutput("explanation_output3"), # explanation
-            htmlOutput("output3"), # last output
-            htmlOutput("selectbox")
-          )
+          htmlOutput("output1"),
+          htmlOutput("output2"),
+          htmlOutput("output3")
         ),
       )
     )
@@ -203,7 +191,7 @@ shinyApp(
         HTML("To try the ineqx package, you first choose a few options on the left-hand side and then click on \"Run ineqx\" to run the package.
         <h4>Settings</h4>
         Use the toggle on the left-hand side to decide whether you want to try the descriptive or causal variance decomposition.
-        Then choose how many groups and timepoints you want to consider (2 groups and 3 timepoints is a good start).
+        Then choose how many groups and timepoints you want to consider (2 groups and 4 timepoints is a good start).
         <h4>Define inequality across groups and time</h4>
         Next you choose the level of inequality across groups and time.
         Each tab represents one timepoint. For each timepoint and group, you choose the mean and standard deviation of, say, income, which defines the disparities in incomes within and between groups before treatment.
@@ -211,17 +199,18 @@ shinyApp(
         The plot on the right-hand side visualizes the chosen values.
         As a default, the effect of treatment is 0. If you specify a nonzero treatment effect, you will see that the post-treatment distributions are represented by a dashed distribution.
         <br /><br />
-        Okay, you can go ahead now and run the ineqx package!")
+        Then you can go ahead now and run the ineqx package! Note that you have to run the ineqx package again when you change parameters or switch the decomposition type.")
       } else {
         HTML("To try the ineqx package, you first choose a few options on the left-hand side and then click on \"Run ineqx\" to run the package.
         <h4>Settings</h4>
         Use the toggle on the left-hand side to decide whether you want to try the descriptive or causal variance decomposition.
-        Then choose how many groups and timepoints you want to consider (2 groups and 3 timepoints is a good start).
+        Then choose how many groups and timepoints you want to consider (2 groups and 4 timepoints is a good start).
         <h4>Define inequality across groups and time</h4>
         Next you choose the level of inequality across groups and time.
         Each tab represents one timepoint. For each timepoint and group, you choose the mean and standard deviation of, say, income, which defines the disparities in incomes within and between groups.
         The plot on the right-hand side visualizes the chosen values.
-        <br /><br />Okay, you can go ahead now and run the ineqx package!")
+        <br /><br />
+        Then you can go ahead now and run the ineqx package! Note that you have to run the ineqx package again when you change parameters or switch the decomposition type.")
       }
 
     })
@@ -230,7 +219,7 @@ shinyApp(
     # Input plot
     # -------------------------------------------------------------------------------------------- #
 
-    output$inputplot <- renderPlot({
+    output$plot_input <- renderPlot({
 
       tab <- as.numeric(gsub("Time ","",input$tabs))
 
@@ -310,29 +299,38 @@ shinyApp(
     })
 
     # -------------------------------------------------------------------------------------------- #
-    # Run ineqx
+    # Run ineqx (+ all post-run output)
     # -------------------------------------------------------------------------------------------- #
 
     observeEvent(input$runineqx,{
 
-      set.seed(2)
-      n <- 1000
-
-      dat <-
-        tibble() %>%
-        tidyr:::expand(id=seq_len(n), time=seq_len(input$nt), group=seq_len(input$ng), x=c(0,1), y=NA)
+      set.seed(3)
 
       if(isTRUE(input$causal)) {
+
+        n <- 10000
+
+        dat <-
+          tibble() %>%
+          tidyr:::expand(id=seq_len(n), time=seq_len(input$nt), group=seq_len(input$ng), x=c(0,1), t=c(0,1), y=NA)
+
         for(i in seq_len(input$nt)) {
           for(j in seq_len(input$ng)) {
-            dat[dat$time==i & dat$group==j & dat$x==0,] <- dat %>% dplyr::filter(time==i & group==j & x==0) %>% dplyr::mutate(y=rnorm(n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]]))
-            dat[dat$time==i & dat$group==j & dat$x==1,] <- dat %>% dplyr::filter(time==i & group==j & x==1) %>% dplyr::mutate(y=rnorm(n, input[[paste0("m",i,j)]]+input[[paste0("b",i,j)]], input[[paste0("s",i,j)]]+input[[paste0("l",i,j)]]))
+            dat[dat$time==i & dat$group==j & dat$t==0,] <- dat %>% dplyr::filter(time==i & group==j & t==0) %>% dplyr::mutate(y=rnorm(2*n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]]))
+            dat[dat$time==i & dat$group==j & dat$t==1 & dat$x==1,] <- dat %>% dplyr::filter(time==i & group==j & x==1 & t==1) %>% dplyr::mutate(y=rnorm(n, input[[paste0("m",i,j)]]+input[[paste0("b",i,j)]], input[[paste0("s",i,j)]]+input[[paste0("l",i,j)]]))
           }
         }
       } else {
+
+        n <- 1000
+
+        dat <-
+          tibble() %>%
+          tidyr:::expand(id=seq_len(n), time=seq_len(input$nt), group=seq_len(input$ng), y=NA)
+
         for(i in seq_len(input$nt)) {
           for(j in seq_len(input$ng)) {
-            dat[dat$time==i & dat$group==j,] <- dat %>% dplyr::filter(time==i & group==j) %>% dplyr::mutate(y=rnorm(2*n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]]))
+            dat[dat$time==i & dat$group==j,] <- dat %>% dplyr::filter(time==i & group==j) %>% dplyr::mutate(y=rnorm(n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]]))
           }
         }
       }
@@ -360,7 +358,7 @@ shinyApp(
 
       if(isTRUE(input$causal)) {
 
-        ineqx.out <- ineqx(treat="x", y="y", ystat="Var", group="group", time="i.time", AME_mu=AME_mu, AME_sigma=AME_sigma, ref=1, dat=dat)
+        ineqx.out <- ineqx(treat="x", post="t", y="y", ystat="Var", group="group", time="i.time", AME_mu=AME_mu, AME_sigma=AME_sigma, ref=1, dat=dat)
 
         wibe.out  <-
           wibe(y="y", group="group", time="i.time", long=T, dat=
@@ -386,9 +384,22 @@ shinyApp(
 
       }
 
-      # Output wibeplot -------------------------------------------------------------------------- #
+      # Output 1 --------------------------------------------------------------------------------- #
 
-      output$wibeplot <- renderPlot({
+      output$output1 <- renderUI({
+
+        box(
+          width=NULL,
+          tagList(
+            HTML("<h4>Within- and between-group inequality over time</h4>
+               This plot displays the development of within-group, between-group, and total inequality over time in absolute values."),
+            plotOutput("plot_wibe"),
+          )
+        )
+
+      })
+
+      output$plot_wibe <- renderPlot({
 
         if(isTRUE(input$causal)) {
           p <- ggplot(aes(x=time, y=value, color=factor(variable, levels = c("VarB", "VarW", "VarT")), linetype=factor(x, levels = c(0,1), labels = c("pre", "post"))), data = wibe.out)
@@ -428,42 +439,17 @@ shinyApp(
 
         p
 
-        })
-
-      # Output ineqxplot ------------------------------------------------------------------------- #
-
-      output$ineqxplot <- renderPlot({ plot(ineqx.out, type="dT") + scale_x_continuous(breaks=seq(1,4,1)) })
-
-      # Output table ----------------------------------------------------------------------------- #
-
-      output$output3 <- renderUI({
-
-        if(input$select_output3==1) {
-          DT::renderDataTable(DT::datatable(ineqx.out$dT[[1]] %>% dplyr::mutate(across(where(is.numeric), round, digits=2)), options = list(pageLength = 5, dom = 'tip'), selection = "none", rownames = FALSE))
-        } else if(input$select_output3==2){
-          renderPlot({ plot(ineqx.out, type="dPA") + scale_x_continuous(breaks=seq(1,4,1)) })
-        } else if(input$select_output3==3){
-          renderPlot({ plot(ineqx.out, type="dTS") })
-        } else if(input$select_output3==4){
-          renderPlot({ plot(ineqx.out, type="dMuP") + labs(color="", group="", linetype="") })
-        } else if(input$select_output3==5){
-          renderPlot({ plot(ineqx.out, type="dSigmaP") + labs(color="", group="", linetype="") })
-        }
-
       })
 
-      # Output explanation 1 --------------------------------------------------------------------- #
+      # Output 2 --------------------------------------------------------------------------------- #
 
-      output$explanation_output1 <- renderUI({
-        HTML("<h4>Within- and between-group inequality over time</h4>
-               This plot displays the development of within-group, between-group, and total inequality over time in absolute values.")
-        })
+      output$output2 <- renderUI({
 
-      # Output explanation 2 --------------------------------------------------------------------- #
-
-      output$explanation_output2 <- renderUI({
-        if(isTRUE(input$causal)) {
-          HTML("<h4>Decomposition results</h4>
+        box(
+          width=NULL,
+          tagList(
+            if(isTRUE(input$causal)) {
+              HTML("<h4>Decomposition results</h4>
                This plot displays the results of the causal variance decomposition.
                The change of four quantities are visualized:
                <ul>
@@ -472,8 +458,8 @@ shinyApp(
                 <li><b>The compositional-group effect</b>: How much did the treatment effect on the variance change due to changes in the composition of groups? This value is zero because groups sizes are constant in the example.</li>
                 <li><b>The pre-treatment effect</b>: How much did the treatment effect on the variance change due to changes in pre-treatment inequality? (Note that this quantity can fluctuate due to the probabilistic nature of the distributions.)</li>
                </ul>")
-        } else {
-          HTML("<h4>Decomposition results</h4>
+            } else {
+              HTML("<h4>Decomposition results</h4>
                This plot displays the results of the descriptive variance decomposition.
                The change of three quantities are visualized:
                <ul>
@@ -481,48 +467,75 @@ shinyApp(
                 <li><b>The within-group effect</b>: How much did the total variance change due to changes in within-group inequality?</li>
                 <li><b>The compositional-group effect</b>: How much did the total variance change due to changes in the composition of groups? This value is zero because groups sizes are constant in the example.</li>
                </ul>")
-        }
-      })
-
-      # Output explanation 3 --------------------------------------------------------------------- #
-
-      output$explanation_output3 <- renderUI({
-
-        tagList(
-          HTML("<h4>The ineqx package offers different table and plot types to facilitate interpretation</h4>"),
-          if(input$select_output3==1) {
-            HTML("This table displays the same output as the plot above.")
-          } else if(input$select_output3==2){
-            HTML("In this plot, the change in total variance is also displayed to examine how big the changes due to treatment are compared to the overall change of the variance.")
-          } else if(input$select_output3==3){
-            HTML("This plot displays how big within-group, between-group, compositional, and pre-treatment effects are relative to each other in absolute values.")
-          } else if(input$select_output3==4){
-            HTML("This plot displays the treatment effects on the mean. In a real application those values would be estimated.")
-          } else if(input$select_output3==5){
-            HTML("This plot displays the treatment effects on the variance. In a real application those values would be estimated.")
-          }
+            },
+            plotOutput("plot_ineqx")
+          )
         )
 
       })
 
-      # Output Selectbox ------------------------------------------------------------------------- #
+      output$plot_ineqx <- renderPlot({ plot(ineqx.out, type="dT") + scale_x_continuous(breaks=seq(1,4,1)) })
 
-      output$selectbox <- renderUI({
-        selectInput(
-          inputId="select_output3",
-          label="Choose from list to see other output types",
-          choices = list(
-            "Table \"Total\"" = 1,
-            "Plot \"Total\"" = 2,
-            "Plot \"Shares\"" = 3,
-            "Plot \"Treatment effect on Mu\"" = 4,
-            "Plot \"Treatment effect on Sigma\"" = 5),
-          selected = 1)
+      # Output 3 --------------------------------------------------------------------------------- #
+
+      output$output3 <- renderUI({
+
+        box(
+          width=NULL,
+          tagList(
+            HTML("<h4>The ineqx package offers different table and plot types to facilitate interpretation</h4>"),
+            htmlOutput("select"),
+            selectInput(
+              inputId="select_output3",
+              label="Choose from list to see other output types",
+              choices = list(
+                "Table \"Total\"" = 1,
+                "Plot \"Total\"" = 2,
+                "Plot \"Shares\"" = 3,
+                "Plot \"Treatment effect on Mu\"" = 4,
+                "Plot \"Treatment effect on Sigma\"" = 5),
+              selected = 1)
+          )
+        )
       })
+
+      observeEvent(
+        input$select_output3, {
+          output$select <- renderUI({
+            if(input$select_output3==1) {
+              tagList(
+                HTML("This table displays the same output as the plot above."),
+                DT::renderDataTable(DT::datatable(ineqx.out$dT[[1]] %>% dplyr::mutate(across(where(is.numeric), round, digits=2)), options = list(pageLength = 5, dom = 'tip'), selection = "none", rownames = FALSE))
+              )
+            } else if(input$select_output3==2){
+              tagList(
+                HTML("This plot displays the same output as the plot above as well as the change in the variance, dVarT (yellow).
+                     We can see that the total change in the four components (dT) equals the change in the variance (dVarT). (The overlay is not perfect due to the probabilistic nature of the data.)
+                     The reason why dT and dVarT are equal is that the true treatment effect values are known and no other forces influence the variance in this example.
+                     In practice, the more the changes in the variance are driven by changes in the treatment effect, the closer the two lines will follow each other."),
+                renderPlot({ plot(ineqx.out, type="dPA") + scale_x_continuous(breaks=seq(1,4,1)) })
+              )
+            } else if(input$select_output3==3){
+              tagList(
+                HTML("This plot displays the size of within-group, between-group, compositional, and pre-treatment effects are relative to each other in absolute values."),
+                renderPlot({ plot(ineqx.out, type="dTS") })
+              )
+            } else if(input$select_output3==4){
+              tagList(
+                HTML("This plot displays the treatment effects on the mean. In a real application those values would be estimated."),
+                renderPlot({ plot(ineqx.out, type="dMuP") + labs(color="", group="", linetype="") })
+              )
+            } else if(input$select_output3==5){
+              tagList(
+                HTML("This plot displays the treatment effects on the variance. In a real application those values would be estimated."),
+                renderPlot({ plot(ineqx.out, type="dSigmaP") + labs(color="", group="", linetype="") })
+              )
+            }
+          })
+        })
 
     })
 
   }
-
 )
 
