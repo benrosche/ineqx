@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>model • ineqx</title>
+<title>Model structure • ineqx</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="model">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Model structure">
 <meta property="og:description" content="ineqx">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -90,7 +90,7 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>model</h1>
+      <h1 data-toc-skip>Model structure</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/benrosche/ineqx/blob/HEAD/vignettes/model.Rmd" class="external-link"><code>vignettes/model.Rmd</code></a></small>
@@ -100,7 +100,128 @@
 
     
     
-<p>Model structure is coming soon!</p>
+<style type="text/css">
+.math {font-size: small;}
+</style>
+<div class="section level3">
+<h3 id="descriptive-variance-decomposition">1 Descriptive variance decomposition<a class="anchor" aria-label="anchor" href="#descriptive-variance-decomposition"></a>
+</h3>
+<p>Take the vector <span class="math inline">\(Y_t\)</span> to be individual incomes at time <span class="math inline">\(t\)</span>, and the vector <span class="math inline">\(G_t\)</span> to be the group to which the individuals belong, where <span class="math inline">\(G_t=j\)</span> is a categorical variable with <span class="math inline">\(j=1,…,J\)</span> categories that represent mutually exclusive and exhaustive groups. The variance <span class="math inline">\(V\)</span> in income at time <span class="math inline">\(t\)</span> can then be expressed as the sum of the variance within and between groups:</p>
+<p><span class="math display">\[\begin{equation} 
+\begin{split} 
+V_t(Y_t) 
+&amp;= E(V(Y_t |G_t))+V(E(Y_t |G_t )) \\[10pt] 
+&amp;= W_t + B_t \\[10pt]
+&amp;= \sum_j\pi_{jt}\sigma_{jt}^2+\sum_j\pi_{jt}\big(\mu_{jt}-\sum_j\pi_{jt}\mu_{jt}\big)^2
+\end{split}
+\tag{1}
+\end{equation}\]</span></p>
+<p>where <span class="math inline">\(\pi_{jt}\)</span> is the proportion of individuals in group <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span>, <span class="math inline">\(\mu_{jt}\)</span> is the mean income in group <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span>, and <span class="math inline">\(\sigma_{jt}^2\)</span> is the variance around this mean in group <span class="math inline">\(j\)</span> at time <span class="math inline">\(t\)</span>.</p>
+<p>With repeated cross-sectional or panel data, the change in variance from <span class="math inline">\(t_0\)</span> (baseline) to <span class="math inline">\(t\)</span> (any timepoint post baseline) can then be decomposed into the sum of a within-group effect (<span class="math inline">\(\delta_W\)</span>), a between-group effect (<span class="math inline">\(\delta_B\)</span>), and a compositional effect (<span class="math inline">\(\delta_C\)</span>). That is, <span class="math display">\[\begin{equation} 
+V_t-V_{t_0} = \delta_W^t + \delta_B^t + \delta_C^t \\[10pt]
+\text{where} \\[10pt]
+\begin{split}
+\delta_W^t &amp;= \sum_j \pi_{jt_0} \big( \sigma_{jt}^2 - \sigma_{jt_0}^2 \big) \\[10pt]
+\delta_B^t &amp;= \sum_j \pi_{jt_0} \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt})^2 \big) \\[10pt]
+\delta_C^t &amp;= \sum_j \big( \pi_{jt}-\pi_{jt_0} \big) \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 + \sigma_{jt}^2 \big) 
+\end{split}
+\tag{2}
+\end{equation}\]</span></p>
+<p>The between-group effect (<span class="math inline">\(\delta_B^t\)</span>) captures the change in total variance induced by changes in the mean of each group. The within-group effect (<span class="math inline">\(\delta_W^t\)</span>) captures the change in total variance induced by changes in the variance around the mean of each group. Finally, the compositional effect (<span class="math inline">\(\delta_C^t\)</span>) captures the change in total variance induced by changes in the relative size of each group. The superscript <span class="math inline">\(t\)</span> on the <span class="math inline">\(\delta\text{s}\)</span> indicates that the change over time is considered.</p>
+</div>
+<div class="section level3">
+<h3 id="causal-variance-decomposition">2 Causal variance decomposition<a class="anchor" aria-label="anchor" href="#causal-variance-decomposition"></a>
+</h3>
+<p>I first entertain the treatment effect framework at a single point in time. Let <span class="math inline">\(D\in\{0,1\}\)</span> be a binary treatment, <span class="math inline">\(Y(D)\)</span> be the potential outcome of the same outcome vector as before, and <span class="math inline">\(\tau=Y(1)-Y(0)\)</span> be the intra-individual causal effect of treatment on the outcome. The group-specific treatment effect on the mean of the treated (<span class="math inline">\(ATT\)</span>) then equals the expected value of the differences in the potential outcomes in each group:</p>
+<p><span class="math display">\[\begin{equation} 
+ATT_j=E[Y(1)-Y(0)|G=j,D=1]
+\tag{3}
+\end{equation}\]</span></p>
+<p>Further, the group-specific treatment effect on the group-specific variances (<span class="math inline">\(VTT\)</span>) equals the expected value of the difference in the variance in the potential outcomes in each group:</p>
+<p><span class="math display">\[\begin{equation} 
+VTT_j=E[V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]]
+\tag{4}
+\end{equation}\]</span></p>
+<div class="section level4">
+<h4 id="a-decomposing-the-effect-of-treatment">2a Decomposing the effect of treatment<a class="anchor" aria-label="anchor" href="#a-decomposing-the-effect-of-treatment"></a>
+</h4>
+<p>The focus here is on the <span class="math inline">\(ATT\)</span> rather than the average treatment effect (<span class="math inline">\(ATE\)</span>) as we are interested in the aggregate consequences of treatment, which depends on the actual distribution of treatment across groups, <span class="math inline">\(E[D|G]\)</span>, and therefore on the <span class="math inline">\(ATT\)</span>. Note that we assume that the treatment effect on the variance is fully described by its effect on the group-specific means and variances. Given these definitions, the effect of treatment on the variance can be decomposed into a within- and between group component, where the variance in the <span class="math inline">\(ATT\)</span> equals the between-group component and the expected value of the <span class="math inline">\(VTT\)</span> equals the within-group component:</p>
+<p><span class="math display">\[\begin{equation} 
+\begin{split}
+V[Y(1)|D]-V[Y(0)|D] &amp;= V[ATT]+E[VTT] \\[10pt]
+&amp;= \delta_B^D + \delta_W^D \\[10pt]
+\end{split}
+\end{equation}\]</span> <span class="math display">\[\begin{equation} 
+\text{where} \\[10pt]
+\begin{split}
+\delta_B^D &amp;= \sum_j \pi_j \big( (\mu_j+\beta_j- \sum_j\pi_j(\mu_j+\beta_j))^2 - (\mu_j - \sum_j\pi_j\mu_j)^2 \big) \\[10pt]
+\delta_W^D &amp;= \sum_j \pi_j \big( (\sigma_j+\lambda_j )^2 - \sum_j\pi_j\sigma_j^2 \big)
+\end{split}
+\tag{5}
+\end{equation}\]</span></p>
+<p>Note that the interpretation of some quantities changes as compared to equation (2). In equation (5), <span class="math inline">\(\pi_j\)</span> is the proportion of individuals in each group receiving treatment (i.e., <span class="math inline">\(E[D|G]\)</span>), <span class="math inline">\(\mu_j\)</span> is the pre-treatment mean in group <span class="math inline">\(j\)</span>, <span class="math inline">\(\sigma_j\)</span> is the pre-treatment standard deviation in group <span class="math inline">\(j\)</span>, <span class="math inline">\(\beta_j\)</span> is the causal effect of treatment on <span class="math inline">\(\mu_j\)</span>, <span class="math inline">\(\lambda_j\)</span> is the causal effect of treatment on <span class="math inline">\(\sigma_j\)</span>. The superscript <span class="math inline">\(D\)</span> on the <span class="math inline">\(\delta\text{s}\)</span> indicates that the change caused by treatment (at a single point in time) is considered. The between-group effect <span class="math inline">\(\delta_B^D\)</span> captures the change in total variance induced by the effect of treatment on the mean of each group. The within-group effect <span class="math inline">\(\delta_W^D\)</span> captures the change in total variance induced by the effect of treatment on the variance of each group.</p>
+</div>
+<div class="section level4">
+<h4 id="b-decomposing-the-change-in-the-effect-of-treatment">2b Decomposing the change in the effect of treatment<a class="anchor" aria-label="anchor" href="#b-decomposing-the-change-in-the-effect-of-treatment"></a>
+</h4>
+<p>The treatment effect on the variance depends both on the treatment effects on the group-specific means and variances and on the distribution of treatment across groups and on the level of pre-treatment inequality. Therefore, with repeated cross-sectional or panel data, the change in total variance from <span class="math inline">\(t_0\)</span> (baseline) to <span class="math inline">\(t\)</span> (any timepoint post baseline) due to change in the effect of treatment can be decomposed into the sum of a between-group effect (<span class="math inline">\(\delta_B^{D,t}\)</span>), within-group effect (<span class="math inline">\(\delta_W^{D,t}\)</span>) a compositional effect (<span class="math inline">\(\delta_C^{D,t}\)</span>), and a pre-treatment effect (<span class="math inline">\(\delta_P^{D,t}\)</span>):</p>
+<p><span class="math display">\[\begin{equation}
+(V[Y_t(1)|D_t]-V[Y_t(0)|D_t]) - (V[Y_{t_0}(1)|D_{t_0}]-V[Y_{t_0}(0)|D_{t_0}])
+= \delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t} \\[10pt]
+\text{where} 
+\end{equation}\]</span> <span class="math display">\[\begin{equation}
+\begin{split}
+
+\delta_B^{D,t} 
+&amp;= B(\pi_{t_0},\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_0) \\
+&amp;= \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t_0} + \beta_{j,t} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0} + \beta_{j,t_0} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t_0} ) \Big)^2 \right) \\[10pt]
+        
+\delta_W^{D,t}
+&amp;= W(\pi_{t_0},\sigma_{t_0}+\lambda_t) - W(\pi_{t_0},\sigma_{t_0}+\lambda_{t_0}) \\
+&amp;= \sum_j\pi_{j,t_0} \left( \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t_0}\Big)^2 \right) \\[10pt] 
+
+\delta_C^{D,t}
+&amp;= \Big( B(\pi_t,\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_t ) \Big) - \Big( B(\pi_t,\mu_t ) - B(\pi_{t_0},\mu_t ) \Big) + \Big( W(\pi_t,\sigma_{t_0}+\lambda_t ) - W(\pi_{t_0},\sigma_{t_0}+\lambda_t ) \Big) - \Big( W(\pi_t,\sigma_t ) - W(\pi_{t_0},\sigma_t ) \Big) \\
+&amp;\approx \sum_j(\pi_{j,t}-\pi_{j,t_0} ) \left( \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 - \Big(\mu_{j,t}-\sum_j\pi_{j,t}\mu_{j,t}\Big)^2 + \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2-\sigma_{j,t}^2 \right) \\[10pt]
+
+\delta_P^{D,t}
+&amp;= B(\pi_t,\mu_t+\beta_t) - B(\pi_t,\mu_{t_0}+\beta_t) + W(\pi_t,\sigma_t+\lambda_t) - W(\pi_t,\sigma_{t_0}+\lambda_t) - \Big( B(\pi_{t_0},\mu_t) - B(\pi_{t_0},\mu_{t_0}) + W(\pi_{t_0},\sigma_t) - W(\pi_{t_0},\sigma_{t_0}) \Big) \\
+&amp;= \sum_j\pi_{j,t} \left( \Big(\mu_{j,t}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 + \Big(\sigma_{j,t}+\lambda_{j,t} \Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 \right) - \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t}-\sum_j\pi_{j,t_0}\mu_{j,t}\Big)^2 - \Big(\mu_{j,t_0}-\sum_j\pi_{j,t_0}\mu_{j,t_0}\Big)^2 + \sigma_{j,t}^2-\sigma_{j,t_0}^2 \right)
+
+\end{split}
+\tag{6}
+\end{equation}\]</span></p>
+</div>
+<div class="section level4">
+<h4 id="c-decomposing-the-change-in-the-post-treatment-variance-due-to-treatment">2c Decomposing the change in the post-treatment variance due to treatment<a class="anchor" aria-label="anchor" href="#c-decomposing-the-change-in-the-post-treatment-variance-due-to-treatment"></a>
+</h4>
+<p>Rather than decomposing the change in the effect of treatment on the variance, the change in post-treatment variance induced by the change in the effect of treatment, i.e., <span class="math inline">\(V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]\)</span>, can also be decomposed.</p>
+<p><span class="math display">\[\begin{equation}
+V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]
+= \delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t} \\[10pt]
+\text{where} 
+\end{equation}\]</span> <span class="math display">\[\begin{equation}
+\begin{split}
+
+\delta_B^{D,t}
+&amp;=\sum_j\pi_{jt_0} \left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt_0}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt_0})\Big)^2 \right) \\[10pt]
+
+\delta_W^{D,t}
+&amp;= \sum_j\pi_{jt_0}\left( \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt_0}\Big)^2 \right) 
+= \sum_j\pi_{jt_0} \Big( \lambda_{jt}^2-\lambda_{jt_0}^2 + 2\sigma_{jt_0}(\lambda_{jt}-\lambda_{jt_0}) \Big) \\[10pt]
+
+\delta_C^{D,t}
+&amp;= \sum_j\pi_{jt}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda{jt}\Big)^2 \right) - \sum_j\pi_{jt_0}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0} (\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right) \\
+&amp;\approx \sum_j(\pi_{jt}-\pi_{jt_0}) \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt} \Big)^2 \right) \\[10pt] 
+
+\delta_P^{D,t}
+&amp;=\sum_j\pi_{jt} \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right)
+
+\end{split}
+\tag{7}
+\end{equation}\]</span></p>
+</div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
