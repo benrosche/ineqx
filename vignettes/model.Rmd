@@ -61,10 +61,10 @@ ATT_j=E[Y(1)-Y(0)|G=j,D=1]
 \tag{3}
 \end{equation}
 
-Further, the group-specific treatment effect on the variance of the treated ($VTT$) equals the expected value of the difference in the variance in the potential outcomes in each group:
+Further, the group-specific treatment effect on the variance of the treated ($VTT$) equals the difference in the variance in the potential outcomes in each group:
 
 \begin{equation} 
-VTT_j=E[V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]]
+VTT_j=V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]
 \tag{4}
 \end{equation}
 
