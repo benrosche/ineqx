@@ -122,7 +122,7 @@ V_t-V_{t_0} = \delta_W^t + \delta_B^t + \delta_C^t \\[10pt]
 \text{where} \\[10pt]
 \begin{split}
 \delta_W^t &amp;= \sum_j \pi_{jt_0} \big( \sigma_{jt}^2 - \sigma_{jt_0}^2 \big) \\[10pt]
-\delta_B^t &amp;= \sum_j \pi_{jt_0} \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt})^2 \big) \\[10pt]
+\delta_B^t &amp;= \sum_j \pi_{jt_0} \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt_0})^2 \big) \\[10pt]
 \delta_C^t &amp;= \sum_j \big( \pi_{jt}-\pi_{jt_0} \big) \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 + \sigma_{jt}^2 \big) 
 \end{split}
 \tag{2}
@@ -132,12 +132,13 @@ V_t-V_{t_0} = \delta_W^t + \delta_B^t + \delta_C^t \\[10pt]
 <div class="section level3">
 <h3 id="causal-variance-decomposition">2 Causal variance decomposition<a class="anchor" aria-label="anchor" href="#causal-variance-decomposition"></a>
 </h3>
-<p>I first entertain the treatment effect framework at a single point in time. Let <span class="math inline">\(D\in\{0,1\}\)</span> be a binary treatment, <span class="math inline">\(Y(D)\)</span> be the potential outcome of the same outcome vector as before, and <span class="math inline">\(\tau=Y(1)-Y(0)\)</span> be the intra-individual causal effect of treatment on the outcome. The group-specific treatment effect on the mean of the treated (<span class="math inline">\(ATT\)</span>) then equals the expected value of the differences in the potential outcomes in each group:</p>
+<p>I first entertain the treatment effect framework at a single point in time. Let <span class="math inline">\(D\in\{0,1\}\)</span> be a binary treatment, <span class="math inline">\(Y(D)\)</span> be the potential outcome of the same outcome vector as before, and <span class="math inline">\(\tau=Y(1)-Y(0)\)</span> be the intra-individual causal effect of treatment on the outcome.</p>
+<p>The group-specific treatment effect on the mean of the treated (<span class="math inline">\(ATT\)</span>) then equals the expected value of the differences in the potential outcomes in each group:</p>
 <p><span class="math display">\[\begin{equation} 
 ATT_j=E[Y(1)-Y(0)|G=j,D=1]
 \tag{3}
 \end{equation}\]</span></p>
-<p>Further, the group-specific treatment effect on the group-specific variances (<span class="math inline">\(VTT\)</span>) equals the expected value of the difference in the variance in the potential outcomes in each group:</p>
+<p>Further, the group-specific treatment effect on the variance of the treated (<span class="math inline">\(VTT\)</span>) equals the expected value of the difference in the variance in the potential outcomes in each group:</p>
 <p><span class="math display">\[\begin{equation} 
 VTT_j=E[V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]]
 \tag{4}

@@ -42,7 +42,7 @@ V_t-V_{t_0} = \delta_W^t + \delta_B^t + \delta_C^t \\[10pt]
 \text{where} \\[10pt]
 \begin{split}
 \delta_W^t &= \sum_j \pi_{jt_0} \big( \sigma_{jt}^2 - \sigma_{jt_0}^2 \big) \\[10pt]
-\delta_B^t &= \sum_j \pi_{jt_0} \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt})^2 \big) \\[10pt]
+\delta_B^t &= \sum_j \pi_{jt_0} \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt_0})^2 \big) \\[10pt]
 \delta_C^t &= \sum_j \big( \pi_{jt}-\pi_{jt_0} \big) \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 + \sigma_{jt}^2 \big) 
 \end{split}
 \tag{2}
@@ -52,14 +52,16 @@ The between-group effect ($\delta_B^t$) captures the change in total variance in
 
 ### 2 Causal variance decomposition
 
-I first entertain the treatment effect framework at a single point in time. Let $D\in\{0,1\}$ be a binary treatment, $Y(D)$ be the potential outcome of the same outcome vector as before, and $\tau=Y(1)-Y(0)$ be the intra-individual causal effect of treatment on the outcome. The group-specific treatment effect on the mean of the treated ($ATT$) then equals the expected value of the differences in the potential outcomes in each group: 
+I first entertain the treatment effect framework at a single point in time. Let $D\in\{0,1\}$ be a binary treatment, $Y(D)$ be the potential outcome of the same outcome vector as before, and $\tau=Y(1)-Y(0)$ be the intra-individual causal effect of treatment on the outcome. 
+
+The group-specific treatment effect on the mean of the treated ($ATT$) then equals the expected value of the differences in the potential outcomes in each group: 
 
 \begin{equation} 
 ATT_j=E[Y(1)-Y(0)|G=j,D=1]
 \tag{3}
 \end{equation}
 
-Further, the group-specific treatment effect on the group-specific variances ($VTT$) equals the expected value of the difference in the variance in the potential outcomes in each group:
+Further, the group-specific treatment effect on the variance of the treated ($VTT$) equals the expected value of the difference in the variance in the potential outcomes in each group:
 
 \begin{equation} 
 VTT_j=E[V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]]
