@@ -40,15 +40,15 @@ calc01 <- function(group, time, ref, wibe.pre, AME_mu, AME_sigma, notime, dat) {
   # ---------------------------------------------------------------------------------------------- #
 
   # Levels of group and time var
-  group_levels <- dat %>% .$group %>% unique() %>% sort()
-  time_levels  <- dat %>% .$time %>% unique() %>% sort()
+  group_levels <- dat %>% pull(group) %>% unique() %>% sort()
+  time_levels  <- dat %>% pull(time) %>% unique() %>% sort()
 
   # Take subset of dat that has the same time window as effectDat
   dat <- dat %>% filter(between(time, min(time_levels), max(time_levels)))
 
   # If notime, we take pre as reference
   if(notime) {
-    ref <- list(n=wibe.pre %>% .$n, mu=wibe.pre %>% .$mu, sigma=wibe.pre %>% .$sigma, beta=c(0,0,0), lambda=c(0,0,0))
+    ref <- list(n=wibe.pre %>% pull(n), mu=wibe.pre %>% pull(mu), sigma=wibe.pre %>% pull(sigma), beta=rep(0, length(group_levels)), lambda=rep(0, length(group_levels)))
   }
 
   # Get reference values ------------------------------------------------------------------------- #
@@ -59,11 +59,11 @@ calc01 <- function(group, time, ref, wibe.pre, AME_mu, AME_sigma, notime, dat) {
 
     if(length(ref)==1) ref <- c(ref, "effect")
 
-    n <- wibe.pre %>% dplyr::filter(time==!!ref[1]) %>% .$n
-    mu <- wibe.pre %>% dplyr::filter(time==!!ref[1]) %>% .$mu
-    sigma <- wibe.pre %>% dplyr::filter(time==!!ref[1]) %>% .$sigma
-    beta <- AME_mu[[1]] %>% dplyr::filter(time==!!ref[1]) %>% dplyr::select(!!ref[2]) %>% unlist()
-    lambda <- AME_sigma[[1]] %>% dplyr::filter(time==!!ref[1]) %>% dplyr::select(!!ref[2]) %>% unlist()
+    n <- wibe.pre %>% dplyr::filter(time==!!ref[1]) %>% pull(n)
+    mu <- wibe.pre %>% dplyr::filter(time==!!ref[1]) %>% pull(mu)
+    sigma <- wibe.pre %>% dplyr::filter(time==!!ref[1]) %>% pull(sigma)
+    beta <- AME_mu[[1]] %>% dplyr::filter(time==!!ref[1]) %>% pull(!!ref[2])
+    lambda <- AME_sigma[[1]] %>% dplyr::filter(time==!!ref[1]) %>% pull(!!ref[2])
 
   } else if(!is.null(names(ref)) & all(names(ref) %in% c("n", "mu", "sigma", "beta", "lambda"))) {
 
