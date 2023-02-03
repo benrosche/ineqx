@@ -45,7 +45,7 @@
 
 ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, weights=NULL, controls=NULL, decomp="post", ref=NULL, AME_mu=NULL, AME_sigma=NULL, dat) {
 
-  # dat = cps_sample; treat="mother"; post="byear"; y="earnweekf"; ystat="CV2"; group="SES"; time="i.year10"; ref=1980; decomp="effect"; controls=NULL; weights="earnwtf"; AME_mu=NULL; AME_sigma=NULL
+  # dat = dat; treat="treat"; post=NULL; y="inc"; ystat="Var"; group="g"; time=NULL; ref=1; decomp="post"; controls=NULL; weights=NULL; AME_mu=NULL; AME_sigma=NULL
 
   # ---------------------------------------------------------------------------------------------- #
   # Dissect input ----
@@ -79,14 +79,14 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
   if(notreat & !nopost) stop("post can only be specified if treat is specified as well.")
   if(!notreat) {
     if(!as.character(treat) %in% names(dat)) stop(paste0(treat, " not in dataset."))
-    treat_levels <- dat[treat] %>% unique() %>% unlist() %>% as.vector() %>% sort()
+    treat_levels <- dat %>% pull(treat) %>% unique() %>% sort()
     if(!0 %in% treat_levels | length(treat_levels)==1) stop(paste0(treat, " must contain 0 (not treated) and at least one other value (treated)."))
     if(!nopost & any(!treat_levels %in% c(0,1))) stop("If post is specified, treat values must be 0 (not treated) or 1 (treated).")
     if(nopost & length(treat_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", treat_levels[treat_levels!=0], sep=" "), " as treat has multiple treatment values.")
   }
   if(!nopost) {
     if(!as.character(post) %in% names(dat)) stop(paste0(post, " not in dataset."))
-    post_levels <- dat[post] %>% unique() %>% unlist() %>% as.vector() %>% sort()
+    post_levels <- dat %>% pull(post) %>% unique() %>% sort()
     if(!0 %in% post_levels | length(post_levels)==1) stop(paste0(post, " must contain 0 (pre) and at least one other value (post)."))
     if(length(post_levels)>2) warning("Treatment effect was calculated as weighted average of ", paste0("0->", post_levels[post_levels!=0], sep=" "), "as post has multiple post-treatment values.")
   }
@@ -97,20 +97,21 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
   if(!is.null(controls)) if(any(!controls %in% names(dat))) stop(paste0(paste0(controls[!controls %in% names(dat)], collapse = " + "), " not in dataset."))
   if(!notime) {
     if(!as.character(time) %in% names(dat)) stop(paste0(time, " not in dataset."))
-    time_levels <- dat[time] %>% unique() %>% unlist() %>% as.vector() %>% sort() # time_levels
+    time_levels <- dat %>% pull(time) %>% unique() %>% sort() # time_levels
     if(is.null(ref)) stop("Counterfactual reference point must be given.")
     if(!refm) if(!ref[1] %in% time_levels) stop(paste0("ref not observed in ", time, "."))
     if(refm)  if(0 %in% time_levels) stop(paste0(time, "must not contain 0 if manual values are provided for ref."))
   }
 
-  # Rename variables in dat
+  # Drop rows with missing values and rename variables
   dat <-
     dat %>%
     dplyr::mutate(across(everything(), as.vector)) %>% # remove labels and other attributes
     dplyr::select({{ treat }}, {{ post }}, {{ y }}, {{ group }}, {{ time }}, {{ weights }}, all_of(controls)) %>%
-    dplyr::rename_with(~paste0("c",1:length(controls)), .cols = all_of(controls)) %>%
-    dplyr::rename(treat={{ treat }}, post={{ post }}, y={{ y }}, w = {{ weights }}, group={{ group }}, time={{ time }}) %>%
-    tidyr::drop_na()
+    tidyr::drop_na() %>%
+    dplyr::rename(treat={{ treat }}, post={{ post }}, y={{ y }}, w = {{ weights }}, group={{ group }}, time={{ time }})
+
+  if(length(controls)>0) dat <- dat %>% dplyr::rename_with(~paste0("c", 1:length(controls)), .cols = all_of(controls))
 
   # Add variable: treat*post
   dat <- if(!is.null(post)) dat %>% dplyr::mutate(tp=treat*post) else dat %>% dplyr::mutate(tp=treat)
@@ -119,8 +120,8 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
   if(notime) dat <- dat %>% dplyr::mutate(time=1)
 
   # Levels of group and time
-  group_levels <- dat %>% .$group %>% unique() %>% sort()
-  time_levels  <- dat %>% .$time %>% unique() %>% sort()
+  group_levels <- dat %>% pull(group) %>% unique() %>% sort()
+  time_levels  <- dat %>% pull(time) %>% unique() %>% sort()
 
   # Weights
   if(!is.null(weights)) w <- "w" else w <- NULL

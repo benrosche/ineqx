@@ -74,12 +74,7 @@ The focus here is on the $ATT$ rather than the average treatment effect ($ATE$) 
 Given these definitions, the effect of treatment on the variance can be decomposed into a within- and between group component, where the variance in the $ATT$ equals the between-group component and the expected value of the $VTT$ equals the within-group component:
 
 \begin{equation} 
-\begin{split}
-V[Y(1)|D]-V[Y(0)|D] &= V[ATT]+E[VTT] \\[10pt]
-&= \delta_B^D + \delta_W^D \\[10pt]
-\end{split}
-\end{equation}
-\begin{equation} 
+V[Y(1)|D]-V[Y(0)|D] = \delta_B^D + \delta_W^D \\[10pt]
 \text{where} \\[10pt]
 \begin{split}
 \delta_B^D &= \sum_j \pi_j \big( (\mu_j+\beta_j- \sum_j\pi_j(\mu_j+\beta_j))^2 - (\mu_j - \sum_j\pi_j\mu_j)^2 \big) \\[10pt]
