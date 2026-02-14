@@ -163,8 +163,8 @@ ineqx <- function(treat=NULL, post=NULL, y, ystat="Var", group=NULL, time=NULL, 
     message("Computing average marginal effects ...")
     # 2do: add SE with predict(,se.fit = T)
 
-    AME_mu    <- suppressWarnings( calcAME(treat="tp", group="group", time="time", what="mu", vfr, dat) )
-    AME_sigma <- suppressWarnings( calcAME(treat="tp", group="group", time="time", what="sigma", vfr, dat) )
+    AME_mu    <- calcAME(treat="tp", group="group", time="time", what="mu", vfr, dat) %>% suppressWarnings()
+    AME_sigma <- calcAME(treat="tp", group="group", time="time", what="sigma", vfr, dat) %>% suppressWarnings()
 
   } else if(notreat) {
 
