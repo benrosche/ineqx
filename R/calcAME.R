@@ -30,7 +30,7 @@ calcAME <- function(treat, group, time, what, vfr, dat) {
   if(!as.character(group) %in% names(dat)) stop(paste0(group, " not in dataset"))
   if(!as.character(time) %in% names(dat)) stop(paste0(time, " not in dataset"))
 
-  treat_levels <- dat[treat] %>% unique() %>% unlist() %>% as.vector() %>% sort()
+  treat_levels <- dat %>% pull(treat) %>% unique() %>% sort()
   if(!0 %in% treat_levels) stop(paste0("Values of ", treat, " must contain 0."))
   treat_levels <- treat_levels[treat_levels!=0]
   if(length(treat_levels)>1) warning("Effect of treat was calculated as weighted average of ", paste0("0->", treat_levels, sep=" "), ".")
