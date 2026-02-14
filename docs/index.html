@@ -56,11 +56,9 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
+  <main id="main" class="col-md-9"><p><img src="reference/figures/ineqx-hexagon.jpg" width="200" align="right"></p>
+<div class="section level1">
 
-<div class="section level3">
-<h3 id="ineqx-descriptive-and-causal-variance-decompositions">ineqx: Descriptive and causal variance decompositions<a class="anchor" aria-label="anchor" href="#ineqx-descriptive-and-causal-variance-decompositions"></a>
-</h3>
 <p>The ineqx package allows to analyze how inequality in an outcome (e.g., income) splits into inequality within and between groups (e.g., gender). It is possible to decompose inequality at a single point in time and to decompose changes in inequality over time. In addition to this descriptive decomposition, the ineqx packages allows to analyze how treatment effects (i.e., binary predictors) impact within- and between-group inequality and how this effect changes over time.</p>
 <p>Existing approaches to analyzing inequality often ignore within-group inequality by solely analyzing mean differences between groups. Approaches that do allow examining both changes in within- and between-group inequality (e.g., <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x" class="external-link">Western &amp; Bloome 2009</a>), in turn, are limited in addressing causal questions about why inequality is changing.</p>
 <p><a href="https://osf.io/preprints/socarxiv/f53kz/" class="external-link">Rosche (2022)</a> introduces a novel approach to analyzing how a treatment variable affects both changes in within- and between-group inequality and decomposing these changes into compositional and behavioral effects. The procedure combines a classic variance decomposition with the Kitagawa-Blinder-Oaxaca (KBO) decomposition approach. Compared to KBO, however, the method allows analyzing treatment effects not only on the mean but on the whole conditional distribution.</p>
@@ -76,7 +74,6 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">incdat</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/ineqx.html">ineqx</a></span><span class="op">(</span>treat<span class="op">=</span><span class="st">"X"</span>, post<span class="op">=</span><span class="st">"post_X"</span>, y<span class="op">=</span><span class="st">"income"</span>, ystat<span class="op">=</span><span class="st">"Var"</span>, group<span class="op">=</span><span class="st">"female"</span>, time<span class="op">=</span><span class="st">"year"</span>, ref<span class="op">=</span><span class="fl">1990</span>, <span class="va">dat</span><span class="op">)</span></span></code></pre></div>
-</div>
 <div class="section level3">
 <h3 id="try-the-ineqx-package-in-this-shiny-app">Try the ineqx package in this Shiny app<a class="anchor" aria-label="anchor" href="#try-the-ineqx-package-in-this-shiny-app"></a>
 </h3>
@@ -106,6 +103,7 @@ iframe {
 <p>More information can be found <a href="http://benrosche.com/projects/ineqx/" class="external-link">here</a></p>
 </div>
 </div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

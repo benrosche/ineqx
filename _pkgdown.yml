@@ -5,7 +5,7 @@ template:
   bootstrap: 5
   bslib:
     # Page styling
-    bg: "#f5f7f9"          # soft light-grey background
+    bg: "#ffffff"          # white background
     fg: "#222222"          # main text color
     primary: "#008b94"     # dark teal accent color (links, buttons)
 

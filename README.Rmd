@@ -13,9 +13,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# <img src="man/figures/ineqx-hexagon.jpg" width="200" align="right" />
+<img src="man/figures/ineqx-hexagon.jpg" width="200" align="right" />
 
-### ineqx: Descriptive and causal variance decompositions
+# ineqx: Descriptive and causal variance decompositions
 
 The ineqx package allows to analyze how inequality in an outcome (e.g., income) splits into inequality within and between groups (e.g., gender). It is possible to decompose inequality at a single point in time and to decompose changes in inequality over time. In addition to this descriptive decomposition, the ineqx packages allows to analyze how treatment effects (i.e., binary predictors) impact within- and between-group inequality and how this effect changes over time.
 
