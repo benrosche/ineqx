@@ -43,9 +43,6 @@ navbar:
     - icon: fab fa-github
       href: https://github.com/benrosche/ineqx/
 
-home:
-  strip_header: true
-
 reference:
   - title: "Functions"
     contents:

@@ -1,3 +1,5 @@
+# ineqx: Descriptive and causal variance decompositions
+
 ![](reference/figures/ineqx-hexagon.jpg)
 
 The ineqx package allows to analyze how inequality in an outcome (e.g.,
@@ -61,7 +63,7 @@ ineqx(treat="X", post="post_X", y="income", ystat="Var", group="female", time="y
 
 Settings
 
-[Toggle navigation](_w_670433352b4a408e81c16ad2a2255f1e/#)
+[Toggle navigation](_w_1c04c0467a4d4613b92d9722db50420f/#)
 
 Causal variance decomposition
 
