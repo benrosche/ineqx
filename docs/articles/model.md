@@ -1,0 +1,189 @@
+# Model structure
+
+### 1 Descriptive variance decomposition
+
+Take the vector $`Y_t`$ to be individual incomes at time $`t`$, and the
+vector $`G_t`$ to be the group to which the individuals belong, where
+$`G_t=j`$ is a categorical variable with $`j=1,…,J`$ categories that
+represent mutually exclusive and exhaustive groups. The variance $`V`$
+in income at time $`t`$ can then be expressed as the sum of the variance
+within and between groups:
+
+``` math
+\begin{equation} 
+\begin{split} 
+V_t(Y_t) 
+&= E(V(Y_t |G_t))+V(E(Y_t |G_t )) \\[10pt] 
+&= W_t + B_t \\[10pt]
+&= \sum_j\pi_{jt}\sigma_{jt}^2+\sum_j\pi_{jt}\big(\mu_{jt}-\sum_j\pi_{jt}\mu_{jt}\big)^2
+\end{split}
+\tag{1}
+\end{equation}
+```
+
+where $`\pi_{jt}`$ is the proportion of individuals in group $`j`$ at
+time $`t`$, $`\mu_{jt}`$ is the mean income in group $`j`$ at time
+$`t`$, and $`\sigma_{jt}^2`$ is the variance around this mean in group
+$`j`$ at time $`t`$.
+
+With repeated cross-sectional or panel data, the change in variance from
+$`t_0`$ (baseline) to $`t`$ (any timepoint post baseline) can then be
+decomposed into the sum of a within-group effect ($`\delta_W`$), a
+between-group effect ($`\delta_B`$), and a compositional effect
+($`\delta_C`$). That is, \$\$\begin{equation} V_t-V\_{t_0} =
+\delta_W^t + \delta_B^t + \delta_C^t \\\[10pt\] \text{where} \\\[10pt\]
+\begin{split} \delta_W^t &= \sum_j \pi\_{jt_0} \big( \sigma\_{jt}^2 -
+\sigma\_{jt_0}^2 \big) \\\[10pt\] \delta_B^t &= \sum_j \pi\_{jt_0} \big(
+(\mu\_{jt} - \sum_j\pi\_{jt}\mu\_{jt})^2 - (\mu\_{jt_0} -
+\sum_j\pi\_{jt_0}\mu\_{jt_0})^2 \big) \\\[10pt\] \delta_C^t &= \sum_j
+\big( \pi\_{jt}-\pi\_{jt_0} \big) \big( (\mu\_{jt} -
+\sum_j\pi\_{jt}\mu\_{jt})^2 + \sigma\_{jt}^2 \big) \end{split} \tag{2}
+\end{equation}\$\$
+
+The between-group effect ($`\delta_B^t`$) captures the change in total
+variance induced by changes in the mean of each group. The within-group
+effect ($`\delta_W^t`$) captures the change in total variance induced by
+changes in the variance around the mean of each group. Finally, the
+compositional effect ($`\delta_C^t`$) captures the change in total
+variance induced by changes in the relative size of each group. The
+superscript $`t`$ on the $`\delta\text{s}`$ indicates that the change
+over time is considered.
+
+### 2 Causal variance decomposition
+
+I first entertain the treatment effect framework at a single point in
+time. Let $`D\in\{0,1\}`$ be a binary treatment, $`Y(D)`$ be the
+potential outcome of the same outcome vector as before, and
+$`\tau=Y(1)-Y(0)`$ be the intra-individual causal effect of treatment on
+the outcome.
+
+The group-specific treatment effect on the mean of the treated ($`ATT`$)
+then equals the expected value of the differences in the potential
+outcomes in each group:
+
+``` math
+\begin{equation} 
+ATT_j=E[Y(1)-Y(0)|G=j,D=1]
+\tag{3}
+\end{equation}
+```
+
+Further, the group-specific treatment effect on the variance of the
+treated ($`VTT`$) equals the difference in the variance in the potential
+outcomes in each group:
+
+``` math
+\begin{equation} 
+VTT_j=V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]
+\tag{4}
+\end{equation}
+```
+
+#### 2a Decomposing the effect of treatment
+
+The focus here is on the $`ATT`$ rather than the average treatment
+effect ($`ATE`$) as we are interested in the aggregate consequences of
+treatment, which depends on the actual distribution of treatment across
+groups, $`E[D|G]`$, and therefore on the $`ATT`$. Note that we assume
+that the treatment effect on the variance is fully described by its
+effect on the group-specific means and variances. Given these
+definitions, the effect of treatment on the variance can be decomposed
+into a within- and between group component, where the variance in the
+$`ATT`$ equals the between-group component and the expected value of the
+$`VTT`$ equals the within-group component:
+
+\$\$\begin{equation} V\[Y(1)\|D\]-V\[Y(0)\|D\] = \delta_B^D + \delta_W^D
+\\\[10pt\] \text{where} \\\[10pt\] \begin{split} \delta_B^D &= \sum_j
+\pi_j \big( (\mu_j+\beta_j- \sum_j\pi_j(\mu_j+\beta_j))^2 - (\mu_j -
+\sum_j\pi_j\mu_j)^2 \big) \\\[10pt\] \delta_W^D &= \sum_j \pi_j \big(
+(\sigma_j+\lambda_j )^2 - \sum_j\pi_j\sigma_j^2 \big) \end{split}
+\tag{5} \end{equation}\$\$
+
+Note that the interpretation of some quantities changes as compared to
+equation (2). In equation (5), $`\pi_j`$ is the proportion of
+individuals in each group receiving treatment (i.e., $`E[D|G]`$),
+$`\mu_j`$ is the pre-treatment mean in group $`j`$, $`\sigma_j`$ is the
+pre-treatment standard deviation in group $`j`$, $`\beta_j`$ is the
+causal effect of treatment on $`\mu_j`$, $`\lambda_j`$ is the causal
+effect of treatment on $`\sigma_j`$. The superscript $`D`$ on the
+$`\delta\text{s}`$ indicates that the change caused by treatment (at a
+single point in time) is considered. The between-group effect
+$`\delta_B^D`$ captures the change in total variance induced by the
+effect of treatment on the mean of each group. The within-group effect
+$`\delta_W^D`$ captures the change in total variance induced by the
+effect of treatment on the variance of each group.
+
+#### 2b Decomposing the change in the effect of treatment
+
+The treatment effect on the variance depends both on the treatment
+effects on the group-specific means and variances and on the
+distribution of treatment across groups and on the level of
+pre-treatment inequality. Therefore, with repeated cross-sectional or
+panel data, the change in total variance from $`t_0`$ (baseline) to
+$`t`$ (any timepoint post baseline) due to change in the effect of
+treatment can be decomposed into the sum of a between-group effect
+($`\delta_B^{D,t}`$), within-group effect ($`\delta_W^{D,t}`$) a
+compositional effect ($`\delta_C^{D,t}`$), and a pre-treatment effect
+($`\delta_P^{D,t}`$):
+
+\$\$\begin{equation} (V\[Y_t(1)\|D_t\]-V\[Y_t(0)\|D_t\]) -
+(V\[Y\_{t_0}(1)\|D\_{t_0}\]-V\[Y\_{t_0}(0)\|D\_{t_0}\]) =
+\delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t}
+\\\[10pt\] \text{where} \end{equation}\$\$
+``` math
+\begin{equation}
+\begin{split}
+
+\delta_B^{D,t} 
+&= B(\pi_{t_0},\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_0) \\
+&= \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t_0} + \beta_{j,t} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0} + \beta_{j,t_0} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t_0} ) \Big)^2 \right) \\[10pt]
+        
+\delta_W^{D,t}
+&= W(\pi_{t_0},\sigma_{t_0}+\lambda_t) - W(\pi_{t_0},\sigma_{t_0}+\lambda_{t_0}) \\
+&= \sum_j\pi_{j,t_0} \left( \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t_0}\Big)^2 \right) \\[10pt] 
+
+\delta_C^{D,t}
+&= \Big( B(\pi_t,\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_t ) \Big) - \Big( B(\pi_t,\mu_t ) - B(\pi_{t_0},\mu_t ) \Big) + \Big( W(\pi_t,\sigma_{t_0}+\lambda_t ) - W(\pi_{t_0},\sigma_{t_0}+\lambda_t ) \Big) - \Big( W(\pi_t,\sigma_t ) - W(\pi_{t_0},\sigma_t ) \Big) \\
+&\approx \sum_j(\pi_{j,t}-\pi_{j,t_0} ) \left( \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 - \Big(\mu_{j,t}-\sum_j\pi_{j,t}\mu_{j,t}\Big)^2 + \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2-\sigma_{j,t}^2 \right) \\[10pt]
+
+\delta_P^{D,t}
+&= B(\pi_t,\mu_t+\beta_t) - B(\pi_t,\mu_{t_0}+\beta_t) + W(\pi_t,\sigma_t+\lambda_t) - W(\pi_t,\sigma_{t_0}+\lambda_t) - \Big( B(\pi_{t_0},\mu_t) - B(\pi_{t_0},\mu_{t_0}) + W(\pi_{t_0},\sigma_t) - W(\pi_{t_0},\sigma_{t_0}) \Big) \\
+&= \sum_j\pi_{j,t} \left( \Big(\mu_{j,t}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 + \Big(\sigma_{j,t}+\lambda_{j,t} \Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 \right) - \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t}-\sum_j\pi_{j,t_0}\mu_{j,t}\Big)^2 - \Big(\mu_{j,t_0}-\sum_j\pi_{j,t_0}\mu_{j,t_0}\Big)^2 + \sigma_{j,t}^2-\sigma_{j,t_0}^2 \right)
+
+\end{split}
+\tag{6}
+\end{equation}
+```
+
+#### 2c Decomposing the change in the post-treatment variance due to treatment
+
+Rather than decomposing the change in the effect of treatment on the
+variance, the change in post-treatment variance induced by the change in
+the effect of treatment, i.e.,
+$`V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]`$, can also be decomposed.
+
+\$\$\begin{equation} V\[Y_t(1)\|D_t\] - V\[Y\_(t_0 )(1)\|D\_(t_0 )\] =
+\delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t}
+\\\[10pt\] \text{where} \end{equation}\$\$
+``` math
+\begin{equation}
+\begin{split}
+
+\delta_B^{D,t}
+&=\sum_j\pi_{jt_0} \left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt_0}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt_0})\Big)^2 \right) \\[10pt]
+
+\delta_W^{D,t}
+&= \sum_j\pi_{jt_0}\left( \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt_0}\Big)^2 \right) 
+= \sum_j\pi_{jt_0} \Big( \lambda_{jt}^2-\lambda_{jt_0}^2 + 2\sigma_{jt_0}(\lambda_{jt}-\lambda_{jt_0}) \Big) \\[10pt]
+
+\delta_C^{D,t}
+&= \sum_j\pi_{jt}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda{jt}\Big)^2 \right) - \sum_j\pi_{jt_0}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0} (\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right) \\
+&\approx \sum_j(\pi_{jt}-\pi_{jt_0}) \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt} \Big)^2 \right) \\[10pt] 
+
+\delta_P^{D,t}
+&=\sum_j\pi_{jt} \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right)
+
+\end{split}
+\tag{7}
+\end{equation}
+```
