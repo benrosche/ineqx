@@ -1,11 +1,29 @@
 title: ineqx
 url: https://benrosche.github.io/ineqx/
+
 template:
+  bootstrap: 5
+  bslib:
+    # Page styling
+    bg: "#f5f7f9"          # soft light-grey background
+    fg: "#222222"          # main text color
+    primary: "#008b94"     # dark teal accent color (links, buttons)
+
+    # Navbar styling
+    navbar-bg: "#141b2d"   # exact dark menu background
+    navbar-fg: "#ffffff"   # navbar text/icons
+    navbar-hover-color: "#008b94"
+    navbar-brand-color: "#ffffff"
+    navbar-brand-hover-color: "#008b94"
+
+    # Link styling
+    link-color: "#008b94"
+
   params:
-    bootswatch: flatly
     ganalytics: UA-56931813-1
+
 navbar:
-  type: inverse
+  type: dark
   left:
     - icon: fa-home
       href: index.html
@@ -15,7 +33,7 @@ navbar:
       href: articles/installation.html
     - text: "Package functions"
       href: reference/index.html
-    - text: Examples
+    - text: "Examples"
       href: articles/examples.html
   right:
     - text: "news"
@@ -24,3 +42,19 @@ navbar:
       href: articles/faq.html
     - icon: fab fa-github
       href: https://github.com/benrosche/ineqx/
+
+home:
+  strip_header: true
+
+reference:
+  - title: "Functions"
+    contents:
+      - matches(".*")
+
+articles:
+  - title: "Articles"
+    contents:
+      - model
+      - installation
+      - examples
+      - faq

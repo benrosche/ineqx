@@ -1,0 +1,12 @@
+/* Override navbar background - pkgdown 2.2.0 hardcodes bg-light class */
+.navbar {
+  background-color: #141b2d !important;
+}
+
+/* Dark teal link color */
+a {
+  color: #008b94;
+}
+a:hover {
+  color: #006670;
+}
