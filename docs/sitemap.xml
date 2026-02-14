@@ -1,51 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://benrosche.github.io/ineqx/404.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/articles/examples.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/articles/faq.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/articles/installation.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/articles/model.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/index.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/calcAME.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/cps_sample.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/incdat.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/ineqx.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/plot.ineqx.html</loc>
-  </url>
-  <url>
-    <loc>https://benrosche.github.io/ineqx/reference/wibe.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://benrosche.github.io/ineqx/404.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/articles/examples.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/articles/faq.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/articles/index.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/articles/installation.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/articles/model.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/authors.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/index.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/news/index.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/calcAME.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/cps_sample.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/incdat.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/index.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/ineqx.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/plot.ineqx.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/runShinyExample.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/theme_ineqx.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/wibe.html</loc></url>
 </urlset>
+

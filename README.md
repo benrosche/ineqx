@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# <img src="man/figures/ineqx-hexagon.png" width="200" align="right" />
+# <img src="man/figures/ineqx-hexagon.jpg" width="200" align="right" />
 
 ### ineqx: Descriptive and causal variance decompositions
 
