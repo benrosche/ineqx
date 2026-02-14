@@ -1,9 +1,9 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# <img src="man/figures/ineqx-hexagon.jpg" width="200" align="right" />
+<img src="man/figures/ineqx-hexagon.jpg" width="200" align="right" />
 
-### ineqx: Descriptive and causal variance decompositions
+# ineqx: Descriptive and causal variance decompositions
 
 The ineqx package allows to analyze how inequality in an outcome (e.g.,
 income) splits into inequality within and between groups (e.g., gender).
