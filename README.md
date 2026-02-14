@@ -3,7 +3,7 @@
 
 <img src="man/figures/ineqx-hexagon.jpg" width="200" align="right" />
 
-# ineqx: Descriptive and causal variance decompositions
+## ineqx: Descriptive and explanatory variance decompositions
 
 The ineqx package allows to analyze how inequality in an outcome (e.g.,
 income) splits into inequality within and between groups (e.g., gender).
@@ -39,18 +39,18 @@ decomposing both the variance and the squared coefficient of variation
 
 <u>With the ineqx package you can analyze</u>
 
--   how overall inequality at a single point in time splits into a
-    within- and between-group component (e.g., Does income inequality
-    differ more within or between gender categories?)
--   whether the overall change in inequality over time stems from
-    changes in within-group inequality, between-group inequality, or
-    changes in the composition of the groups (e.g., )
--   the degree to which changes in inequality are due to changes in the
-    effect of a treatment (i.e., binary predictor) on within- and
-    between-group inequality, due to changes in the composition of the
-    groups, and due to changes in pre-treatment inequality
--   analyze the effect of a treatment on inequality (i.e. variability in
-    an outcome) rather than just the mean
+- how overall inequality at a single point in time splits into a within-
+  and between-group component (e.g., Does income inequality differ more
+  within or between gender categories?)
+- whether the overall change in inequality over time stems from changes
+  in within-group inequality, between-group inequality, or changes in
+  the composition of the groups (e.g., )
+- the degree to which changes in inequality are due to changes in the
+  effect of a treatment (i.e., binary predictor) on within- and
+  between-group inequality, due to changes in the composition of the
+  groups, and due to changes in pre-treatment inequality
+- analyze the effect of a treatment on inequality (i.e. variability in
+  an outcome) rather than just the mean
 
 This is how the `ineqx()` function looks like:
 
@@ -68,6 +68,7 @@ iframe {
   border: none;
 }
 </style>
+
 <iframe src="https://benrosche.shinyapps.io/ineqx-app/" />
 
 ### Developers
