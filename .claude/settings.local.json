@@ -29,7 +29,8 @@
       "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/R CMD check --no-build-vignettes --no-manual ineqx_0.3.0.tar.gz)",
       "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"pkg <- devtools::build\\(vignettes=FALSE\\); message\\(''Built: '', pkg\\); tools:::.check_packages\\(pkg, args=''--no-manual --no-build-vignettes''\\)\")",
       "Bash(_R_CHECK_FORCE_SUGGESTS_=false C:/Users/fr2488/AppData/Local/miniforge3/Scripts/R CMD check --no-manual --no-build-vignettes ineqx_0.3.0.tar.gz)",
-      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::build\\(vignettes=FALSE\\)\")"
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::build\\(vignettes=FALSE\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::install\\(quick=TRUE, upgrade=''never''\\)\")"
     ]
   }
 }
