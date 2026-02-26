@@ -2,80 +2,111 @@
 % Please edit documentation in R/ineqx.R
 \name{ineqx}
 \alias{ineqx}
-\title{Descriptive and causal variance decompositions}
+\title{Causal variance decomposition}
 \usage{
 ineqx(
+  params = NULL,
+  formula_mu = NULL,
+  formula_sigma = NULL,
+  data = NULL,
   treat = NULL,
-  post = NULL,
-  y,
-  ystat = "Var",
   group = NULL,
   time = NULL,
   weights = NULL,
-  controls = NULL,
-  decomp = "post",
+  post = NULL,
   ref = NULL,
-  AME_mu = NULL,
-  AME_sigma = NULL,
-  dat
+  ystat = "Var",
+  order = c("behavioral", "compositional", "pretreatment"),
+  se = "delta"
 )
 }
 \arguments{
-\item{treat}{Character string. Treatment variable. Values must be 0/1}
+\item{params}{An \code{ineqx_params} object for Mode A. If provided,
+formula/data arguments are ignored.}
 
-\item{post}{Character string. Before/after variable. Values must be 0/1}
+\item{formula_mu}{Formula for the mean equation (Mode B). E.g.,
+\code{y ~ treat * group + controls}.}
 
-\item{y}{Character string. Dependent variable. Variable must be continuous.}
+\item{formula_sigma}{Formula for the log-SD equation (Mode B). One-sided,
+e.g., \code{~ treat * group + controls}.}
 
-\item{ystat}{Character string. Either "Var" (default) or "CV2". Choose to analyze (the effect of x on) the variance or squared coefficient of variation.}
+\item{data}{Data.frame for Mode B (individual-level data).}
 
-\item{group}{Character string. Variable must be categorical. Grouping variable to decompose variance into within- and between-group components.}
+\item{treat}{Character, treatment variable name (Mode B). Coded 0/1.}
 
-\item{time}{Character string. c.x with specify penalized splines, i.x will specify dummies. Time variable to analyze change over time.}
+\item{group}{Character, grouping variable name (Mode B).}
 
-\item{weights}{Character string. Weight variable.}
+\item{time}{Character, time variable name (Mode B). NULL for cross-sectional.}
 
-\item{controls}{Character vector with additional control variables. E.g. c("c.age", "i.sex", ...)}
+\item{weights}{Character, weight variable name (Mode B). NULL for equal weights.}
 
-\item{decomp}{Character string. Either "post" (default) or "effect".}
+\item{post}{Character, pre/post indicator for DiD (Mode B). NULL for
+simple difference estimator.}
 
-\item{ref}{Number, vector, or list. Counterfactual reference point. See details.}
+\item{ref}{Numeric, reference time period. Used in Mode B; in Mode A,
+taken from \code{params}.}
 
-\item{AME_mu}{Dataframe with average marginal effects (Mu)}
+\item{ystat}{Character, \code{"Var"} or \code{"CV2"}. Default: \code{"Var"}.}
 
-\item{AME_sigma}{Dataframe with average marginal effects (Sigma)}
+\item{order}{Decomposition ordering for longitudinal data. Either:
+\itemize{
+  \item A character vector of length 3: a permutation of
+    \code{c("behavioral", "compositional", "pretreatment")} for a
+    single ordering.
+  \item \code{"shapley"}: averages across all 6 possible orderings.
+}
+Ignored for cross-sectional data. Default:
+\code{c("behavioral", "compositional", "pretreatment")}.}
 
-\item{dat}{Dataframe}
+\item{se}{Standard error method. One of:
+\itemize{
+  \item \code{"delta"} (default): delta method SEs (requires vcov in params)
+  \item \code{"none"}: skip SE computation
+  \item A \code{boot_config} object: bootstrap SEs
+}}
 }
 \value{
-List with eight elements: "vars", "dMu", "dSigma", "dW", "dB", "dC", "dP", "dT". See details.
+For cross-sectional data: an \code{ineqx_causal_cross} object.
+  For longitudinal data with a specific ordering: an \code{ineqx_causal_longit}
+  object. For \code{order = "shapley"}: an \code{ineqx_shapley} object.
 }
 \description{
-The ineqx package implements Rosche (202X). [...]
+Decomposes the treatment effect on inequality into between-group and
+within-group components. Supports both cross-sectional and longitudinal
+designs, with automatic detection based on the input parameters.
 }
 \details{
-The main function of \code{ineqx}. [...]
-
-
-\bold{Counterfactual reference point (ref)}
-
-\code{ref} can either be a number, c(number, "variable name"), or list(n=c(...), mu=c(...), sigma=c(...), beta=c(...), lambda=c(...)). [...]
-
-\bold{Return}
-
-...
+There are two usage modes:
+\describe{
+  \item{Mode A: Pre-extracted params}{Pass an \code{ineqx_params} object
+    via \code{params}. Use \code{\link{ineqx_params}} to create one
+    manually or from a fitted gamlss model.}
+  \item{Mode B: Integrated fitting}{Pass \code{formula_mu},
+    \code{formula_sigma}, \code{data}, \code{treat}, and \code{group}.
+    The function fits a GAMLSS model, extracts parameters, and decomposes.}
+}
 }
 \examples{
-data(incdat)
-# Descriptive variance decomposition
-decomp_descr <- ineqx(y="inc", group="group", time="i.year", ref=1, dat=incdat)
-plot(decomp_descr, type="dT")
+# Mode A: from manual params
+params <- ineqx_params(
+  data = data.frame(
+    group = c("workers", "managers"),
+    pi = c(0.5, 0.5),
+    mu0 = c(500, 1000),
+    sigma0 = c(200, 400),
+    beta = c(60, 100),
+    lambda = c(-0.1, -0.2)
+  )
+)
+result <- ineqx(params = params)
 
-# Causal variance decomposition
-decomp_treat <- ineqx(treat="x", post="t", y="inc", group="group", time="i.year", ref=1, dat=incdat)
-plot(decomp_treat, type="dT")
-
+\dontrun{
+# Mode B: integrated GAMLSS fitting
+result <- ineqx(
+  formula_mu = inc ~ x * factor(group),
+  formula_sigma = ~ x * factor(group),
+  data = incdat, treat = "x", group = "group"
+)
 }
-\author{
-Benjamin Rosche <benjamin.rosche@gmail.com>
+
 }

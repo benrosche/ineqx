@@ -1,0 +1,236 @@
+---
+title: "Getting Started with ineqx"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with ineqx}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4,
+  out.width = "80%",
+  dpi = 150,
+  fig.align = "center"
+)
+```
+
+This tutorial walks through the three main workflows of the **ineqx** package:
+
+1. [Descriptive decomposition](#descriptive) — split inequality into within- and between-group components
+2. [Causal decomposition](#causal) — decompose treatment effects on inequality
+3. [External GAMLSS model](#gamlss) — bring your own model, extract parameters, and decompose
+
+The package has three user-facing functions:
+
+| Function | Purpose |
+|----------|---------|
+| `ineq()` | Descriptive decomposition from raw data |
+| `ineqx()` | Causal decomposition (from params or formula + data) |
+| `ineqx_params()` | Create parameter object — manually or from a fitted gamlss |
+
+We use the simulated `incdat` dataset that ships with the package. It contains
+panel data on individuals across multiple years, three groups
+(`group = 1, 2, 3`), and a binary treatment indicator (`x`).
+
+```{r setup}
+library(ineqx)
+
+data("incdat")
+str(incdat)
+```
+
+---
+
+## 1. Descriptive decomposition {#descriptive}
+
+The simplest use case: given an outcome and a grouping variable, how much
+inequality is *within* groups versus *between* groups?
+
+```{r desc}
+desc <- ineq(
+  y     = "inc",
+  group = "group",
+  time  = "year",
+  data  = incdat,
+  ref   = 1,
+  ystat = "Var"
+)
+
+print(desc)
+```
+
+When a time variable and reference period are provided, `ineq()`
+computes within-group, between-group, and total inequality for each period,
+and decomposes the change over time into contributions from changing group
+means ($\mu$), dispersions ($\sigma$), and composition ($\pi$), using
+Shapley averaging by default.
+
+```{r desc-plot, fig.height = 3.5}
+plot(desc)
+```
+
+---
+
+## 2. Causal decomposition {#causal}
+
+The causal decomposition answers a different question: *how does a treatment
+affect inequality?* It decomposes the treatment's total effect on variance
+into:
+
+- **Between-group** (behavioral): does treatment raise means more in some
+  groups than others?
+- **Within-group** (behavioral): does treatment compress or expand dispersion
+  within groups?
+
+### Integrated fitting (Mode B)
+
+The simplest approach: pass formulas and data directly to `ineqx()`, which
+fits a GAMLSS model internally:
+
+```{r causal-modeb, message = FALSE}
+result <- ineqx(
+  formula_mu    = inc ~ x * factor(group),
+  formula_sigma = ~ x * factor(group),
+  data  = incdat,
+  treat = "x",
+  group = "group",
+  se    = "none"
+)
+
+print(result)
+```
+
+```{r causal-cross-plot, fig.height = 3.5}
+plot(result)
+```
+
+### Pre-extracted parameters (Mode A)
+
+For more control, create an `ineqx_params` object first and pass it to
+`ineqx()`:
+
+```{r causal-modea, message = FALSE}
+# Extract params from a gamlss model
+params <- ineqx_params(
+  model = gamlss::gamlss(
+    inc ~ x * factor(group) + factor(t),
+    sigma.formula = ~ x * factor(group) + factor(t),
+    data = incdat, family = gamlss.dist::NO(), trace = FALSE
+  ),
+  data  = incdat,
+  treat = "x",
+  group = "group",
+  time  = "t",
+  ref   = 0,
+  vcov  = FALSE
+)
+
+print(params)
+```
+
+### Longitudinal causal decomposition
+
+With longitudinal parameters, `ineqx()` automatically performs the
+longitudinal decomposition:
+
+```{r causal-longit}
+result_longit <- ineqx(
+  params = params,
+  order  = c("behavioral", "compositional", "pretreatment"),
+  se     = "none"
+)
+
+print(result_longit)
+```
+
+```{r causal-longit-plot, fig.height = 3.5}
+plot(result_longit)
+```
+
+### Shapley values
+
+Since the longitudinal decomposition depends on the ordering, you can
+average across all 6 orderings with `order = "shapley"`:
+
+```{r shapley}
+result_shapley <- ineqx(params = params, order = "shapley", se = "none")
+print(result_shapley)
+```
+
+```{r shapley-plot, fig.height = 3.5}
+plot(result_shapley)
+```
+
+---
+
+## 3. Using an external GAMLSS model {#gamlss}
+
+If you want full control over the model specification (e.g., different
+distributions, random effects, custom controls), fit a `gamlss` model
+yourself and pass it to `ineqx_params()`:
+
+```{r external-gamlss, message = FALSE}
+library(gamlss)
+
+# Fit your own GAMLSS
+my_model <- gamlss(
+  formula       = inc ~ x * factor(group) + factor(t),
+  sigma.formula = ~ x * factor(group) + factor(t),
+  data          = incdat,
+  family        = NO(),
+  trace         = FALSE
+)
+
+# Extract parameters
+params_ext <- ineqx_params(
+  model = my_model,
+  data  = incdat,
+  treat = "x",
+  group = "group",
+  vcov  = TRUE
+)
+
+print(params_ext)
+
+# Decompose
+ineqx(params = params_ext)
+```
+
+### Manual parameter specification
+
+You can also construct `ineqx_params` by hand — useful for simulation
+studies, sensitivity analyses, or replicating results from other software:
+
+```{r manual-params}
+params_manual <- ineqx_params(
+  data = data.frame(
+    group  = c("low", "mid", "high"),
+    pi     = c(0.4, 0.35, 0.25),
+    mu0    = c(300, 600, 1200),
+    sigma0 = c(100, 200, 500),
+    beta   = c(50, 80, 120),
+    lambda = c(-0.05, -0.10, -0.15)
+  ),
+  ystat = "Var"
+)
+
+ineqx(params = params_manual, se = "none")
+```
+
+---
+
+## Summary
+
+| Workflow | Functions | Input |
+|----------|-----------|-------|
+| Descriptive | `ineq()` | Raw data (y, group, time) |
+| Causal (integrated) | `ineqx(formula_mu=..., data=...)` | Raw data + treatment |
+| Causal (external model) | `ineqx_params(model=...)` + `ineqx(params=...)` | Fitted gamlss |
+| Causal (manual) | `ineqx_params(data=...)` + `ineqx(params=...)` | Parameter data.frame |
+
+For details on the methodology, see `vignette("model")`. For more examples, see `vignette("examples")`.

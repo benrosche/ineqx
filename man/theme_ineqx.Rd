@@ -3,20 +3,20 @@
 \docType{data}
 \name{theme_ineqx}
 \alias{theme_ineqx}
-\title{theme_ineqx}
+\title{ineqx ggplot2 theme}
 \format{
-An object of class \code{theme} (inherits from \code{gg}) of length 93.
+An object of class \code{theme} (inherits from \code{ggplot2::theme}, \code{gg}, \code{S7_object}) of length 144.
 }
 \usage{
 theme_ineqx
 }
 \description{
-ggplot theme used for the plotting
+A custom ggplot2 theme for consistent styling of ineqx plots.
+Use as \code{+ theme_ineqx} in ggplot2 pipelines.
 }
 \examples{
-theme_ineqx()
-}
-\author{
-Benjamin Rosche <benjamin.rosche@gmail.com>
+library(ggplot2)
+ggplot(mtcars, aes(wt, mpg)) + geom_point() + theme_ineqx
+
 }
 \keyword{datasets}

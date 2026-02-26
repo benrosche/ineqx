@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /c/Users/fr2488/OneDrive/GitHub/ineqx/R/*.R)",
+      "Bash(where Rscript)",
+      "Bash(where R)",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"devtools::test\\(filter=''delta''\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"devtools::test\\(\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"devtools::check\\(\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"data\\(cps_sample, package=''ineqx''\\); cat\\(''Columns:'', paste\\(names\\(cps_sample\\), collapse='', ''\\), ''\\\\n''\\); cat\\(''Rows:'', nrow\\(cps_sample\\), ''\\\\n''\\); cat\\(''Classes:'', paste\\(sapply\\(cps_sample, class\\), collapse='', ''\\), ''\\\\n''\\); if\\(''SES'' %in% names\\(cps_sample\\)\\) cat\\(''SES levels:'', paste\\(sort\\(unique\\(cps_sample[[''SES'']]\\)\\), collapse='', ''\\), ''\\\\n''\\); if\\(''year'' %in% names\\(cps_sample\\)\\) cat\\(''Years:'', paste\\(range\\(cps_sample[[''year'']]\\), collapse=''-''\\), ''\\\\n''\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"roxygen2::roxygenise\\(\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"devtools::load_all\\(\\); cat\\(''Package loaded successfully\\\\n''\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \"devtools::build_vignettes\\(\\)\")",
+      "Bash(\"C:\\\\Users\\\\fr2488\\\\AppData\\\\Local\\\\miniforge3\\\\Scripts\\\\Rscript.exe\" -e \":*)",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"roxygen2::roxygenise\\(\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::test\\(\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"cat\\(requireNamespace\\(''gamlss'', quietly=FALSE\\)\\); library\\(gamlss\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"install.packages\\(''MASS'', repos=''https://cloud.r-project.org''\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"library\\(gamlss\\); cat\\(''OK''\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"install.packages\\(''nlme'', repos=''https://cloud.r-project.org''\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"install.packages\\(''Matrix'', repos=''https://cloud.r-project.org''\\)\")",
+      "Bash(grep -E \"^#'' @export\" /c/Users/fr2488/OneDrive/GitHub/ineqx/R/*.R)",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"load\\(''data/incdat.RData''\\); str\\(incdat\\); head\\(incdat\\); load\\(''data/cps_sample.RData''\\); str\\(cps_sample\\); head\\(cps_sample\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::load_all\\(\\); cat\\(''load_all OK\\\\n''\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \":*)",
+      "Bash(xargs ls -1)",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::document\\(\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::check\\(\\)\")",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/R CMD check --no-build-vignettes --no-manual ineqx_0.3.0.tar.gz)",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"pkg <- devtools::build\\(vignettes=FALSE\\); message\\(''Built: '', pkg\\); tools:::.check_packages\\(pkg, args=''--no-manual --no-build-vignettes''\\)\")",
+      "Bash(_R_CHECK_FORCE_SUGGESTS_=false C:/Users/fr2488/AppData/Local/miniforge3/Scripts/R CMD check --no-manual --no-build-vignettes ineqx_0.3.0.tar.gz)",
+      "Bash(C:/Users/fr2488/AppData/Local/miniforge3/Scripts/Rscript -e \"devtools::build\\(vignettes=FALSE\\)\")"
+    ]
+  }
+}
