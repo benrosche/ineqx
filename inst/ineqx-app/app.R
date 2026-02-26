@@ -217,7 +217,14 @@ shinyApp(
 
     output$plot_input <- renderPlot({
 
+      req(input$tabs)
       tab <- as.numeric(gsub("Time ","",input$tabs))
+      req(input[[paste0("m",tab,1)]], input[[paste0("s",tab,1)]],
+          input[[paste0("m",tab,2)]], input[[paste0("s",tab,2)]])
+      if(isTRUE(input$causal)) {
+        req(input[[paste0("b",tab,1)]], input[[paste0("l",tab,1)]],
+            input[[paste0("b",tab,2)]], input[[paste0("l",tab,2)]])
+      }
 
       # Plot defaults
       p <-
@@ -295,6 +302,15 @@ shinyApp(
     })
 
     # -------------------------------------------------------------------------------------------- #
+    # Reset outputs when switching between descriptive and causal
+    # -------------------------------------------------------------------------------------------- #
+
+    observeEvent(input$causal, {
+      output$output1 <- renderUI({ NULL })
+      output$output2 <- renderUI({ NULL })
+    })
+
+    # -------------------------------------------------------------------------------------------- #
     # Run ineqx (+ all post-run output)
     # -------------------------------------------------------------------------------------------- #
 
@@ -369,43 +385,35 @@ shinyApp(
 
       output$plot_wibe <- renderPlot({
         if(isTRUE(input$causal)) {
-          # For causal, show the cross-sectional bar plot or longit plot
+          # Causal decomposition plot (bar chart for cross-sectional, line for longit/shapley)
           plot(ineqx.out)
         } else {
           plot(ineqx.out, type = "wibe")
         }
       })
 
-      # Output 2: Decomposition results -------------------------------------------------------- #
+      # Output 2: Decomposition details -------------------------------------------------------- #
 
       output$output2 <- renderUI({
-        box(
-          width=NULL,
-          tagList(
-            if(isTRUE(input$causal)) {
-              HTML("<h4>Decomposition results</h4>
-               This plot displays the results of the causal variance decomposition.")
-            } else {
-              HTML("<h4>Decomposition results</h4>
-               This plot displays the results of the descriptive variance decomposition.
-               The change of three quantities are visualized:
+        if(!isTRUE(input$causal)) {
+          box(
+            width=NULL,
+            tagList(
+              HTML("<h4>Decomposition of change over time</h4>
+               This plot decomposes the change in inequality relative to the reference period:
                <ul>
                 <li><b>Means (mu)</b>: How much did inequality change due to changes in group means?</li>
                 <li><b>Dispersions (sigma)</b>: How much did inequality change due to changes in within-group dispersions?</li>
                 <li><b>Composition (pi)</b>: How much did inequality change due to changes in group composition?</li>
-               </ul>")
-            },
-            plotOutput("plot_ineqx")
+               </ul>"),
+              plotOutput("plot_ineqx")
+            )
           )
-        )
+        }
       })
 
       output$plot_ineqx <- renderPlot({
-        if(isTRUE(input$causal)) {
-          plot(ineqx.out)
-        } else {
-          plot(ineqx.out, type = "deltas")
-        }
+        plot(ineqx.out, type = "deltas")
       })
 
     })

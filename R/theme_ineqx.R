@@ -25,7 +25,7 @@ theme_ineqx <-
     legend.title = ggplot2::element_text(face = "bold"),
     legend.text = ggplot2::element_text(face = "bold"),
     legend.position = "bottom",
-    legend.margin = ggplot2::margin(-20, 0, 0, 0),
+    legend.margin = ggplot2::margin(0, 0, 0, 0),
     legend.box.margin = ggplot2::margin(0, 0, 0, 0),
     legend.key.width = ggplot2::unit(1.4, "cm"),
     strip.background = ggplot2::element_rect(fill = "white", color = "white"),
