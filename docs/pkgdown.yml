@@ -6,7 +6,8 @@ articles:
   faq: faq.html
   installation: installation.html
   model: model.html
-last_built: 2026-02-14T09:05Z
+  tutorial: tutorial.html
+last_built: 2026-02-26T19:52Z
 urls:
   reference: https://benrosche.github.io/ineqx/reference
   article: https://benrosche.github.io/ineqx/articles
