@@ -1,28 +1,33 @@
 Package: ineqx
 Type: Package
-Title: Descriptive and causal variance decomposition
-Version: 0.1.0
-Author: Benjamin Rosche
-Maintainer: Benjamin Rosche <benjamin.rosche@gmail.com>
-Description: The ineqx package implements Rosche (2022). [...]
+Title: Descriptive and Causal Variance Decomposition
+Version: 0.3.0
+Authors@R: person("Benjamin", "Rosche", role=c("aut", "cre"),
+    email="benjamin.rosche@gmail.com", comment=c(ORCID="0000-0001-5196-625X"))
+Description: Implements descriptive and causal variance decomposition for
+    analyzing within-group and between-group inequality. Decomposes the
+    treatment effect on total variance into behavioral, compositional, and
+    pre-treatment components. Supports configurable decomposition orderings
+    and Shapley values. See Rosche (2025) for methodological details.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: 
-    dplyr,
-    zeallot,
-    ggplot2,
+Depends:
+    R (>= 3.5.0)
+Imports:
+    ggplot2
+Suggests:
     gamlss,
-    shiny
-Imports: 
-    purrr,
-    rlang,
+    gamlss.dist,
+    dplyr,
     tidyr,
-    DT
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    shiny,
+    shinydashboard,
+    shinyWidgets
 URL: http://benrosche.com/projects/ineqx/
 BugReports: https://github.com/benrosche/ineqx/issues
-RoxygenNote: 7.1.2
-Authors@R: person("Benjamin", "Rosche", role=c("aut", "cre"), 
-    email="benjamin.rosche@gmail.com", comment=c(ORCID="0000-0001-5196-625X"))
-
-
+RoxygenNote: 7.3.3
+VignetteBuilder: knitr

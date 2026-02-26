@@ -1,11 +1,8 @@
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
-library(DT)
-library(tidyr)
 library(ineqx)
 library(ggplot2)
-library(ggthemes)
 # rsconnect::deployApp("C:/Users/benja/OneDrive - Cornell University/GitHub/ineqx/inst/ineqx-app")
 
 shinyApp(
@@ -51,8 +48,7 @@ shinyApp(
             plotOutput("plot_input")
           ),
           htmlOutput("output1"),
-          htmlOutput("output2"),
-          htmlOutput("output3")
+          htmlOutput("output2")
         ),
       )
     )
@@ -238,7 +234,7 @@ shinyApp(
           axis.title.y = element_text(face="bold"),
           axis.line = element_line(color = "black"),
           axis.text=element_text(color="black", size = 15),
-          panel.grid = element_line(size=0.25),
+          panel.grid = element_line(linewidth=0.25),
           panel.grid.minor = element_blank(),
           panel.grid.major = element_line(color = "#A9A9A9", linetype = 2),
           panel.grid.major.x = element_blank(),
@@ -256,40 +252,40 @@ shinyApp(
 
         p <-
           p +
-          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,1)]], sd = input[[paste0("s",tab,1)]]), size=1, aes(color="Group 1", linetype="(pre)")) +
-          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,1)]] + input[[paste0("b",tab,1)]], sd = input[[paste0("s",tab,1)]] + input[[paste0("l",tab,1)]]), size=1, aes(color="Group 1", linetype="(post)")) +
-          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,2)]], sd = input[[paste0("s",tab,2)]]), size=1, aes(color="Group 2", linetype="(pre)")) +
-          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,2)]] + input[[paste0("b",tab,2)]], sd = input[[paste0("s",tab,2)]] + input[[paste0("l",tab,2)]]), size=1, aes(color="Group 2", linetype="(post)"))
+          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,1)]], sd = input[[paste0("s",tab,1)]]), linewidth=1, aes(color="Group 1", linetype="(pre)")) +
+          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,1)]] + input[[paste0("b",tab,1)]], sd = input[[paste0("s",tab,1)]] + input[[paste0("l",tab,1)]]), linewidth=1, aes(color="Group 1", linetype="(post)")) +
+          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,2)]], sd = input[[paste0("s",tab,2)]]), linewidth=1, aes(color="Group 2", linetype="(pre)")) +
+          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,2)]] + input[[paste0("b",tab,2)]], sd = input[[paste0("s",tab,2)]] + input[[paste0("l",tab,2)]]), linewidth=1, aes(color="Group 2", linetype="(post)"))
 
         if(input$ng>2) {
           p <-
             p +
-            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,3)]], sd = input[[paste0("s",tab,3)]]), size=1, aes(color="Group 3", linetype="(pre)")) +
-            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,3)]] + input[[paste0("b",tab,3)]], sd = input[[paste0("s",tab,3)]] + input[[paste0("l",tab,3)]]), size=1, aes(color="Group 3", linetype="(post)"))
+            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,3)]], sd = input[[paste0("s",tab,3)]]), linewidth=1, aes(color="Group 3", linetype="(pre)")) +
+            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,3)]] + input[[paste0("b",tab,3)]], sd = input[[paste0("s",tab,3)]] + input[[paste0("l",tab,3)]]), linewidth=1, aes(color="Group 3", linetype="(post)"))
         }
         if(input$ng>3) {
           p <-
             p +
-            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,4)]], sd = input[[paste0("s",tab,4)]]), size=1, aes(color="Group 4", linetype="(pre)")) +
-            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,4)]] + input[[paste0("b",tab,4)]], sd = input[[paste0("s",tab,4)]] + input[[paste0("l",tab,4)]]), size=1, aes(color="Group 4", linetype="(post)"))
+            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,4)]], sd = input[[paste0("s",tab,4)]]), linewidth=1, aes(color="Group 4", linetype="(pre)")) +
+            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,4)]] + input[[paste0("b",tab,4)]], sd = input[[paste0("s",tab,4)]] + input[[paste0("l",tab,4)]]), linewidth=1, aes(color="Group 4", linetype="(post)"))
         }
 
       } else {
 
         p <-
           p +
-          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,1)]], sd = input[[paste0("s",tab,1)]]), size=1, aes(color="Group 1")) +
-          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,2)]], sd = input[[paste0("s",tab,2)]]), size=1, aes(color="Group 2"))
+          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,1)]], sd = input[[paste0("s",tab,1)]]), linewidth=1, aes(color="Group 1")) +
+          stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,2)]], sd = input[[paste0("s",tab,2)]]), linewidth=1, aes(color="Group 2"))
 
         if(input$ng>2) {
           p <-
             p +
-            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,3)]], sd = input[[paste0("s",tab,3)]]), size=1, aes(color="Group 3"))
+            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,3)]], sd = input[[paste0("s",tab,3)]]), linewidth=1, aes(color="Group 3"))
         }
         if(input$ng>3) {
           p <-
             p +
-            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,4)]], sd = input[[paste0("s",tab,4)]]), size=1, aes(color="Group 4"))
+            stat_function(fun = dnorm, n = 10000, args = list(mean = input[[paste0("m",tab,4)]], sd = input[[paste0("s",tab,4)]]), linewidth=1, aes(color="Group 4"))
         }
 
       }
@@ -305,237 +301,114 @@ shinyApp(
     observeEvent(input$runineqx,{
 
       set.seed(3)
+      ng <- as.integer(input$ng)
+      nt <- as.integer(input$nt)
 
       if(isTRUE(input$causal)) {
 
-        n <- 10000
-
-        dat <-
-          tibble() %>%
-          tidyr:::expand(id=seq_len(n), time=seq_len(input$nt), group=seq_len(input$ng), x=c(0,1), t=c(0,1), y=NA)
-
-        for(i in seq_len(input$nt)) {
-          for(j in seq_len(input$ng)) {
-            dat[dat$time==i & dat$group==j & dat$t==0,] <- dat %>% dplyr::filter(time==i & group==j & t==0) %>% dplyr::mutate(y=rnorm(2*n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]]))
-            dat[dat$time==i & dat$group==j & dat$t==1 & dat$x==1,] <- dat %>% dplyr::filter(time==i & group==j & x==1 & t==1) %>% dplyr::mutate(y=rnorm(n, input[[paste0("m",i,j)]]+input[[paste0("b",i,j)]], input[[paste0("s",i,j)]]+input[[paste0("l",i,j)]]))
+        # Build parameter data.frame from slider inputs
+        rows <- list()
+        for(i in seq_len(nt)) {
+          for(j in seq_len(ng)) {
+            rows[[length(rows) + 1]] <- data.frame(
+              group  = j,
+              time   = i,
+              pi     = 1 / ng,
+              mu0    = input[[paste0("m",i,j)]],
+              sigma0 = input[[paste0("s",i,j)]],
+              beta   = input[[paste0("b",i,j)]],
+              lambda = input[[paste0("l",i,j)]] / input[[paste0("s",i,j)]]  # convert additive to log-scale
+            )
           }
         }
+        param_df <- do.call(rbind, rows)
+
+        params <- ineqx_params(data = param_df, ref = 1)
+
+        if (params$type == "cross_sectional") {
+          ineqx.out <- ineqx(params = params, se = "none")
+        } else {
+          ineqx.out <- ineqx(params = params, order = "shapley", se = "none")
+        }
+
       } else {
 
+        # Build data for descriptive decomposition
         n <- 1000
-
-        dat <-
-          tibble() %>%
-          tidyr:::expand(id=seq_len(n), time=seq_len(input$nt), group=seq_len(input$ng), y=NA)
-
-        for(i in seq_len(input$nt)) {
-          for(j in seq_len(input$ng)) {
-            dat[dat$time==i & dat$group==j,] <- dat %>% dplyr::filter(time==i & group==j) %>% dplyr::mutate(y=rnorm(n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]]))
+        dat_list <- list()
+        for(i in seq_len(nt)) {
+          for(j in seq_len(ng)) {
+            dat_list[[length(dat_list) + 1]] <- data.frame(
+              id = seq_len(n),
+              time = i,
+              group = j,
+              y = rnorm(n, input[[paste0("m",i,j)]], input[[paste0("s",i,j)]])
+            )
           }
         }
+        dat <- do.call(rbind, dat_list)
+
+        ineqx.out <- ineq(
+          y = "y", group = "group", time = "time",
+          data = dat, ref = 1, ystat = "Var"
+        )
       }
 
-      if(isTRUE(input$causal)) {
-
-        AME_mu <- list()
-        AME_mu[[1]] <- tibble(time=numeric(), group=numeric(), effect=numeric())
-        AME_mu[[2]] <- tibble(time=numeric(), effect=numeric())
-
-        AME_sigma <- list()
-        AME_sigma[[1]] <- tibble(time=numeric(), group=numeric(), effect=numeric())
-        AME_sigma[[2]] <- tibble(time=numeric(), effect=numeric())
-
-        for(i in seq_len(input$nt)) {
-          for(j in seq_len(input$ng)) {
-            AME_mu[[1]] <- AME_mu[[1]] %>% add_row(time=i, group=j, effect=input[[paste0("b",i,j)]])
-            AME_sigma[[1]] <- AME_sigma[[1]] %>% add_row(time=i, group=j, effect=input[[paste0("l",i,j)]])
-          }
-          AME_mu[[2]] <- AME_mu[[1]] %>% group_by(time) %>% dplyr::summarise(time=mean(time), effect=mean(effect))
-          AME_sigma[[2]] <- AME_sigma[[1]] %>% group_by(time) %>% dplyr::summarise(time=mean(time), effect=mean(effect))
-        }
-
-      }
-
-      if(isTRUE(input$causal)) {
-
-        ineqx.out <- ineqx(treat="x", post="t", y="y", ystat="Var", group="group", time="i.time", AME_mu=AME_mu, AME_sigma=AME_sigma, ref=1, dat=dat)
-
-        wibe.out  <-
-          wibe(y="y", group="group", time="i.time", long=T, dat=
-                 dat %>%
-                 dplyr::filter(x==0))[[2]] %>%
-          dplyr::filter(variable %in% c("VarW", "VarB", "VarT")) %>%
-          dplyr::mutate(x=0) %>%
-          add_row(
-            wibe(y="y", group="group", time="i.time", long=T, dat=
-                   dat %>%
-                   dplyr::filter(x==1))[[2]] %>%
-              dplyr::filter(variable %in% c("VarW", "VarB", "VarT")) %>%
-              dplyr::mutate(x=1)
-          )
-
-      } else {
-
-        ineqx.out <- ineqx(y="y", ystat="Var", group="group", time="i.time", ref=1, dat=dat)
-
-        wibe.out  <-
-          wibe(y="y", group="group", time="i.time", long=T, dat=dat)[[2]] %>%
-          dplyr::filter(variable %in% c("VarW", "VarB", "VarT"))
-
-      }
-
-      # Output 1 --------------------------------------------------------------------------------- #
+      # Output 1: W/B levels over time --------------------------------------------------------- #
 
       output$output1 <- renderUI({
-
         box(
           width=NULL,
           tagList(
             HTML("<h4>Within- and between-group inequality over time</h4>
-               This plot displays the development of within-group, between-group, and total inequality over time in absolute values."),
+               This plot displays the development of within-group, between-group, and total inequality over time."),
             plotOutput("plot_wibe"),
           )
         )
-
       })
 
       output$plot_wibe <- renderPlot({
-
         if(isTRUE(input$causal)) {
-          p <- ggplot(aes(x=time, y=value, color=factor(variable, levels = c("VarB", "VarW", "VarT")), linetype=factor(x, levels = c(0,1), labels = c("pre", "post"))), data = wibe.out)
+          # For causal, show the cross-sectional bar plot or longit plot
+          plot(ineqx.out)
         } else {
-          p <- ggplot(aes(x=time, y=value, color=factor(variable, levels = c("VarB", "VarW", "VarT"))), data = wibe.out)
+          plot(ineqx.out, type = "wibe")
         }
-
-        p <-
-          p +
-          geom_line() +
-          labs(x="Time", y="Variance", color="", linetype="") +
-          scale_color_manual(values=c("#F8766D", "#00BFC4", "#000000")) +
-          scale_linetype_manual(values = c("solid", "dashed")) +
-          scale_x_continuous(breaks=seq(1:4)) +
-          #scale_y_continuous(limits = c(0, 500)) +
-          theme_bw() +
-          theme(
-            text = element_text(size = 15),
-            plot.title = element_text(face="bold", hjust = 0.5),
-            axis.title.x = element_text(face="bold"),
-            axis.title.y = element_text(face="bold"),
-            axis.line = element_line(color = "black"),
-            axis.text=element_text(color="black", size = 15),
-            panel.grid = element_line(size=0.25),
-            panel.grid.minor = element_blank(),
-            panel.grid.major = element_line(color = "#A9A9A9", linetype = 2),
-            panel.grid.major.x = element_blank(),
-            panel.border = element_blank(),
-            legend.title = element_text(face="bold"),
-            legend.text = element_text(face="bold"),
-            legend.position="top",
-            legend.margin=margin(0,0,0,0),
-            legend.box.margin=margin(0,0,0,0),
-            legend.key.width=unit(1.2,"cm"),
-            strip.background=element_rect(fill="white", color="white"),
-            strip.text=element_text(face="bold", colour = "black", size=rel(1.2)))
-
-        p
-
       })
 
-      # Output 2 --------------------------------------------------------------------------------- #
+      # Output 2: Decomposition results -------------------------------------------------------- #
 
       output$output2 <- renderUI({
-
         box(
           width=NULL,
           tagList(
             if(isTRUE(input$causal)) {
               HTML("<h4>Decomposition results</h4>
-               This plot displays the results of the causal variance decomposition.
-               The change of four quantities are visualized:
-               <ul>
-                <li><b>The between-group effect</b>: How much did the treatment effect on the variance change due to changes in the effect of treatment on between-group inequality?</li>
-                <li><b>The within-group effect</b>: How much did the treatment effect on the variance change due to changes in the effect of treatment on within-group inequality?</li>
-                <li><b>The compositional-group effect</b>: How much did the treatment effect on the variance change due to changes in the composition of groups? This value is zero because groups sizes are constant in the example.</li>
-                <li><b>The pre-treatment effect</b>: How much did the treatment effect on the variance change due to changes in pre-treatment inequality? (Note that this quantity can fluctuate due to the probabilistic nature of the distributions.)</li>
-               </ul>")
+               This plot displays the results of the causal variance decomposition.")
             } else {
               HTML("<h4>Decomposition results</h4>
                This plot displays the results of the descriptive variance decomposition.
                The change of three quantities are visualized:
                <ul>
-                <li><b>The between-group effect</b>: How much did the total variance change due to changes in between-group inequality?</li>
-                <li><b>The within-group effect</b>: How much did the total variance change due to changes in within-group inequality?</li>
-                <li><b>The compositional-group effect</b>: How much did the total variance change due to changes in the composition of groups? This value is zero because groups sizes are constant in the example.</li>
+                <li><b>Means (mu)</b>: How much did inequality change due to changes in group means?</li>
+                <li><b>Dispersions (sigma)</b>: How much did inequality change due to changes in within-group dispersions?</li>
+                <li><b>Composition (pi)</b>: How much did inequality change due to changes in group composition?</li>
                </ul>")
             },
             plotOutput("plot_ineqx")
           )
         )
-
       })
 
-      output$plot_ineqx <- renderPlot({ plot(ineqx.out, type="dT") + scale_x_continuous(breaks=seq(1,4,1)) })
-
-      # Output 3 --------------------------------------------------------------------------------- #
-
-      output$output3 <- renderUI({
-
-        box(
-          width=NULL,
-          tagList(
-            HTML("<h4>The ineqx package offers different table and plot types to facilitate interpretation</h4>"),
-            htmlOutput("select"),
-            selectInput(
-              inputId="select_output3",
-              label="Choose from list to see other output types",
-              choices = list(
-                "Table \"Total\"" = 1,
-                "Plot \"Total\"" = 2,
-                "Plot \"Shares\"" = 3,
-                "Plot \"Treatment effect on Mu\"" = 4,
-                "Plot \"Treatment effect on Sigma\"" = 5),
-              selected = 1)
-          )
-        )
+      output$plot_ineqx <- renderPlot({
+        if(isTRUE(input$causal)) {
+          plot(ineqx.out)
+        } else {
+          plot(ineqx.out, type = "deltas")
+        }
       })
-
-      observeEvent(
-        input$select_output3, {
-          output$select <- renderUI({
-            if(input$select_output3==1) {
-              tagList(
-                HTML("This table displays the same output as the plot above."),
-                DT::renderDataTable(DT::datatable(ineqx.out$dT[[1]] %>% dplyr::mutate(across(where(is.numeric), round, digits=2)), options = list(pageLength = 5, dom = 'tip'), selection = "none", rownames = FALSE))
-              )
-            } else if(input$select_output3==2){
-              tagList(
-                HTML("This plot displays the same output as the plot above as well as the change in the variance, dVarT (yellow).
-                     We can see that the total change in the four components (dT) equals the change in the variance (dVarT). (The overlay is not perfect due to the probabilistic nature of the data.)
-                     The reason why dT and dVarT are equal is that the true treatment effect values are known and no other forces influence the variance in this example.
-                     In practice, the more the changes in the variance are driven by changes in the treatment effect, the closer the two lines will follow each other."),
-                renderPlot({ plot(ineqx.out, type="dPA") + scale_x_continuous(breaks=seq(1,4,1)) })
-              )
-            } else if(input$select_output3==3){
-              tagList(
-                HTML("This plot displays the size of within-group, between-group, compositional, and pre-treatment effects are relative to each other in absolute values."),
-                renderPlot({ plot(ineqx.out, type="dTS") })
-              )
-            } else if(input$select_output3==4){
-              tagList(
-                HTML("This plot displays the treatment effects on the mean. In a real application those values would be estimated."),
-                renderPlot({ plot(ineqx.out, type="dMuP") + labs(color="", group="", linetype="") })
-              )
-            } else if(input$select_output3==5){
-              tagList(
-                HTML("This plot displays the treatment effects on the variance. In a real application those values would be estimated."),
-                renderPlot({ plot(ineqx.out, type="dSigmaP") + labs(color="", group="", linetype="") })
-              )
-            }
-          })
-        })
 
     })
 
   }
 )
-
