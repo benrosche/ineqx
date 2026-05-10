@@ -70,19 +70,21 @@ print.ineqx_causal_cross <- function(x, ...) {
   stat_name <- if (x$ystat == "Var") "variance" else "CV2"
   cat(sprintf("\nTreatment effect on outcome %s:\n", stat_name))
 
+  # NB: x[["se"]] avoids partial matching to x$se_method
+  se <- x[["se"]]
   .print_line(sprintf("%s[Y | T = 0]", stat_label), x$ineq_control,
-              se = if (!is.null(x$se)) x$se$se_ineq_control, pad = pad)
+              se = if (!is.null(se)) se$se_ineq_control, pad = pad)
   .print_line(sprintf("%s[Y | T = 1]", stat_label), x$ineq_treated,
-              se = if (!is.null(x$se)) x$se$se_ineq_treated, pad = pad)
+              se = if (!is.null(se)) se$se_ineq_treated, pad = pad)
 
   # Total, then B/W indented
-  if (!is.null(x$se)) {
+  if (!is.null(se)) {
     .print_line("Total effect (tau_T)", x$tau_total,
-                se = x$se$se_tau_total, pad = pad)
+                se = se$se_tau_total, pad = pad)
     .print_line("Between-group (tau_B)", x$tau_B,
-                se = x$se$se_tau_B, indent = 6, pad = pad)
+                se = se$se_tau_B, indent = 6, pad = pad)
     .print_line("Within-group (tau_W)", x$tau_W,
-                se = x$se$se_tau_W, indent = 6, pad = pad)
+                se = se$se_tau_W, indent = 6, pad = pad)
   } else {
     .print_line("Total effect (tau_T)", x$tau_total, pad = pad)
     .print_line("Between-group (tau_B)", x$tau_B, indent = 6, pad = pad)
@@ -103,7 +105,7 @@ print.ineqx_causal_cross <- function(x, ...) {
   }
 
   comps <- x$components
-  se_sub <- if (!is.null(x$se)) x$se$se_sub else NULL
+  se_sub <- if (!is.null(se)) se$se_sub else NULL
   if (x$ystat == "Var") {
     cat("\nBetween-group sub-components:\n")
     .print_line("Var_pi(beta)", comps$Var_pi_beta,
@@ -169,7 +171,9 @@ print.ineqx_causal_longit <- function(x, ...) {
                                lambda_tests = x$lambda_tests)
 
   # --- Table 2: Per-time blocks ---
-  has_se <- !is.null(x$se)
+  # NB: x[["se"]] avoids partial matching to x$se_method
+  se <- x[["se"]]
+  has_se <- !is.null(se)
 
   cat(sprintf("\nDecomposition of changes in group-specific treatment effects on variance relative to ref = %s:\n", x$ref))
 
@@ -181,7 +185,7 @@ print.ineqx_causal_longit <- function(x, ...) {
       next
     }
     r <- x$results[[t_char]]
-    s <- if (has_se && t_char %in% names(x$se)) x$se[[t_char]] else NULL
+    s <- if (has_se && t_char %in% names(se)) se[[t_char]] else NULL
     cat(sprintf("\n  time %s:\n", t_char))
     .print_causal_block(r, s)
   }

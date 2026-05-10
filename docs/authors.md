@@ -8,15 +8,26 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/benrosche/ineqx/blob/HEAD/DESCRIPTION)
+[`inst/CITATION`](https://github.com/benrosche/ineqx/blob/HEAD/inst/CITATION)
 
-Rosche B (2026). *ineqx: Descriptive and causal variance decomposition*.
-R package version 0.1.0, <http://benrosche.com/projects/ineqx/>.
+Rosche B (2026). “Treatment effects on within-group and between-group
+inequality.” Working paper, <https://osf.io/preprints/socarxiv/f53kz/>.
+
+    @Unpublished{,
+      author = {Benjamin Rosche},
+      title = {Treatment effects on within-group and between-group inequality},
+      year = {2026},
+      note = {Working paper},
+      url = {https://osf.io/preprints/socarxiv/f53kz/},
+    }
+
+Rosche B (2026). *ineqx: Descriptive and Causal Variance Decomposition*.
+R package version 0.4.0, <https://benrosche.github.io/ineqx/>.
 
     @Manual{,
-      title = {ineqx: Descriptive and causal variance decomposition},
+      title = {ineqx: Descriptive and Causal Variance Decomposition},
       author = {Benjamin Rosche},
       year = {2026},
-      note = {R package version 0.1.0},
-      url = {http://benrosche.com/projects/ineqx/},
+      note = {R package version 0.4.0},
+      url = {https://benrosche.github.io/ineqx/},
     }

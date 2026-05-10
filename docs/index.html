@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,50 +58,60 @@
 <div class="row">
   <main id="main" class="col-md-9"><p><img src="reference/figures/ineqx-hexagon.jpg" width="200" align="right"></p>
 <div class="section level2">
-<h2 id="ineqx-descriptive-and-explanatory-variance-decompositions">ineqx: Descriptive and explanatory variance decompositions<a class="anchor" aria-label="anchor" href="#ineqx-descriptive-and-explanatory-variance-decompositions"></a>
+<h2 id="ineqx-descriptive-and-causal-variance-decompositions">ineqx: Descriptive and causal variance decompositions<a class="anchor" aria-label="anchor" href="#ineqx-descriptive-and-causal-variance-decompositions"></a>
 </h2>
-<p>The ineqx package allows to analyze how inequality in an outcome (e.g., income) splits into inequality within and between groups (e.g., gender). It is possible to decompose inequality at a single point in time and to decompose changes in inequality over time. In addition to this descriptive decomposition, the ineqx packages allows to analyze how treatment effects (i.e., binary predictors) impact within- and between-group inequality and how this effect changes over time.</p>
-<p>Existing approaches to analyzing inequality often ignore within-group inequality by solely analyzing mean differences between groups. Approaches that do allow examining both changes in within- and between-group inequality (e.g., <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x" class="external-link">Western &amp; Bloome 2009</a>), in turn, are limited in addressing causal questions about why inequality is changing.</p>
-<p><a href="https://osf.io/preprints/socarxiv/f53kz/" class="external-link">Rosche (2026)</a> introduces a novel approach to analyzing how a treatment variable affects both changes in within- and between-group inequality and decomposing these changes into compositional and behavioral effects. The procedure combines a classic variance decomposition with the Kitagawa-Blinder-Oaxaca (KBO) decomposition approach. Compared to KBO, however, the method allows analyzing treatment effects not only on the mean but on the whole conditional distribution.</p>
-<p>The ineqx packages implements both the descriptive (<a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x" class="external-link">Western &amp; Bloome 2009</a>) and causal variance decomposition (<a href="https://osf.io/preprints/socarxiv/f53kz/" class="external-link">Rosche 2026</a>). The package allows decomposing both the variance and the squared coefficient of variation (CV<sup>2</sup>).</p>
-<p><u>With the ineqx package you can analyze</u></p>
+<p>Inequality is usually summarized in one number — a Gini, a variance, a 90/10 ratio. But that number hides how much of the inequality lives <em>between</em> groups (men vs women, college vs non-college, …) and how much lives <em>within</em> them, and it hides how a treatment, a policy, or any other binary predictor moves either piece. The <strong>ineqx</strong> package addresses both.</p>
+<p>For a single cross-section it implements the classic <a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x" class="external-link">Western &amp; Bloome (2009)</a> within/between decomposition. For repeated cross-sections it tracks how each piece changes over time. And — the part that’s new in <a href="https://osf.io/preprints/socarxiv/f53kz/" class="external-link">Rosche (2026)</a> — it extends the decomposition to a <em>causal</em> potential-outcomes setting: it splits the effect of a binary treatment on inequality into</p>
 <ul>
-<li>how overall inequality at a single point in time splits into a within- and between-group component (e.g., Does income inequality differ more within or between gender categories?)</li>
-<li>whether the overall change in inequality over time stems from changes in within-group inequality, between-group inequality, or changes in the composition of the groups (e.g., )</li>
-<li>the degree to which changes in inequality are due to changes in the effect of a treatment (i.e., binary predictor) on within- and between-group inequality, due to changes in the composition of the groups, and due to changes in pre-treatment inequality</li>
-<li>analyze the effect of a treatment on inequality (i.e. variability in an outcome) rather than just the mean</li>
+<li>a <strong>between-group</strong> effect, further decomposed into a <strong>heterogeneity</strong> term (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">Var</mtext><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Var}_\pi(\beta)</annotation></semantics></math> — does the treatment effect vary across groups?) and a <strong>covariance</strong> term (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mspace width="0.167em"></mspace><msub><mtext mathvariant="normal">Cov</mtext><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">2\,\text{Cov}_\pi(\mu(0),\beta)</annotation></semantics></math> — do the larger gains accrue to already-advantaged groups?), and</li>
+<li>a <strong>within-group</strong> effect, similarly split into the average effect on group dispersion (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">het</mtext><mi>W</mi></msub><annotation encoding="application/x-tex">\text{het}_W</annotation></semantics></math>) and the sorting of variance effects across groups (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="normal">cov</mtext><mi>W</mi></msub><annotation encoding="application/x-tex">\text{cov}_W</annotation></semantics></math>).</li>
 </ul>
-<p>This is how the <code><a href="reference/ineqx.html">ineqx()</a></code> function looks like:</p>
+<p>For repeated cross-sections, the <em>change</em> in this treatment effect further decomposes into three channels — <strong>behavioral</strong> (the treatment effects themselves changed), <strong>compositional</strong> (who gets treated changed), and <strong>pre-treatment</strong> (the baseline distribution changed) — combining a variance decomposition with a Kitagawa–Blinder–Oaxaca-style attribution.</p>
+<p><u>With the ineqx package you can analyze:</u></p>
+<ul>
+<li>
+<strong>how inequality splits</strong> at a single point in time into within- and between-group components,</li>
+<li>
+<strong>how that split has changed</strong> over time, attributing the change to shifting means, dispersions, or group sizes,</li>
+<li>
+<strong>how a treatment moves inequality</strong> — beyond just the mean — through the four sub-components above, and</li>
+<li>
+<strong>how that effect has evolved</strong> over time, separating behavioral, compositional, and pre-treatment channels.</li>
+</ul>
+<p>The package supports both the variance (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>) and the squared coefficient of variation (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">CV^2</annotation></semantics></math>) as the underlying measure (and accepts <code>ystat = "VL"</code> for the descriptive case, with caveats — see the <a href="articles/faq.html">FAQ</a>).</p>
+<p>This is what <code><a href="reference/ineqx.html">ineqx()</a></code> looks like:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">incdat</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/ineqx.html">ineqx</a></span><span class="op">(</span>treat<span class="op">=</span><span class="st">"X"</span>, post<span class="op">=</span><span class="st">"post_X"</span>, y<span class="op">=</span><span class="st">"income"</span>, ystat<span class="op">=</span><span class="st">"Var"</span>, group<span class="op">=</span><span class="st">"female"</span>, time<span class="op">=</span><span class="st">"year"</span>, ref<span class="op">=</span><span class="fl">1990</span>, <span class="va">dat</span><span class="op">)</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="try-the-ineqx-package-in-this-shiny-app">Try the ineqx package in this Shiny app<a class="anchor" aria-label="anchor" href="#try-the-ineqx-package-in-this-shiny-app"></a>
-</h3>
-<style>
-iframe {
-  width: 100%;
-  height: 1000px;
-  border: none;
-}
-</style>
-<iframe src="https://benrosche.shinyapps.io/ineqx-app/"></iframe>
-</div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">cps_sample</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Descriptive: how does CV² of women's earnings split into within/between SES?</span></span>
+<span><span class="fu"><a href="reference/ineqx.html">ineqx</a></span><span class="op">(</span><span class="st">"earnweekf"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>, group <span class="op">=</span> <span class="st">"SES"</span>,</span>
+<span>      time <span class="op">=</span> <span class="st">"year"</span>, ref <span class="op">=</span> <span class="fl">1982</span>, weights <span class="op">=</span> <span class="st">"earnwtf"</span>,</span>
+<span>      data <span class="op">=</span> <span class="va">cps_sample</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Causal: how does motherhood reshape that inequality?</span></span>
+<span><span class="fu"><a href="reference/ineqx.html">ineqx</a></span><span class="op">(</span><span class="st">"earnweekf"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
+<span>      treat <span class="op">=</span> <span class="st">"mother"</span>, post <span class="op">=</span> <span class="st">"byear"</span>,</span>
+<span>      group <span class="op">=</span> <span class="st">"edu"</span>, time <span class="op">=</span> <span class="st">"year10"</span>, ref <span class="op">=</span> <span class="fl">1980</span>,</span>
+<span>      formula_mu    <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">byear</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">edu</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">year10</span><span class="op">)</span> <span class="op">+</span> <span class="va">age</span>,</span>
+<span>      formula_sigma <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">byear</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">edu</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">year10</span><span class="op">)</span>,</span>
+<span>      weights <span class="op">=</span> <span class="st">"earnwtf"</span>, se <span class="op">=</span> <span class="st">"delta"</span>,</span>
+<span>      data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">cps_sample</span>, <span class="va">age</span> <span class="op">&gt;=</span> <span class="fl">18</span> <span class="op">&amp;</span> <span class="va">age</span> <span class="op">&lt;=</span> <span class="fl">49</span> <span class="op">&amp;</span> <span class="va">earnweekf</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>See the <a href="articles/model.html">Model structure</a> page for the math, the <a href="articles/examples.html">Examples</a> page for both calls walked through end-to- end, and the <a href="articles/faq.html">FAQ</a> for common questions.</p>
 <div class="section level3">
 <h3 id="developers">Developers<a class="anchor" aria-label="anchor" href="#developers"></a>
 </h3>
 <p>I welcome contributions to the package! Feel free to submit changes for review or contact me if you have any questions.</p>
 </div>
 <div class="section level3">
-<h3 id="issues-or-feature-requests">Issues or Feature Requests<a class="anchor" aria-label="anchor" href="#issues-or-feature-requests"></a>
+<h3 id="issues-or-feature-requests">Issues or feature requests<a class="anchor" aria-label="anchor" href="#issues-or-feature-requests"></a>
 </h3>
-<p>If you would like to log an issue or submit a feature request, please create a new issue or comment on an existing issue on <a href="https://github.com/benrosche/ineqx/issues" class="external-link">GitHub Issues</a> on this repo.</p>
+<p>If you would like to log an issue or submit a feature request, please open one on <a href="https://github.com/benrosche/ineqx/issues" class="external-link">GitHub Issues</a>.</p>
 </div>
 <div class="section level3">
 <h3 id="changelog">Changelog<a class="anchor" aria-label="anchor" href="#changelog"></a>
 </h3>
-<p>See <a href="https://github.com/benrosche/ineqx/news/index.html" class="external-link">NEWS.md</a> for the package changelog.</p>
-<p>More information can be found <a href="http://benrosche.com/projects/ineqx/" class="external-link">here</a></p>
+<p>See <a href="https://github.com/benrosche/ineqx/blob/master/NEWS.md" class="external-link">NEWS.md</a> for the package changelog.</p>
+<p>More information at <a href="http://benrosche.com/projects/ineqx/" class="external-link">benrosche.com/projects/ineqx</a>.</p>
 </div>
 </div>
 

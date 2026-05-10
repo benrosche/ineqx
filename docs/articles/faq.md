@@ -1,1 +1,141 @@
-# faq
+# FAQ
+
+    #> Warning: package 'ineqx' was built under R version 4.5.2
+
+### Var, CV², or VL — which inequality measure should I use?
+
+[`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md)
+accepts `ystat = "Var"`, `"CV2"`, or (descriptive only) `"VL"`. As a
+default, prefer **`"CV2"`** when groups have very different mean levels
+— without normalising by the squared mean, the `Var` decomposition is
+mechanically dominated by whichever group has the highest mean. Use
+**`"Var"`** when levels are comparable across groups or when the
+dollar-scale interpretation matters. **Avoid `"VL"`** for substantive
+decomposition work: because the log transform is non-linear, the within-
+and between-group components of $`V_L`$ can move in the *opposite
+direction* from within- and between-group changes on the income scale.
+[`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md) issues
+a runtime warning whenever `"VL"` is used. See the [Model
+structure](https://benrosche.github.io/ineqx/articles/model.md) page §4
+for detail.
+
+### What is the difference between descriptive and causal decomposition?
+
+Both run through the same
+[`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md)
+function — the dispatch is on whether `treat` is supplied:
+
+- **Descriptive** (no `treat`): how does total inequality split into
+  within- and between-group components, and how have those components
+  shifted over time? Calls the Western & Bloome (2009) decomposition.
+- **Causal** (with `treat`): given a binary treatment, how does the
+  *treatment effect* on inequality split?
+  [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md) fits
+  a GAMLSS model for both the mean and log-SD, then decomposes the
+  implied effect on $`V`$ or $`CV^2`$ into between vs within (and
+  further into heterogeneity vs covariance sub-components).
+
+The descriptive case answers *“how unequal is this and where is it
+growing?”*; the causal case answers *“how would inequality differ if we
+removed the treatment?”* See the
+[Examples](https://benrosche.github.io/ineqx/articles/examples.md) for
+both.
+
+### Why is `order = "shapley"` the default?
+
+The longitudinal decomposition splits the change in the treatment effect
+on inequality into three channels (behavioral, compositional,
+pre-treatment). Computing each channel requires a sequential
+parameter-switching argument, and the size of any one channel depends on
+the *order* in which parameters are switched. With three parameter
+blocks there are $`3! = 6`$ orderings. Shapley averaging takes the
+unweighted mean across all six and is the canonical fix for
+path-dependence in this kind of decomposition. The `type = "shapley"`
+plot also displays the *range* across orderings, so you can see which
+channels are robust to the choice and which are sensitive.
+
+### When should I use `se = "delta"` vs `se = boot_config()`?
+
+- **`se = "delta"`** (default): closed-form standard errors via the
+  delta method, evaluated at the GAMLSS coefficient vcov. Fast, no
+  resampling, and available for the integrated estimation mode. Use this
+  unless you have a reason not to.
+- **`se = boot_config(B = 500, ...)`**: nonparametric bootstrap. Use it
+  when
+  1.  you want CIs that don’t rely on a normal-approximation, (b) you
+      are blending user-supplied params with model params (delta method
+      is not supported there), or (c) you want CIs on quantities that
+      aren’t covered by the closed-form gradients yet. Note that with
+      small `B` (e.g. `B = 10`) the percentile CIs will be very noisy —
+      bump to `B = 500+` for production use.
+- **`se = "none"`** / `FALSE`: skip SE computation entirely. Useful for
+  exploratory work where you just want point estimates fast.
+
+### How do I supply externally estimated parameters?
+
+Use `ineqx_params(data = ...)` to wrap a data.frame with the canonical
+columns (`group`, `pi`, `mu0`, `sigma0`, `beta`, `lambda`) into an
+`ineqx_params` object, then pass it to
+`ineqx(..., params = ..., se = "none")`. This is the right path when you
+have estimates from a model that doesn’t fit the GAMLSS template — for
+example a 2SLS specification, or coefficients copied out of a published
+table. See
+[`?ineqx_params`](https://benrosche.github.io/ineqx/reference/ineqx_params.md)
+for the schema and the
+[Tutorial](https://benrosche.github.io/ineqx/articles/tutorial.md) for a
+walk-through.
+
+### What’s the difference between `type = "treat.params"` and `type = "outcome.params"`?
+
+Both plot model-implied parameters as a function of group (and time, if
+longitudinal). The difference is which parameters:
+
+- **`treat.params`** plots $`\beta`$ and $`\lambda`$ — the causal
+  effects of treatment on the group mean and log-SD. One panel for each.
+- **`outcome.params`** plots $`\mu(0), \mu(1) = \mu(0) + \beta`$ and
+  $`\sigma(0),
+  \sigma(1) = \sigma(0) e^{\lambda}`$ — the *predicted levels* under
+  control and treatment for each group. Useful for showing the
+  underlying potential outcomes that drive the decomposition.
+
+Both accept `ci = TRUE` (delta method or bootstrap, whichever is
+available on the fitted object) and `style = "line"`/`"point"`.
+
+### My CIs look invisible — what should I check?
+
+A few common causes:
+
+1.  **Lowercase `ci`**. The plot argument is `ci = TRUE`, not
+    `CI = TRUE`. R is case-sensitive and `CI` silently lands in `...`,
+    so the plot uses the default (`ci = FALSE`).
+2.  **Vertical scale**. If the y-axis spans 0–3 and the SEs are ~0.05,
+    the bands are real but only a few percent of the panel — they get
+    easily missed in a small figure. Try `style = "point"` to render
+    error *bars* instead of ribbons; bars are usually more salient at
+    small SEs.
+3.  **`se` was set to `"none"`**. If
+    [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md)
+    was called with `se = "none"` or `se = FALSE`, no SEs are stored and
+    `ci = TRUE` falls through silently (or warns, depending on plot
+    type).
+4.  **Bootstrap with tiny `B`**. With `B = 10`, percentile bands are
+    dominated by noise — they may straddle zero everywhere. Bump to
+    `B ≥ 500`.
+
+### I get an error about `vcov` not being available — what’s wrong?
+
+The delta-method SE path needs the GAMLSS coefficient
+variance-covariance matrix, which
+[`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md) only
+stores when both (a) `se = "delta"` was used *and* (b) the model was
+fitted via the integrated path (i.e., not blended with user-supplied
+params). Two fixes:
+
+- If you used `se = "none"` or fitted via blending: re-run with
+  `se = boot_config(B = 500)`. The wibe / treat.params / outcome.params
+  plots will fall back to bootstrap percentile CIs automatically.
+- If you used `se = "delta"` but the model failed to converge or the
+  vcov block is singular: simplify the formulas (`formula_mu` /
+  `formula_sigma`) or drop sparsely-populated cells. A degenerate vcov
+  usually points at a collinearity issue in the design matrix rather
+  than a problem with `ineqx`.

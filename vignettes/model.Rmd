@@ -12,138 +12,114 @@ vignette: >
 ```
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
+This page sketches the methodology behind `ineqx`. Three equations carry the
+intuition; for the full derivations see [Rosche
+(2026)](https://osf.io/preprints/socarxiv/f53kz/).
 
+### 1. Descriptive within/between decomposition
 
-### 1 Descriptive variance decomposition
+Take the vector $Y_t$ of individual incomes at time $t$, and the vector $G_t$
+of group memberships ($G_t = j$ for $j = 1,\dots,J$ mutually exclusive groups).
+The variance of $Y_t$ splits cleanly into a within- and a between-group part:
 
-Take the vector $Y_t$ to be individual incomes at time $t$, and the vector $G_t$ to be the group to which the individuals belong, where $G_t=j$ is a categorical variable with $j=1,…,J$ categories that represent mutually exclusive and exhaustive groups. The variance $V$ in income at time $t$ can then be expressed as the sum of the variance within and between groups: 
-
-\begin{equation} 
-\begin{split} 
-V_t(Y_t) 
-&= E(V(Y_t |G_t))+V(E(Y_t |G_t )) \\[10pt] 
-&= W_t + B_t \\[10pt]
-&= \sum_j\pi_{jt}\sigma_{jt}^2+\sum_j\pi_{jt}\big(\mu_{jt}-\sum_j\pi_{jt}\mu_{jt}\big)^2
-\end{split}
+\begin{equation}
+V_t \;=\; \underbrace{\sum_j \pi_{jt}\,\sigma_{jt}^2}_{\text{within } W_t}
+       \;+\; \underbrace{\sum_j \pi_{jt}\,\big(\mu_{jt} - \bar\mu_t\big)^2}_{\text{between } B_t}
 \tag{1}
 \end{equation}
 
-where $\pi_{jt}$ is the proportion of individuals in group $j$ at time $t$, $\mu_{jt}$ is the mean income in group $j$ at time $t$, and $\sigma_{jt}^2$ is the variance around this mean in group $j$ at time $t$.
+with $\pi_{jt}$ the share of group $j$, $\mu_{jt}$ its mean, $\sigma_{jt}^2$ its
+variance, and $\bar\mu_t = \sum_j \pi_{jt}\mu_{jt}$ the overall mean. Cross
+sections collapse to a single $t$. With repeated cross-sections, the change
+$V_t - V_{t_0}$ further decomposes into contributions from changing means
+$(\Delta_\mu)$, changing dispersions $(\Delta_\sigma)$, and changing group
+shares $(\Delta_\pi)$, with each component split into its between- and
+within-group share. This is what `ineqx()` returns when no `treat` is
+supplied — it is essentially the Western & Bloome (2009) decomposition with a
+Shapley-averaged path.
 
-With repeated cross-sectional or panel data, the change in variance from $t_0$ (baseline) to $t$ (any timepoint post baseline) can then be decomposed into the sum of a within-group effect ($\delta_W$), a between-group effect ($\delta_B$), and a compositional effect ($\delta_C$). That is,
-\begin{equation} 
-V_t-V_{t_0} = \delta_W^t + \delta_B^t + \delta_C^t \\[10pt]
-\text{where} \\[10pt]
-\begin{split}
-\delta_W^t &= \sum_j \pi_{jt_0} \big( \sigma_{jt}^2 - \sigma_{jt_0}^2 \big) \\[10pt]
-\delta_B^t &= \sum_j \pi_{jt_0} \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt_0})^2 \big) \\[10pt]
-\delta_C^t &= \sum_j \big( \pi_{jt}-\pi_{jt_0} \big) \big( (\mu_{jt} - \sum_j\pi_{jt}\mu_{jt})^2 + \sigma_{jt}^2 \big) 
-\end{split}
+### 2. Causal cross-sectional decomposition
+
+Let $D \in \{0,1\}$ be a binary treatment, $\beta_j$ its causal effect on group
+$j$'s mean, and $\lambda_j$ its causal effect on group $j$'s log-SD (so the
+treated SD is $\sigma_j(0)\cdot e^{\lambda_j}$). The treatment effect on
+inequality, $\tau = V[Y(1)\mid D] - V[Y(0)\mid D]$, splits into a between- and
+a within-group part, **and each of those further splits into a heterogeneity
+and a covariance term**:
+
+\begin{equation}
+\boxed{\;\tau_B \;=\; \underbrace{\mathrm{Var}_\pi(\beta)}_{\text{het}_B}
+            \;+\; \underbrace{2\,\mathrm{Cov}_\pi(\mu(0),\,\beta)}_{\text{cov}_B}
+\;}
+\qquad
+\boxed{\;\tau_W \;\approx\; \underbrace{2\,\bar\sigma^2(0)\,\bar\lambda}_{\text{het}_W}
+            \;+\; \underbrace{2\,\mathrm{Cov}_\pi(\sigma^2(0),\,\lambda)}_{\text{cov}_W}\;}
 \tag{2}
 \end{equation}
 
-The between-group effect ($\delta_B^t$) captures the change in total variance induced by changes in the mean of each group. The within-group effect ($\delta_W^t$) captures the change in total variance induced by changes in the variance around the mean of each group. Finally, the compositional effect ($\delta_C^t$) captures the change in total variance induced by changes in the relative size of each group. The superscript $t$ on the $\delta\text{s}$ indicates that the change over time is considered. 
+The four sub-components have direct substantive readings:
 
-### 2 Causal variance decomposition
+- **$\text{het}_B = \mathrm{Var}_\pi(\beta) \ge 0$.** Heterogeneity in the
+  treatment effect on the mean *always* widens between-group inequality. Equal
+  $\beta$ across groups means $\text{het}_B = 0$.
+- **$\text{cov}_B = 2\,\mathrm{Cov}_\pi(\mu(0),\beta)$.** Sorting of gains. If
+  positive, larger gains accrue to already-advantaged groups (reinforces the
+  hierarchy). If negative, treatment compresses the hierarchy.
+- **$\text{het}_W \propto \bar\lambda$.** The average effect on within-group
+  dispersion. Sign tracks $\bar\lambda$: treatment can stretch or compress
+  within-group spread.
+- **$\text{cov}_W = 2\,\mathrm{Cov}_\pi(\sigma^2(0),\lambda)$.** Sorting of
+  variance effects. If positive, treatment amplifies dispersion most in
+  already-disperse groups.
 
-I first entertain the treatment effect framework at a single point in time. Let $D\in\{0,1\}$ be a binary treatment, $Y(D)$ be the potential outcome of the same outcome vector as before, and $\tau=Y(1)-Y(0)$ be the intra-individual causal effect of treatment on the outcome. 
+`plot(<causal>, type = "wibe", stats = c("het_b","cov_b","het_w","cov_w"))`
+shows these four series directly.
 
-The group-specific treatment effect on the mean of the treated ($ATT$) then equals the expected value of the differences in the potential outcomes in each group: 
+The package supports both $V$ (variance) and $CV^2 = \sigma^2/\mu^2$ (squared
+coefficient of variation) as the underlying inequality measure.
 
-\begin{equation} 
-ATT_j=E[Y(1)-Y(0)|G=j,D=1]
+### 3. Longitudinal three-channel decomposition
+
+With repeated cross-sections, the *change* in the treatment effect on
+inequality, $\Delta\tau = \tau_t - \tau_{t_0}$, decomposes into three
+interpretable channels:
+
+\begin{equation}
+\Delta\tau \;=\; \underbrace{(\Delta_\beta + \Delta_\lambda)}_{\text{behavioral}}
+\;+\; \underbrace{(\Delta_{\pi,B} + \Delta_{\pi,W})}_{\text{compositional}}
+\;+\; \underbrace{(\Delta_\mu + \Delta_\sigma)}_{\text{pre-treatment}}
 \tag{3}
 \end{equation}
 
-Further, the group-specific treatment effect on the variance of the treated ($VTT$) equals the difference in the variance in the potential outcomes in each group:
+- **Behavioral** — changes in *how* treatment affects each group's mean and
+  variance ($\Delta_\beta$, $\Delta_\lambda$). The Kitagawa-Blinder-Oaxaca
+  "coefficient effect."
+- **Compositional** — changes in *who gets treated* across groups
+  ($\Delta_{\pi,B}, \Delta_{\pi,W}$). The KBO "endowment effect."
+- **Pre-treatment** — changes in the baseline distribution that determine how
+  much a fixed treatment effect *translates into* inequality
+  ($\Delta_\mu, \Delta_\sigma$). Has no KBO analogue — this is what the
+  variance-decomposition framing adds.
 
-\begin{equation} 
-VTT_j=V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]
-\tag{4}
-\end{equation}
+Sequential decompositions of this kind are path-dependent: the size of
+$\Delta_\beta$ depends on whether you switch $\beta$ before or after $\pi$.
+`ineqx()` defaults to `order = "shapley"`, which averages across all $3! = 6$
+orderings to give an order-invariant decomposition. `plot(<causal>, type =
+"shapley")` displays the Shapley point estimate and the range across
+orderings.
 
-#### 2a Decomposing the effect of treatment
+### 4. A note on the variance of logs
 
-The focus here is on the $ATT$ rather than the average treatment effect ($ATE$) as we are interested in the aggregate consequences of treatment, which depends on the actual distribution of treatment across groups, $E[D|G]$, and therefore on the $ATT$. Note that we assume that the treatment effect on the variance is fully described by its effect on the group-specific means and variances.
-Given these definitions, the effect of treatment on the variance can be decomposed into a within- and between group component, where the variance in the $ATT$ equals the between-group component and the expected value of the $VTT$ equals the within-group component:
-
-\begin{equation} 
-V[Y(1)|D]-V[Y(0)|D] = \delta_B^D + \delta_W^D \\[10pt]
-\text{where} \\[10pt]
-\begin{split}
-\delta_B^D &= \sum_j \pi_j \big( (\mu_j+\beta_j- \sum_j\pi_j(\mu_j+\beta_j))^2 - (\mu_j - \sum_j\pi_j\mu_j)^2 \big) \\[10pt]
-\delta_W^D &= \sum_j \pi_j \big( (\sigma_j+\lambda_j )^2 - \sum_j\pi_j\sigma_j^2 \big)
-\end{split}
-\tag{5}
-\end{equation}
-
-Note that the interpretation of some quantities changes as compared to equation (2). In equation (5), $\pi_j$ is the proportion of individuals in each group receiving treatment (i.e., $E[D|G]$), $\mu_j$ is the pre-treatment mean in group $j$, $\sigma_j$ is the pre-treatment standard deviation in group $j$, $\beta_j$ is the causal effect of treatment on $\mu_j$, $\lambda_j$ is the causal effect of treatment on $\sigma_j$. The superscript $D$ on the $\delta\text{s}$ indicates that the change caused by treatment (at a single point in time) is considered. 
-The between-group effect $\delta_B^D$ captures the change in total variance induced by the effect of treatment on the mean of each group. The within-group effect $\delta_W^D$ captures the change in total variance induced by the effect of treatment on the variance of each group.
-
-#### 2b Decomposing the change in the effect of treatment
-
-The treatment effect on the variance depends both on the treatment effects on the group-specific means and variances and on the distribution of treatment across groups and on the level of pre-treatment inequality. Therefore, with repeated cross-sectional or panel data, the change in total variance from $t_0$ (baseline) to $t$ (any timepoint post baseline) due to change in the effect of treatment can be decomposed into the sum of a between-group effect ($\delta_B^{D,t}$), within-group effect ($\delta_W^{D,t}$) a compositional effect ($\delta_C^{D,t}$), and a pre-treatment effect ($\delta_P^{D,t}$):
-
-\begin{equation}
-(V[Y_t(1)|D_t]-V[Y_t(0)|D_t]) - (V[Y_{t_0}(1)|D_{t_0}]-V[Y_{t_0}(0)|D_{t_0}])
-= \delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t} \\[10pt]
-\text{where} 
-\end{equation}
-\begin{equation}
-\begin{split}
-
-\delta_B^{D,t} 
-&= B(\pi_{t_0},\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_0) \\
-&= \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t_0} + \beta_{j,t} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0} + \beta_{j,t_0} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t_0} ) \Big)^2 \right) \\[10pt]
-        
-\delta_W^{D,t}
-&= W(\pi_{t_0},\sigma_{t_0}+\lambda_t) - W(\pi_{t_0},\sigma_{t_0}+\lambda_{t_0}) \\
-&= \sum_j\pi_{j,t_0} \left( \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t_0}\Big)^2 \right) \\[10pt] 
-
-\delta_C^{D,t}
-&= \Big( B(\pi_t,\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_t ) \Big) - \Big( B(\pi_t,\mu_t ) - B(\pi_{t_0},\mu_t ) \Big) + \Big( W(\pi_t,\sigma_{t_0}+\lambda_t ) - W(\pi_{t_0},\sigma_{t_0}+\lambda_t ) \Big) - \Big( W(\pi_t,\sigma_t ) - W(\pi_{t_0},\sigma_t ) \Big) \\
-&\approx \sum_j(\pi_{j,t}-\pi_{j,t_0} ) \left( \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 - \Big(\mu_{j,t}-\sum_j\pi_{j,t}\mu_{j,t}\Big)^2 + \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2-\sigma_{j,t}^2 \right) \\[10pt]
-
-\delta_P^{D,t}
-&= B(\pi_t,\mu_t+\beta_t) - B(\pi_t,\mu_{t_0}+\beta_t) + W(\pi_t,\sigma_t+\lambda_t) - W(\pi_t,\sigma_{t_0}+\lambda_t) - \Big( B(\pi_{t_0},\mu_t) - B(\pi_{t_0},\mu_{t_0}) + W(\pi_{t_0},\sigma_t) - W(\pi_{t_0},\sigma_{t_0}) \Big) \\
-&= \sum_j\pi_{j,t} \left( \Big(\mu_{j,t}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 + \Big(\sigma_{j,t}+\lambda_{j,t} \Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 \right) - \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t}-\sum_j\pi_{j,t_0}\mu_{j,t}\Big)^2 - \Big(\mu_{j,t_0}-\sum_j\pi_{j,t_0}\mu_{j,t_0}\Big)^2 + \sigma_{j,t}^2-\sigma_{j,t_0}^2 \right)
-
-\end{split}
-\tag{6}
-\end{equation}
-
-#### 2c Decomposing the change in the post-treatment variance due to treatment
-
-Rather than decomposing the change in the effect of treatment on the variance, the change in post-treatment variance induced by the change in the effect of treatment, i.e., $V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]$, can also be decomposed. 
-
-\begin{equation}
-V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]
-= \delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t} \\[10pt]
-\text{where} 
-\end{equation}
-\begin{equation}
-\begin{split}
-
-\delta_B^{D,t}
-&=\sum_j\pi_{jt_0} \left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt_0}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt_0})\Big)^2 \right) \\[10pt]
-
-\delta_W^{D,t}
-&= \sum_j\pi_{jt_0}\left( \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt_0}\Big)^2 \right) 
-= \sum_j\pi_{jt_0} \Big( \lambda_{jt}^2-\lambda_{jt_0}^2 + 2\sigma_{jt_0}(\lambda_{jt}-\lambda_{jt_0}) \Big) \\[10pt]
-
-\delta_C^{D,t}
-&= \sum_j\pi_{jt}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda{jt}\Big)^2 \right) - \sum_j\pi_{jt_0}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0} (\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right) \\
-&\approx \sum_j(\pi_{jt}-\pi_{jt_0}) \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt} \Big)^2 \right) \\[10pt] 
-
-\delta_P^{D,t}
-&=\sum_j\pi_{jt} \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right)
-
-\end{split}
-\tag{7}
-\end{equation}
+`ineqx()` accepts `ystat = "VL"` for the descriptive case (it log-transforms
+$y$ and runs the standard variance decomposition), but the paper recommends
+**against** $V_L$ for substantive decomposition work. The reason: because the
+log transformation is non-linear, the within- and between-group components of
+$V_L$ can move in the *opposite direction* from within- and between-group
+changes on the income scale. A treatment that unambiguously raises within-group
+dispersion in dollars can register as compressing it in $V_L$. $V$ and $CV^2$
+do not have this pathology and decompose into components that remain
+interpretable on the original income scale. `ineqx()` issues a runtime warning
+whenever `ystat = "VL"` is used — see the FAQ for details.

@@ -8,128 +8,136 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-I provide two examples on how the ineqx package can be employed to study inequality:
+Two short worked examples. Both run on the package's bundled `cps_sample`
+(a 65k-row CPS subsample, 1982–2021) and aim to show the package's two main
+modes — descriptive and causal — without doing a full analysis.
 
-- [Example 1: Tracking changes in within- and between-group inequality over time](#e1)
-- [Example 2: Causal decomposition with manual parameters](#e2)
+* [Example 1: Descriptive within/between decomposition](#e1)
+* [Example 2: Causal decomposition — the motherhood penalty](#e2)
 
-### Tracking changes in within- and between-group inequality over time {#e1}
-
-In this first example, I demonstrate how the ineqx package can be used (1) to split
-the inequality in an outcome between groups into within- and between-group components
-and (2) to track changes in the within- and between-group components over time.
-
-First, I load a reduced version of the Current Population Survey (CPS) containing a
-subsample of all women in CPS with information on their motherhood status and earnings
-between 1982 and 2021.
-
-```{r, message = FALSE, warning = FALSE}
+```{r setup, message = FALSE, warning = FALSE}
 library(ineqx)
-
 data("cps_sample")
 ```
 
-In this dataset, women are grouped into low, medium, and high economic position (SES = 1, 2, 3)
-by the total annual income of the household they lead or belong to.
+---
 
-Let us now calculate how much inequality there is within and between those groups:
+### Example 1: Descriptive within/between decomposition {#e1}
 
-```{r}
+Women in `cps_sample` are grouped into low/medium/high SES (`SES = 1, 2, 3`)
+based on household income. We ask: how much earnings inequality lies *within*
+each SES tier vs *between* tiers, and how has that changed since 1982?
+
+```{r, message = FALSE}
 desc <- ineqx(
-  y = "earnweekf",
-  ystat = "CV2",
+  y = "earnweekf", ystat = "CV2",
   group = "SES",
-  time = "year",
-  ref = 1982,
+  time = "year", ref = 1982,
   weights = "earnwtf",
   data = cps_sample
 )
 ```
 
-The `ineqx()` function (without `treat`) takes the information on outcome (y), grouping
-structure (group), and time variable (time) to calculate within-group, between-group,
-and total inequality in each year. It also decomposes the change over time into
-contributions from changing means, dispersions, and composition (Shapley-averaged by
-default).
+We use `ystat = "CV2"` (squared coefficient of variation, $\sigma^2/\mu^2$)
+rather than `"Var"` so that the high-income tier doesn't mechanically dominate
+the decomposition. `"VL"` (variance of logs) is also accepted but is generally
+not recommended — see the FAQ.
 
 ```{r}
 print(desc)
 ```
 
-Instead of the variance, we use the squared coefficient of variation as measure of
-inequality ($CV^{2}=\sigma^{2}/\mu^{2}$), which equals the variance divided by the
-squared mean. This is preferable when decomposing variation into within- and between-group
-components to not have the group with the highest income dominate the decomposition.
+Within- vs between-group inequality over time:
 
-The resulting within-group and between-group inequality over time:
-
-```{r fig1, fig.width = 8, fig.height = 4, out.width = '75%', dpi=200, fig.align = "center"}
-plot(desc)
+```{r fig1, fig.width = 8, fig.height = 4, out.width = "85%", dpi = 150, fig.align = "center"}
+plot(desc, type = "wibe")
 ```
 
-### Causal decomposition with manual parameters {#e2}
+Decomposition of the change since 1982 into contributions from changing means
+($\Delta_\mu$), changing dispersions ($\Delta_\sigma$), and changing group
+shares ($\Delta_\pi$):
 
-In this example, we demonstrate the cross-sectional causal decomposition using the
-paper's workers/managers example.
+```{r fig2, fig.width = 8, fig.height = 4, out.width = "85%", dpi = 150, fig.align = "center"}
+plot(desc, type = "decomp")
+```
 
-Suppose we have two groups (workers and managers) with equal representation among the
-treated, where treatment (e.g., a policy) raises mean earnings by 60 for workers and
-100 for managers, and reduces log-SD by 0.1 for workers and 0.2 for managers:
+Most of the increase in $CV^2$ since 1982 traces to changes in within-group
+dispersion ($\Delta_\sigma$) — earnings inequality has grown *within* SES
+tiers, not just *between* them. This is the basic motivation for taking
+within-group inequality seriously.
 
-```{r}
-params <- ineqx_params(
-  data = data.frame(
-    group = c("workers", "managers"),
-    pi = c(0.5, 0.5),
-    mu0 = c(500, 1000),
-    sigma0 = c(200, 400),
-    beta = c(60, 100),
-    lambda = c(-0.1, -0.2)
-  )
+---
+
+### Example 2: Causal decomposition — the motherhood penalty {#e2}
+
+Same dataset, now asking a causal question: how does motherhood affect
+earnings inequality among women, and how has that effect changed?
+
+We restrict the sample to women of childbearing age and fit a difference-in-
+differences model (treatment = `mother`, post-period = `byear`) with
+education-by-decade interactions for both the mean and log-SD of earnings.
+GAMLSS does the heavy lifting internally.
+
+```{r, message = FALSE, warning = FALSE}
+df <- subset(cps_sample,
+             age >= 18 & age <= 49 & !is.na(earnweekf) & earnweekf > 0)
+
+causal <- ineqx(
+  y = "earnweekf", ystat = "CV2",
+  treat = "mother", post = "byear",
+  group = "edu",
+  time = "year10", ref = 1980,
+  formula_mu    = ~ mother * byear * factor(edu) * factor(year10) + age,
+  formula_sigma = ~ mother * byear * factor(edu) * factor(year10),
+  weights = "earnwtf",
+  se = "delta",
+  data = df
 )
-
-print(params)
 ```
 
-Now we decompose the treatment effect on inequality:
+#### Cross-sectional split: het and cov sub-components
 
-```{r}
-result <- ineqx("y", group = "group", params = params,
-                se = "none", data = data.frame(y = 1, group = "A"))
-print(result)
+The treatment effect on inequality at each time decomposes into
+$\tau_B = \text{het}_B + \text{cov}_B$ (between groups) and
+$\tau_W = \text{het}_W + \text{cov}_W$ (within groups). See the [Model
+structure](model.html) page for the exact formulas. `plot(..., type = "wibe",
+stats = ...)` shows all four series at once:
+
+```{r fig3, fig.width = 8, fig.height = 4.5, out.width = "90%", dpi = 150, fig.align = "center", message = FALSE}
+plot(causal, type = "wibe",
+     stats = c("het_b", "cov_b", "het_w", "cov_w"),
+     ci = TRUE)
 ```
 
-The between-group effect (delta_B) is positive because managers benefit more from
-treatment than workers, which increases between-group inequality. The within-group
-effect (delta_W) is negative because treatment compresses the within-group dispersion
-(lambda < 0 for both groups).
+The dominant series here is **`het_W`** — the within-group component driven
+by the average treatment effect on log-SD ($\bar\lambda$). It is negative and
+large: motherhood compresses within-education earnings dispersion. The
+between-group **`cov_B`** term (sorting of mean effects $\beta$ across
+education groups) is small and runs in the opposite direction. Note this is
+exactly the kind of pattern that mean-based methods miss.
 
-```{r fig2, fig.width = 6, fig.height = 4, out.width = '60%', dpi=200, fig.align = "center"}
-plot(result)
+#### Longitudinal: behavioral / compositional / pre-treatment
+
+How has the motherhood effect's contribution to inequality *changed* since
+1980? `type = "shapley"` displays the three-channel decomposition with the
+range across the six possible orderings:
+
+```{r fig4, fig.width = 8, fig.height = 4.5, out.width = "90%", dpi = 150, fig.align = "center", message = FALSE}
+plot(causal, type = "shapley")
 ```
 
-If we reverse the treatment effects on means (workers benefit more), the between-group
-effect flips sign:
+The **compositional** channel ($\Delta_\pi$) is large and negative — the
+share of childbearing-age women who are mothers has dropped substantially
+since 1980, and that compositional shift on its own reduces the contribution
+of motherhood to overall inequality. Behavioral changes ($\Delta_\beta +
+\Delta_\lambda$, how motherhood's per-group effects have changed) are
+smaller, and pre-treatment shifts ($\Delta_\mu + \Delta_\sigma$, baseline
+inequality changes) contribute a modest negative term.
 
-```{r}
-params_reversed <- ineqx_params(
-  data = data.frame(
-    group = c("workers", "managers"),
-    pi = c(0.5, 0.5),
-    mu0 = c(500, 1000),
-    sigma0 = c(200, 400),
-    beta = c(100, 60),  # reversed
-    lambda = c(-0.1, -0.2)
-  )
-)
-
-result_reversed <- ineqx("y", group = "group", params = params_reversed,
-                         se = "none", data = data.frame(y = 1, group = "A"))
-print(result_reversed)
-```
+A more thorough analysis would add controls for race, marital status, age
+splines, and family size; would model the pre-trends formally; and would use
+bootstrap rather than delta-method SEs. See `?ineqx`, `?boot_config`, and the
+[Tutorial](tutorial.html) for the full toolbox.
