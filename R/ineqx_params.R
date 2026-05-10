@@ -9,17 +9,28 @@
 #' two stages: users can construct \code{ineqx_params} from any estimation
 #' method (GAMLSS, Bayesian models, simulation, or manual specification).
 #'
-#' There are two usage modes:
+#' There are three usage modes:
 #' \describe{
-#'   \item{Manual specification}{Pass a data.frame with columns
+#'   \item{Descriptive (manual)}{Pass a data.frame with columns
+#'     \code{group}, \code{pi}, \code{mu}, \code{sigma}. Returns an
+#'     \code{ineqx_desc_params} object representing a counterfactual
+#'     reference for descriptive decomposition.}
+#'   \item{Causal (manual)}{Pass a data.frame with columns
 #'     \code{group}, \code{pi}, \code{mu0}, \code{sigma0}, \code{beta},
-#'     \code{lambda} (and optionally \code{time}).}
-#'   \item{From a fitted gamlss model}{Pass a fitted \code{gamlss} object
+#'     \code{lambda} (and optionally \code{time}). Returns an
+#'     \code{ineqx_params} object.}
+#'   \item{Causal (from fitted gamlss)}{Pass a fitted \code{gamlss} object
 #'     via \code{model}, along with the raw data and variable names. The
 #'     function extracts treatment effects via counterfactual predictions.}
 #' }
 #'
-#' @param data For manual mode: a data.frame with required columns
+#' The mode is auto-detected from the columns in \code{data}: if \code{mu}
+#' and \code{sigma} are present (without \code{mu0}, \code{sigma0}), the
+#' descriptive path is used; otherwise the causal path is used.
+#'
+#' @param data For descriptive mode: a data.frame with columns
+#'   \code{group}, \code{pi}, \code{mu}, \code{sigma}.
+#'   For causal manual mode: a data.frame with columns
 #'   \code{group}, \code{pi}, \code{mu0}, \code{sigma0}, \code{beta},
 #'   \code{lambda} (and optionally \code{time}).
 #'   For model mode: the data.frame used to fit the model.
@@ -38,14 +49,13 @@
 #'   Only used in model mode. NULL for simple difference estimator.
 #' @param ystat Character, either \code{"Var"} (variance) or \code{"CV2"}
 #'   (squared coefficient of variation). Default: \code{"Var"}.
-#' @param ref Numeric, reference time period for longitudinal decomposition.
-#'   Required when data contains multiple time periods.
 #' @param vcov For manual mode: an optional variance-covariance matrix (or
 #'   named list of matrices for longitudinal data).
 #'   For model mode: logical, whether to extract the vcov via numerical
 #'   Jacobian (default: TRUE). Set to FALSE for faster computation without SEs.
 #'
-#' @return An object of class \code{"ineqx_params"}
+#' @return An object of class \code{"ineqx_desc_params"} (descriptive mode) or
+#'   \code{"ineqx_params"} (causal mode)
 #'
 #' @details
 #' When \code{model} is provided, the function generates predictions under
@@ -58,7 +68,17 @@
 #' \deqn{\beta_{D,j} = E[\hat{\mu}(D=1) - \hat{\mu}(D=0) | G=j]}
 #'
 #' @examples
-#' # Manual specification for a two-group example
+#' # Descriptive counterfactual reference (equal groups, no inequality)
+#' desc_ref <- ineqx_params(
+#'   data = data.frame(
+#'     group = c("workers", "managers"),
+#'     pi = c(0.5, 0.5),
+#'     mu = c(0, 0),
+#'     sigma = c(0, 0)
+#'   )
+#' )
+#'
+#' # Causal manual specification for a two-group example
 #' params <- ineqx_params(
 #'   data = data.frame(
 #'     group = c("workers", "managers"),
@@ -82,7 +102,7 @@
 #' @export
 ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
                           time = NULL, post = NULL,
-                          ystat = "Var", ref = NULL, vcov = NULL) {
+                          ystat = "Var", vcov = NULL, verbose = TRUE) {
 
   ystat <- match.arg(ystat, c("Var", "CV2"))
 
@@ -94,13 +114,24 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
       model = model, data = data,
       treat = treat, group = group,
       time = time, post = post,
-      ystat = ystat, ref = ref, vcov = vcov
+      ystat = ystat, vcov = vcov
     )
   } else {
     # -------------------------------------------------------------------- #
     # MANUAL SPECIFICATION PATH
     # -------------------------------------------------------------------- #
-    .ineqx_params_manual(data = data, ystat = ystat, ref = ref, vcov = vcov)
+
+    # Auto-detect descriptive vs causal based on columns
+    causal_cols <- c("mu0", "sigma0", "beta", "lambda")
+    desc_cols <- c("mu", "sigma")
+
+    if (is.data.frame(data) &&
+        all(desc_cols %in% names(data)) &&
+        !any(causal_cols %in% names(data))) {
+      .ineqx_desc_params_manual(data = data, ystat = ystat)
+    } else {
+      .ineqx_params_manual(data = data, ystat = ystat, vcov = vcov)
+    }
   }
 }
 
@@ -109,7 +140,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # Internal: Manual specification path
 # ---------------------------------------------------------------------------- #
 
-.ineqx_params_manual <- function(data, ystat, ref, vcov) {
+.ineqx_params_manual <- function(data, ystat, vcov) {
 
   if (!is.data.frame(data)) {
     stop("'data' must be a data.frame")
@@ -131,16 +162,6 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   n_times <- if (has_time) length(unique(data$time)) else 1L
   type <- if (has_time && n_times > 1) "longitudinal" else "cross_sectional"
 
-  # Validate ref for longitudinal
-  if (type == "longitudinal" && is.null(ref)) {
-    stop("'ref' (reference time period) is required for longitudinal decomposition ",
-         "(data has ", n_times, " time periods)")
-  }
-  if (type == "longitudinal" && !is.null(ref) && !(ref %in% unique(data$time))) {
-    stop("'ref' = ", ref, " not found in data$time. ",
-         "Available time periods: ", paste(sort(unique(data$time)), collapse = ", "))
-  }
-
   # Validate numeric columns
   numeric_cols <- c("pi", "mu0", "sigma0", "beta", "lambda")
   for (col in numeric_cols) {
@@ -152,9 +173,9 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     }
   }
 
-  # Validate sigma0 > 0
-  if (any(data$sigma0 <= 0)) {
-    stop("'sigma0' must be strictly positive (it represents the baseline SD)")
+  # Validate sigma0 >= 0
+  if (any(data$sigma0 < 0)) {
+    stop("'sigma0' must be non-negative (it represents the baseline SD)")
   }
 
   # Validate pi sums to 1 within each time period
@@ -214,7 +235,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     }
   }
 
-  .make_ineqx_params(data, ystat, type, ref, vcov, has_time)
+  .make_ineqx_params(data, ystat, type, vcov, has_time)
 }
 
 
@@ -223,7 +244,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # ---------------------------------------------------------------------------- #
 
 .ineqx_params_from_model <- function(model, data, treat, group,
-                                      time, post, ystat, ref, vcov) {
+                                      time, post, ystat, vcov, verbose = TRUE) {
 
   if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Package 'gamlss' is required when model is provided. ",
@@ -268,60 +289,131 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   group_levels <- sort(unique(data[[group]]))
   time_levels <- sort(unique(data[[time_var]]))
 
-  # -------------------------------------------------------------------- #
-  # Generate predictions under counterfactual treatment assignments
-  # -------------------------------------------------------------------- #
+  is_did <- !is.null(post)
 
-  data_cf0 <- data
-  data_cf0[[treat]] <- 0
-  pred_mu_0 <- predict(model, what = "mu", type = "response",
-                       newdata = data_cf0, data = data)
-  pred_sigma_0 <- predict(model, what = "sigma", type = "response",
-                          newdata = data_cf0, data = data)
+  # -------------------------------------------------------------------- #
+  # Generate predictions under counterfactual treatment (and post, for DiD)
+  #
+  # Simple difference: 2 predictions per row (D=0, D=1).
+  # DiD:               4 predictions per row (D x P combinations).
+  # -------------------------------------------------------------------- #
+  if (verbose) message("  Generating counterfactual predictions...")
 
-  if (length(treat_levels) == 1) {
-    data_cf1 <- data
-    data_cf1[[treat]] <- treat_levels[1]
-    pred_mu_1 <- predict(model, what = "mu", type = "response",
-                         newdata = data_cf1, data = data)
-    pred_sigma_1 <- predict(model, what = "sigma", type = "response",
-                            newdata = data_cf1, data = data)
-  } else {
-    pred_mu_1 <- rep(0, nrow(data))
-    pred_sigma_1 <- rep(0, nrow(data))
-    for (tl in treat_levels) {
-      data_cf <- data
-      data_cf[[treat]] <- tl
-      p_mu <- predict(model, what = "mu", type = "response",
-                      newdata = data_cf, data = data)
-      p_sigma <- predict(model, what = "sigma", type = "response",
-                         newdata = data_cf, data = data)
-      freq <- sum(data[[treat]] == tl) / sum(data[[treat]] != 0)
-      pred_mu_1 <- pred_mu_1 + freq * p_mu
-      pred_sigma_1 <- pred_sigma_1 + freq * p_sigma
+  .pred_at <- function(treat_val, post_val = NULL) {
+    nd <- data
+    nd[[treat]] <- treat_val
+    if (!is.null(post_val)) nd[[post]] <- post_val
+    list(
+      mu    = predict(model, what = "mu",    type = "response",
+                      newdata = nd, data = data),
+      sigma = predict(model, what = "sigma", type = "response",
+                      newdata = nd, data = data)
+    )
+  }
+
+  .pred_at_treat1 <- function(post_val = NULL) {
+    if (length(treat_levels) == 1) {
+      return(.pred_at(treat_levels[1], post_val))
     }
+    mu_acc    <- rep(0, nrow(data))
+    sigma_acc <- rep(0, nrow(data))
+    for (tl in treat_levels) {
+      p <- .pred_at(tl, post_val)
+      freq <- sum(data[[treat]] == tl) / sum(data[[treat]] != 0)
+      mu_acc    <- mu_acc    + freq * p$mu
+      sigma_acc <- sigma_acc + freq * p$sigma
+    }
+    list(mu = mu_acc, sigma = sigma_acc)
+  }
+
+  if (is_did) {
+    p_D0P0 <- .pred_at(0,        0)
+    p_D0P1 <- .pred_at(0,        1)
+    p_D1P0 <- .pred_at_treat1(0)
+    p_D1P1 <- .pred_at_treat1(1)
+  } else {
+    p_D0 <- .pred_at(0)
+    p_D1 <- .pred_at_treat1()
   }
 
   # -------------------------------------------------------------------- #
   # Compute per group-time quantities
+  #
+  # For DiD, the canonical estimands are computed on the treated post-period
+  # subpopulation (D=1, P=1) within each (group, time) cell. The
+  # counterfactual untreated mean for that subpopulation is constructed via
+  # the parallel-trends identity:
+  #   mu0 = E[mu_hat(D=1, P=0)] + (E[mu_hat(D=0, P=1)] - E[mu_hat(D=0, P=0)])
+  # so that beta = mu1 - mu0 = beta_DP (the ATT). Lambda is analogous on
+  # the log-SD scale.
   # -------------------------------------------------------------------- #
 
   result_list <- list()
   for (t in time_levels) {
     for (g in group_levels) {
-      idx <- data[[time_var]] == t & data[[group]] == g
-      if (sum(idx) == 0) next
+      idx_cell <- data[[time_var]] == t & data[[group]] == g
+      if (sum(idx_cell) == 0) next
 
-      mu0_g  <- mean(pred_mu_0[idx])
-      sigma0_g <- mean(pred_sigma_0[idx])
-      beta_g  <- mean(pred_mu_1[idx] - pred_mu_0[idx])
-      lambda_g <- mean(log(pred_sigma_1[idx]) - log(pred_sigma_0[idx]))
-      n_treated <- sum(data[[treat]][idx] != 0)
+      if (is_did) {
+        idx_tp <- idx_cell & data[[treat]] != 0 & data[[post]] == 1
+        if (sum(idx_tp) == 0) {
+          # No treated post-period observations in this cell — fall back to
+          # whole-cell averaging so the row is still produced (with a warning
+          # surfaced via NA n_treated_post).
+          idx_tp <- idx_cell
+        }
+        mu_D0P0 <- mean(p_D0P0$mu[idx_tp])
+        mu_D0P1 <- mean(p_D0P1$mu[idx_tp])
+        mu_D1P0 <- mean(p_D1P0$mu[idx_tp])
+        mu_D1P1 <- mean(p_D1P1$mu[idx_tp])
+
+        lsig_D0P0 <- mean(log(p_D0P0$sigma[idx_tp]))
+        lsig_D0P1 <- mean(log(p_D0P1$sigma[idx_tp]))
+        lsig_D1P0 <- mean(log(p_D1P0$sigma[idx_tp]))
+        lsig_D1P1 <- mean(log(p_D1P1$sigma[idx_tp]))
+
+        mu1_g    <- mu_D1P1
+        mu0_g    <- mu_D1P0 + (mu_D0P1 - mu_D0P0)  # DiD-implied counterfactual
+        beta_g   <- mu1_g - mu0_g                  # = beta_DP (ATT)
+
+        lsig1     <- lsig_D1P1
+        lsig0_DiD <- lsig_D1P0 + (lsig_D0P1 - lsig_D0P0)
+        sigma1_g  <- exp(lsig1)
+        sigma0_g  <- exp(lsig0_DiD)
+        lambda_g  <- lsig1 - lsig0_DiD             # = lambda_DP
+
+        # Pre-period anchors (used by outcome.params and pretrends plots)
+        mu1_pre_g    <- mu_D1P0
+        mu0_pre_g    <- mu_D0P0
+        sigma1_pre_g <- exp(lsig_D1P0)
+        sigma0_pre_g <- exp(lsig_D0P0)
+
+        n_treated <- sum(data[[treat]][idx_tp] != 0)
+      } else {
+        mu0_g     <- mean(p_D0$mu[idx_cell])
+        sigma0_g  <- mean(p_D0$sigma[idx_cell])
+        beta_g    <- mean(p_D1$mu[idx_cell] - p_D0$mu[idx_cell])
+        lambda_g  <- mean(log(p_D1$sigma[idx_cell]) -
+                          log(p_D0$sigma[idx_cell]))
+
+        mu1_g    <- mu0_g + beta_g
+        sigma1_g <- sigma0_g * exp(lambda_g)
+
+        mu1_pre_g    <- NA_real_
+        mu0_pre_g    <- NA_real_
+        sigma1_pre_g <- NA_real_
+        sigma0_pre_g <- NA_real_
+
+        n_treated <- sum(data[[treat]][idx_cell] != 0)
+      }
 
       result_list[[length(result_list) + 1]] <- data.frame(
         group = g, time = t, n_treated = n_treated,
         mu0 = mu0_g, sigma0 = sigma0_g,
+        mu1 = mu1_g, sigma1 = sigma1_g,
         beta = beta_g, lambda = lambda_g,
+        mu0_pre = mu0_pre_g, mu1_pre = mu1_pre_g,
+        sigma0_pre = sigma0_pre_g, sigma1_pre = sigma1_pre_g,
         stringsAsFactors = FALSE
       )
     }
@@ -329,7 +421,8 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 
   result_df <- do.call(rbind, result_list)
 
-  # Normalize pi within each time period
+  # Normalize pi within each time period (share of treated [post-period, in
+  # the DiD case] subpopulation in each group)
   result_df$pi <- NA_real_
   for (t in time_levels) {
     idx <- result_df$time == t
@@ -341,16 +434,22 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     }
   }
 
-  out_df <- result_df[, c("group", "time", "pi", "mu0", "sigma0", "beta", "lambda")]
+  base_cols <- c("group", "time", "pi",
+                 "mu0", "sigma0", "mu1", "sigma1", "beta", "lambda")
+  did_cols  <- c("mu0_pre", "mu1_pre", "sigma0_pre", "sigma1_pre")
+  out_cols  <- if (is_did) c(base_cols, did_cols) else base_cols
+  out_df    <- result_df[, out_cols]
 
   # Extract vcov if requested
   vcov_mat <- NULL
   if (vcov) {
+    message("  Computing variance-covariance matrix...")
     vcov_mat <- .extract_vcov_numerical(
       model = model, treat = treat, group = group,
       time_var = time_var, data = data,
       group_levels = group_levels, time_levels = time_levels,
-      out_df = out_df
+      out_df = out_df,
+      post = if (is_did) post else NULL
     )
   }
 
@@ -359,8 +458,11 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     out_df$time <- NULL
   }
 
-  # Use manual path for validation and S3 construction
-  .ineqx_params_manual(data = out_df, ystat = ystat, ref = ref, vcov = vcov_mat)
+  # Use manual path for validation and S3 construction, then attach DiD flags
+  obj <- .ineqx_params_manual(data = out_df, ystat = ystat, vcov = vcov_mat)
+  obj$is_did <- is_did
+  obj$post   <- if (is_did) post else NULL
+  obj
 }
 
 
@@ -368,13 +470,12 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # Internal: Construct the S3 object
 # ---------------------------------------------------------------------------- #
 
-.make_ineqx_params <- function(data, ystat, type, ref, vcov, has_time) {
+.make_ineqx_params <- function(data, ystat, type, vcov, has_time) {
   structure(
     list(
       data = data,
       ystat = ystat,
       type = type,
-      ref = ref,
       vcov = vcov,
       groups = sort(unique(data$group)),
       times = if (has_time) sort(unique(data$time)) else NULL,
@@ -387,15 +488,62 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 
 
 # ---------------------------------------------------------------------------- #
+# Internal: Extract raw coefficient vcov from QR decompositions
+# ---------------------------------------------------------------------------- #
+
+#' Extract block-diagonal coefficient vcov from a gamlss model
+#'
+#' Bypasses \code{gamlss::vcov.gamlss()} / \code{gen.likelihood()} which use
+#' \code{get()} to resolve \code{data} from the model's call — this fails when
+#' the model was created inside \code{fit_ineqx_model()} because the call
+#' references local variable names that no longer exist.
+#'
+#' Instead, we extract the per-equation vcov directly from the QR
+#' decompositions stored on the model (\code{model$mu.qr},
+#' \code{model$sigma.qr}) and combine them into a block-diagonal matrix.
+#'
+#' @param model A fitted gamlss object
+#' @return A (p_mu + p_sigma) x (p_mu + p_sigma) block-diagonal vcov matrix
+#' @keywords internal
+.extract_raw_vcov <- function(model) {
+  mu_coefs <- coef(model, what = "mu")
+  sigma_coefs <- coef(model, what = "sigma")
+  p_mu <- length(mu_coefs)
+  p_sigma <- length(sigma_coefs)
+
+  # Extract per-equation vcov from QR decompositions
+  R_mu <- qr.R(model$mu.qr)[1:p_mu, 1:p_mu, drop = FALSE]
+  vcov_mu <- chol2inv(R_mu)
+
+  R_sigma <- qr.R(model$sigma.qr)[1:p_sigma, 1:p_sigma, drop = FALSE]
+  vcov_sigma <- chol2inv(R_sigma)
+
+  # Combine into block-diagonal matrix
+  p <- p_mu + p_sigma
+  raw_vcov <- matrix(0, p, p)
+  raw_vcov[1:p_mu, 1:p_mu] <- vcov_mu
+  raw_vcov[(p_mu + 1):p, (p_mu + 1):p] <- vcov_sigma
+
+  # Transfer names
+  nms <- c(names(mu_coefs), names(sigma_coefs))
+  dimnames(raw_vcov) <- list(nms, nms)
+
+  raw_vcov
+}
+
+
+# ---------------------------------------------------------------------------- #
 # Internal: Extract vcov via numerical Jacobian
 # ---------------------------------------------------------------------------- #
 
 #' @keywords internal
 .extract_vcov_numerical <- function(model, treat, group, time_var, data,
-                                     group_levels, time_levels, out_df) {
+                                     group_levels, time_levels, out_df,
+                                     post = NULL) {
 
+  # Extract the raw coefficient vcov from the model's QR decompositions.
   raw_vcov <- tryCatch(
-    stats::vcov(model),
+    .extract_raw_vcov(model),
     error = function(e) {
       warning("Could not extract vcov from model: ", e$message,
               ". Returning NULL.")
@@ -408,13 +556,13 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   sigma_coefs <- coef(model, what = "sigma")
   raw_coefs <- c(mu_coefs, sigma_coefs)
   p <- length(raw_coefs)
+  p_mu <- length(mu_coefs)
+  p_sigma <- length(sigma_coefs)
 
   if (nrow(raw_vcov) != p || ncol(raw_vcov) != p) {
     vcov_mu <- tryCatch(stats::vcov(model, what = "mu"), error = function(e) NULL)
     vcov_sigma <- tryCatch(stats::vcov(model, what = "sigma"), error = function(e) NULL)
     if (!is.null(vcov_mu) && !is.null(vcov_sigma)) {
-      p_mu <- length(mu_coefs)
-      p_sigma <- length(sigma_coefs)
       raw_vcov <- matrix(0, p, p)
       raw_vcov[1:p_mu, 1:p_mu] <- vcov_mu
       raw_vcov[(p_mu + 1):p, (p_mu + 1):p] <- vcov_sigma
@@ -424,25 +572,98 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     }
   }
 
-  theta_base <- .coefs_to_theta(model, raw_coefs, treat, group, time_var,
-                                 data, group_levels, time_levels)
+  # --- Fast analytical Jacobian via model matrices ---
+  # Build model matrices for counterfactual predictions (once, not per coef).
+  # For simple-difference: 2 matrices each (D=0, D=1).
+  # For DiD: 4 matrices each (D x P combinations) — matches the corrected
+  # extraction in .ineqx_params_from_model.
+  is_did <- !is.null(post)
 
-  eps <- 1e-5
-  n_theta <- length(theta_base)
-  jacobian <- matrix(0, n_theta, p)
+  mu_form <- formula(model, what = "mu")
+  sigma_form <- formula(model, what = "sigma")
+  if (length(mu_form) == 3) mu_form[2] <- NULL
+  if (length(sigma_form) == 3) sigma_form[2] <- NULL
 
-  for (k in seq_len(p)) {
-    coefs_plus <- raw_coefs
-    coefs_plus[k] <- coefs_plus[k] + eps
-    theta_plus <- .coefs_to_theta(model, coefs_plus, treat, group, time_var,
-                                   data, group_levels, time_levels)
-    jacobian[, k] <- (theta_plus - theta_base) / eps
+  .mm <- function(form, dat, what) {
+    if (what == "mu") {
+      model.matrix(form, data = dat, xlev = model$mu.xlevels,
+                   contrasts.arg = model$contrasts)
+    } else {
+      model.matrix(form, data = dat, xlev = model$sigma.xlevels,
+                   contrasts.arg = model$contrasts)
+    }
   }
 
-  full_vcov <- jacobian %*% raw_vcov %*% t(jacobian)
+  if (is_did) {
+    .with_dp <- function(d_val, p_val) {
+      dat <- data; dat[[treat]] <- d_val; dat[[post]] <- p_val; dat
+    }
+    X_mu_D0P0  <- .mm(mu_form,    .with_dp(0, 0), "mu")
+    X_mu_D0P1  <- .mm(mu_form,    .with_dp(0, 1), "mu")
+    X_mu_D1P0  <- .mm(mu_form,    .with_dp(1, 0), "mu")
+    X_mu_D1P1  <- .mm(mu_form,    .with_dp(1, 1), "mu")
+    X_sig_D0P0 <- .mm(sigma_form, .with_dp(0, 0), "sigma")
+    X_sig_D0P1 <- .mm(sigma_form, .with_dp(0, 1), "sigma")
+    X_sig_D1P0 <- .mm(sigma_form, .with_dp(1, 0), "sigma")
+    X_sig_D1P1 <- .mm(sigma_form, .with_dp(1, 1), "sigma")
+
+    # DiD-implied linear combinations:
+    #   beta_j(t)   = mean_idx_tp(X_mu_D1P1 - X_mu_D1P0 - X_mu_D0P1 + X_mu_D0P0) %*% mu_coefs
+    #   mu0_j(t)    = mean_idx_tp(X_mu_D1P0 + X_mu_D0P1 - X_mu_D0P0) %*% mu_coefs
+    #   lambda_j(t) = mean_idx_tp(X_sig_D1P1 - X_sig_D1P0 - X_sig_D0P1 + X_sig_D0P0) %*% sigma_coefs
+    #   log_sigma0_j(t) = mean_idx_tp(X_sig_D1P0 + X_sig_D0P1 - X_sig_D0P0) %*% sigma_coefs
+    X_mu_beta  <- X_mu_D1P1  - X_mu_D1P0  - X_mu_D0P1  + X_mu_D0P0
+    X_mu_mu0   <- X_mu_D1P0  + X_mu_D0P1  - X_mu_D0P0
+    X_sig_lam  <- X_sig_D1P1 - X_sig_D1P0 - X_sig_D0P1 + X_sig_D0P0
+    X_sig_lsig <- X_sig_D1P0 + X_sig_D0P1 - X_sig_D0P0
+  } else {
+    data_cf0 <- data; data_cf0[[treat]] <- 0
+    data_cf1 <- data; data_cf1[[treat]] <- 1
+    X_mu_0  <- .mm(mu_form,    data_cf0, "mu")
+    X_mu_1  <- .mm(mu_form,    data_cf1, "mu")
+    X_sig_0 <- .mm(sigma_form, data_cf0, "sigma")
+    X_sig_1 <- .mm(sigma_form, data_cf1, "sigma")
+
+    X_mu_beta  <- X_mu_1 - X_mu_0
+    X_mu_mu0   <- X_mu_0
+    X_sig_lam  <- X_sig_1 - X_sig_0
+    X_sig_lsig <- X_sig_0
+  }
+
+  # Theta vector per time-group: [beta_1..J, mu0_1..J, lambda_1..J, log_sigma0_1..J]
+  # All quantities are linear in the raw coefficients, so the Jacobian is analytic.
+  # The averaging set differs by mode: simple-difference averages over the cell;
+  # DiD averages over the treated post-period subset of the cell (idx_tp).
 
   J <- length(group_levels)
   n_t <- length(time_levels)
+  n_theta <- 4 * J * n_t
+  jacobian <- matrix(0, n_theta, p)
+
+  for (ti in seq_along(time_levels)) {
+    t_val <- time_levels[ti]
+    for (ji in seq_along(group_levels)) {
+      g <- group_levels[ji]
+      idx_cell <- which(data[[time_var]] == t_val & data[[group]] == g)
+      if (length(idx_cell) == 0) next
+
+      if (is_did) {
+        idx <- idx_cell[data[[treat]][idx_cell] != 0 &
+                         data[[post]][idx_cell] == 1]
+        if (length(idx) == 0) idx <- idx_cell
+      } else {
+        idx <- idx_cell
+      }
+
+      offset <- (ti - 1) * 4 * J
+      jacobian[offset + ji,           1:p_mu]      <- colMeans(X_mu_beta[idx, , drop = FALSE])
+      jacobian[offset + J + ji,       1:p_mu]      <- colMeans(X_mu_mu0[idx, , drop = FALSE])
+      jacobian[offset + 2 * J + ji,   (p_mu + 1):p] <- colMeans(X_sig_lam[idx, , drop = FALSE])
+      jacobian[offset + 3 * J + ji,   (p_mu + 1):p] <- colMeans(X_sig_lsig[idx, , drop = FALSE])
+    }
+  }
+
+  full_vcov <- jacobian %*% raw_vcov %*% t(jacobian)
 
   if (n_t == 1) {
     return(full_vcov)
@@ -454,56 +675,6 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     vcov_list[[as.character(time_levels[i])]] <- full_vcov[idx, idx, drop = FALSE]
   }
   vcov_list
-}
-
-
-# ---------------------------------------------------------------------------- #
-# Internal: Map raw model coefficients to ineqx theta vector
-# ---------------------------------------------------------------------------- #
-
-#' @keywords internal
-.coefs_to_theta <- function(model, coefs, treat, group, time_var, data,
-                             group_levels, time_levels) {
-
-  p_mu <- length(coef(model, what = "mu"))
-  mu_coefs <- coefs[1:p_mu]
-  sigma_coefs <- coefs[(p_mu + 1):length(coefs)]
-
-  model_mod <- model
-  model_mod$mu.coefficients <- mu_coefs
-  model_mod$sigma.coefficients <- sigma_coefs
-
-  data_cf0 <- data
-  data_cf0[[treat]] <- 0
-  pred_mu_0 <- predict(model_mod, what = "mu", type = "response",
-                       newdata = data_cf0, data = data)
-  pred_sigma_0 <- predict(model_mod, what = "sigma", type = "response",
-                          newdata = data_cf0, data = data)
-
-  data_cf1 <- data
-  data_cf1[[treat]] <- 1
-  pred_mu_1 <- predict(model_mod, what = "mu", type = "response",
-                       newdata = data_cf1, data = data)
-  pred_sigma_1 <- predict(model_mod, what = "sigma", type = "response",
-                          newdata = data_cf1, data = data)
-
-  theta <- c()
-  for (t in time_levels) {
-    betas <- mu0s <- lambdas <- log_sigma0s <- numeric(length(group_levels))
-    for (j in seq_along(group_levels)) {
-      g <- group_levels[j]
-      idx <- data[[time_var]] == t & data[[group]] == g
-      if (sum(idx) == 0) next
-
-      mu0s[j] <- mean(pred_mu_0[idx])
-      betas[j] <- mean(pred_mu_1[idx] - pred_mu_0[idx])
-      lambdas[j] <- mean(log(pred_sigma_1[idx]) - log(pred_sigma_0[idx]))
-      log_sigma0s[j] <- mean(log(pred_sigma_0[idx]))
-    }
-    theta <- c(theta, betas, mu0s, lambdas, log_sigma0s)
-  }
-
-  theta
 }
 
 
@@ -521,21 +692,155 @@ print.ineqx_params <- function(x, ...) {
   if (!is.null(x$times)) {
     cat("  Time periods (", x$n_times, "): ",
         paste(x$times, collapse = ", "), "\n", sep = "")
-    cat("  Reference period:", x$ref, "\n")
   }
-  cat("\nParameter ranges:\n")
+
   d <- x$data
-  cat("  pi:     [", round(min(d$pi), 4), ", ", round(max(d$pi), 4), "]\n", sep = "")
-  cat("  mu0:    [", round(min(d$mu0), 2), ", ", round(max(d$mu0), 2), "]\n", sep = "")
-  cat("  sigma0: [", round(min(d$sigma0), 2), ", ", round(max(d$sigma0), 2), "]\n", sep = "")
-  cat("  beta:   [", round(min(d$beta), 4), ", ", round(max(d$beta), 4), "]\n", sep = "")
-  cat("  lambda: [", round(min(d$lambda), 4), ", ", round(max(d$lambda), 4), "]\n", sep = "")
+  show_cols <- c("group", "pi", "mu0", "sigma0", "beta", "lambda")
+
+  if (!is.null(x$times)) {
+    cat("\nGroup-level parameters:\n")
+    for (t in x$times) {
+      cat(sprintf("\n  time %s:\n", t))
+      sub <- d[d$time == t, show_cols, drop = FALSE]
+      rownames(sub) <- NULL
+      .print_indented_df(sub, indent = 4, digits = 4)
+    }
+  } else {
+    cat("\nGroup-level parameters:\n")
+    sub <- d[, show_cols, drop = FALSE]
+    rownames(sub) <- NULL
+    .print_indented_df(sub, indent = 2, digits = 4)
+  }
+
   if (!is.null(x$vcov)) {
     if (is.matrix(x$vcov)) {
-      cat("\nVariance-covariance matrix: ", nrow(x$vcov), "x", ncol(x$vcov), "\n")
+      cat(sprintf("\nvcov: %dx%d\n", nrow(x$vcov), ncol(x$vcov)))
     } else {
-      cat("\nVariance-covariance matrices: ", length(x$vcov), " time periods\n")
+      cat(sprintf("\nvcov: %d time periods\n", length(x$vcov)))
     }
+  }
+  invisible(x)
+}
+
+
+# ---------------------------------------------------------------------------- #
+# Internal: Descriptive params manual specification
+# ---------------------------------------------------------------------------- #
+
+.ineqx_desc_params_manual <- function(data, ystat) {
+
+  if (!is.data.frame(data)) {
+    stop("'data' must be a data.frame")
+  }
+
+  # Check required columns
+  required_cols <- c("group", "pi", "mu", "sigma")
+  missing_cols <- setdiff(required_cols, names(data))
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns in 'data': ",
+         paste(missing_cols, collapse = ", "),
+         "\nFor descriptive params, required columns: group, pi, mu, sigma",
+         "\nFor causal params, required columns: group, pi, mu0, sigma0, beta, lambda")
+  }
+
+  # Validate numeric columns
+  numeric_cols <- c("pi", "mu", "sigma")
+  for (col in numeric_cols) {
+    if (!is.numeric(data[[col]])) {
+      stop("Column '", col, "' must be numeric")
+    }
+    if (any(is.na(data[[col]]))) {
+      stop("Column '", col, "' contains NA values")
+    }
+  }
+
+  # Validate sigma >= 0
+  if (any(data$sigma < 0)) {
+    stop("'sigma' must be non-negative")
+  }
+
+  # Determine if longitudinal (optional time column)
+  has_time <- "time" %in% names(data)
+
+  # Validate pi sums to 1 (within each time period if longitudinal)
+  if (has_time) {
+    times <- unique(data$time)
+    for (t in times) {
+      pi_sum <- sum(data$pi[data$time == t])
+      if (abs(pi_sum - 1) > 1e-6) {
+        stop("'pi' must sum to 1 within each time period. ",
+             "At time = ", t, ", sum(pi) = ", round(pi_sum, 6))
+      }
+    }
+  } else {
+    pi_sum <- sum(data$pi)
+    if (abs(pi_sum - 1) > 1e-6) {
+      stop("'pi' must sum to 1. Currently sum(pi) = ", round(pi_sum, 6))
+    }
+  }
+
+  # Validate no duplicate group(-time) combinations
+  if (has_time) {
+    gt <- paste(data$group, data$time, sep = "_")
+  } else {
+    gt <- as.character(data$group)
+  }
+  if (any(duplicated(gt))) {
+    stop("Duplicate group", if (has_time) "-time", " combinations found in 'data'")
+  }
+
+  # Sort for consistency
+  if (has_time) {
+    data <- data[order(data$time, data$group), ]
+  } else {
+    data <- data[order(data$group), ]
+  }
+
+  structure(
+    list(
+      data = data,
+      ystat = ystat,
+      groups = sort(unique(data$group)),
+      n_groups = length(unique(data$group)),
+      times = if (has_time) sort(unique(data$time)) else NULL,
+      n_times = if (has_time) length(unique(data$time)) else NULL
+    ),
+    class = "ineqx_desc_params"
+  )
+}
+
+
+# ---------------------------------------------------------------------------- #
+# Print method for descriptive params
+# ---------------------------------------------------------------------------- #
+
+#' @export
+print.ineqx_desc_params <- function(x, ...) {
+  cat("ineqx_desc_params object (descriptive counterfactual reference)\n")
+  cat("  Inequality measure:", x$ystat, "\n")
+  cat("  Groups (", x$n_groups, "): ",
+      paste(x$groups, collapse = ", "), "\n", sep = "")
+  if (!is.null(x$times)) {
+    cat("  Time periods (", x$n_times, "): ",
+        paste(x$times, collapse = ", "), "\n", sep = "")
+  }
+
+  d <- x$data
+  show_cols <- c("group", "pi", "mu", "sigma")
+
+  if (!is.null(x$times)) {
+    cat("\nGroup-level parameters:\n")
+    for (t in x$times) {
+      cat(sprintf("\n  time %s:\n", t))
+      sub <- d[d$time == t, show_cols, drop = FALSE]
+      rownames(sub) <- NULL
+      .print_indented_df(sub, indent = 4, digits = 4)
+    }
+  } else {
+    cat("\nGroup-level parameters:\n")
+    sub <- d[, show_cols, drop = FALSE]
+    rownames(sub) <- NULL
+    .print_indented_df(sub, indent = 2, digits = 4)
   }
   invisible(x)
 }

@@ -94,9 +94,9 @@ test_that("cross-sectional SEs compute correctly with known vcov", {
 
   # SEs should be present
   expect_true(!is.null(result$se))
-  expect_true(result$se$se_delta_B > 0)
-  expect_true(result$se$se_delta_W > 0)
-  expect_true(result$se$se_delta_total > 0)
+  expect_true(result$se$se_tau_B > 0)
+  expect_true(result$se$se_tau_W > 0)
+  expect_true(result$se$se_tau_total > 0)
 
   # Verify manually: grad_B = 2*pi*(mu1 - mu1_bar, beta - beta_bar)
   # mu1 = (560, 1100), mu1_bar = 830
@@ -104,10 +104,10 @@ test_that("cross-sectional SEs compute correctly with known vcov", {
   # beta_bar = 80
   # grad_mu0 = 2*0.5*(60-80, 100-80) = (-20, 20)
   # grad_B = (-270, 270, -20, 20)
-  # Var(delta_B) = 270^2*10 + 270^2*10 + 20^2*25 + 20^2*25
-  #              = 2*270^2*10 + 2*20^2*25 = 1458000 + 20000 = 1478000
+  # Var(tau_B) = 270^2*10 + 270^2*10 + 20^2*25 + 20^2*25
+  #            = 2*270^2*10 + 2*20^2*25 = 1458000 + 20000 = 1478000
   expected_se_B <- sqrt(1478000)
-  expect_equal(result$se$se_delta_B, expected_se_B, tolerance = 1e-4)
+  expect_equal(result$se$se_tau_B, expected_se_B, tolerance = 1e-4)
 })
 
 test_that("zero vcov gives zero SEs", {
@@ -124,9 +124,9 @@ test_that("zero vcov gives zero SEs", {
   )
 
   result <- ineqx:::causal_decompose_cross(params)
-  expect_equal(result$se$se_delta_B, 0)
-  expect_equal(result$se$se_delta_W, 0)
-  expect_equal(result$se$se_delta_total, 0)
+  expect_equal(result$se$se_tau_B, 0)
+  expect_equal(result$se$se_tau_W, 0)
+  expect_equal(result$se$se_tau_total, 0)
 })
 
 test_that("block independence: off-diagonal in W block doesn't affect B SE", {
@@ -166,11 +166,11 @@ test_that("block independence: off-diagonal in W block doesn't affect B SE", {
   se1 <- ineqx:::delta_method_se(params1, type = "cross")
   se2 <- ineqx:::delta_method_se(params2, type = "cross")
 
-  # delta_B SE should be unchanged
-  expect_equal(se1$se_delta_B, se2$se_delta_B)
+  # tau_B SE should be unchanged
+  expect_equal(se1$se_tau_B, se2$se_tau_B)
 
-  # delta_W SE should change
-  expect_false(se1$se_delta_W == se2$se_delta_W)
+  # tau_W SE should change
+  expect_false(se1$se_tau_W == se2$se_tau_W)
 })
 
 # ---------------------------------------------------------------------------- #
@@ -188,14 +188,13 @@ test_that("longitudinal delta method SEs are computed", {
       beta = c(60, 100, 80, 90),
       lambda = c(-0.1, -0.2, -0.15, -0.15)
     ),
-    ref = 2000,
     vcov = list(
       "2000" = diag(rep(1, 8)),
       "2010" = diag(rep(1, 8))
     )
   )
 
-  result <- ineqx:::causal_decompose_longit(params)
+  result <- ineqx:::causal_decompose_longit(params, ref = 2000)
 
   # SEs should be present
   expect_true(!is.null(result$se))
@@ -256,24 +255,64 @@ test_that("zero lambda gives zero gradient for delta_W w.r.t. log_sigma0", {
 })
 
 # ---------------------------------------------------------------------------- #
-# p-value and significance helpers
+# Descriptive delta SEs
 # ---------------------------------------------------------------------------- #
 
-test_that("significance stars are correct", {
-  expect_equal(ineqx:::.signif_stars(0.0001), "***")
-  expect_equal(ineqx:::.signif_stars(0.005), "**")
-  expect_equal(ineqx:::.signif_stars(0.03), "*")
-  expect_equal(ineqx:::.signif_stars(0.08), ".")
-  expect_equal(ineqx:::.signif_stars(0.5), "")
-  expect_equal(ineqx:::.signif_stars(NA), "")
+test_that("descriptive delta SEs are non-NA when ref is set", {
+  data(incdat)
+  result <- ineqx("inc", group = "group", time = "year",
+                   ref = 1, se = "delta", data = incdat)
+
+  expect_false(is.null(result$se$deltas))
+
+  # At ref period, SEs should be 0
+  se_ref <- result$se$deltas[["1"]]
+  expect_equal(se_ref$se_delta_mu, 0)
+  expect_equal(se_ref$se_delta_sigma, 0)
+  expect_equal(se_ref$se_delta_pi, 0)
+  expect_equal(se_ref$se_delta_T, 0)
+
+  # At non-ref periods, SEs should be positive (non-NA)
+  for (t_key in setdiff(names(result$se$deltas), "1")) {
+    se_t <- result$se$deltas[[t_key]]
+    expect_true(!is.na(se_t$se_delta_mu), info = paste("mu at", t_key))
+    expect_true(!is.na(se_t$se_delta_sigma), info = paste("sigma at", t_key))
+    expect_true(!is.na(se_t$se_delta_pi), info = paste("pi at", t_key))
+    expect_true(!is.na(se_t$se_delta_T), info = paste("T at", t_key))
+    expect_true(se_t$se_delta_T >= 0, info = paste("T >= 0 at", t_key))
+  }
 })
 
-test_that("p-value from SE is correct", {
-  # z = 3 -> p ≈ 0.0027
-  pval <- ineqx:::.pval_from_se(3, 1)
-  expect_equal(pval, 2 * pnorm(-3), tolerance = 1e-10)
+test_that("descriptive delta SEs work with counterfactual ref", {
+  set.seed(42)
+  n <- 200
+  d <- data.frame(
+    y = c(rnorm(n, 100, 30), rnorm(n, 200, 50)),
+    group = rep(c("A", "B"), each = n)
+  )
 
-  # SE = 0 -> NA
-  expect_true(is.na(ineqx:::.pval_from_se(1, 0)))
-  expect_true(is.na(ineqx:::.pval_from_se(1, NA)))
+  ref <- ineqx_params(data = data.frame(
+    group = c("A", "B"), pi = c(0.5, 0.5), mu = c(0, 0), sigma = c(0, 0)
+  ))
+
+  result <- ineqx("y", group = "group", params = ref, se = "delta", data = d)
+
+  expect_false(is.null(result$se$deltas))
+  obs_time <- setdiff(names(result$se$deltas), as.character(result$ref))
+  for (t_key in obs_time) {
+    se_t <- result$se$deltas[[t_key]]
+    expect_true(se_t$se_delta_T > 0, info = paste("T > 0 at", t_key))
+  }
 })
+
+test_that(".parse_se accepts 'boot' and TRUE", {
+  res_boot <- ineqx:::.parse_se("boot")
+  expect_equal(res_boot$method, "bootstrap")
+  expect_s3_class(res_boot$boot, "ineqx_boot_config")
+  expect_equal(res_boot$boot$B, 100L)
+
+  res_true <- ineqx:::.parse_se(TRUE)
+  expect_equal(res_true$method, "delta")
+  expect_null(res_true$boot)
+})
+

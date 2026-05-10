@@ -12,12 +12,14 @@ ineqx_params(
   time = NULL,
   post = NULL,
   ystat = "Var",
-  ref = NULL,
-  vcov = NULL
+  vcov = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{data}{For manual mode: a data.frame with required columns
+\item{data}{For descriptive mode: a data.frame with columns
+\code{group}, \code{pi}, \code{mu}, \code{sigma}.
+For causal manual mode: a data.frame with columns
 \code{group}, \code{pi}, \code{mu0}, \code{sigma0}, \code{beta},
 \code{lambda} (and optionally \code{time}).
 For model mode: the data.frame used to fit the model.}
@@ -43,16 +45,14 @@ Only used in model mode. NULL for simple difference estimator.}
 \item{ystat}{Character, either \code{"Var"} (variance) or \code{"CV2"}
 (squared coefficient of variation). Default: \code{"Var"}.}
 
-\item{ref}{Numeric, reference time period for longitudinal decomposition.
-Required when data contains multiple time periods.}
-
 \item{vcov}{For manual mode: an optional variance-covariance matrix (or
 named list of matrices for longitudinal data).
 For model mode: logical, whether to extract the vcov via numerical
 Jacobian (default: TRUE). Set to FALSE for faster computation without SEs.}
 }
 \value{
-An object of class \code{"ineqx_params"}
+An object of class \code{"ineqx_desc_params"} (descriptive mode) or
+  \code{"ineqx_params"} (causal mode)
 }
 \description{
 Constructs a standardized parameter object that serves as the interface
@@ -61,15 +61,24 @@ two stages: users can construct \code{ineqx_params} from any estimation
 method (GAMLSS, Bayesian models, simulation, or manual specification).
 }
 \details{
-There are two usage modes:
+There are three usage modes:
 \describe{
-  \item{Manual specification}{Pass a data.frame with columns
+  \item{Descriptive (manual)}{Pass a data.frame with columns
+    \code{group}, \code{pi}, \code{mu}, \code{sigma}. Returns an
+    \code{ineqx_desc_params} object representing a counterfactual
+    reference for descriptive decomposition.}
+  \item{Causal (manual)}{Pass a data.frame with columns
     \code{group}, \code{pi}, \code{mu0}, \code{sigma0}, \code{beta},
-    \code{lambda} (and optionally \code{time}).}
-  \item{From a fitted gamlss model}{Pass a fitted \code{gamlss} object
+    \code{lambda} (and optionally \code{time}). Returns an
+    \code{ineqx_params} object.}
+  \item{Causal (from fitted gamlss)}{Pass a fitted \code{gamlss} object
     via \code{model}, along with the raw data and variable names. The
     function extracts treatment effects via counterfactual predictions.}
 }
+
+The mode is auto-detected from the columns in \code{data}: if \code{mu}
+and \code{sigma} are present (without \code{mu0}, \code{sigma0}), the
+descriptive path is used; otherwise the causal path is used.
 
 
 When \code{model} is provided, the function generates predictions under
@@ -82,7 +91,17 @@ For the simple difference estimator, the ATT is:
 \deqn{\beta_{D,j} = E[\hat{\mu}(D=1) - \hat{\mu}(D=0) | G=j]}
 }
 \examples{
-# Manual specification for a two-group example
+# Descriptive counterfactual reference (equal groups, no inequality)
+desc_ref <- ineqx_params(
+  data = data.frame(
+    group = c("workers", "managers"),
+    pi = c(0.5, 0.5),
+    mu = c(0, 0),
+    sigma = c(0, 0)
+  )
+)
+
+# Causal manual specification for a two-group example
 params <- ineqx_params(
   data = data.frame(
     group = c("workers", "managers"),

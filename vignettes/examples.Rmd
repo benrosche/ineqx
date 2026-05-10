@@ -41,21 +41,22 @@ by the total annual income of the household they lead or belong to.
 Let us now calculate how much inequality there is within and between those groups:
 
 ```{r}
-desc <- ineq(
+desc <- ineqx(
   y = "earnweekf",
+  ystat = "CV2",
   group = "SES",
   time = "year",
-  weights = "earnwtf",
-  data = cps_sample,
   ref = 1982,
-  ystat = "CV2"
+  weights = "earnwtf",
+  data = cps_sample
 )
 ```
 
-The `ineq()` function takes the information on outcome (y), grouping structure
-(group), and time variable (time) to calculate within-group, between-group, and total
-inequality in each year. It also decomposes the change over time into contributions
-from changing means, dispersions, and composition (Shapley-averaged by default).
+The `ineqx()` function (without `treat`) takes the information on outcome (y), grouping
+structure (group), and time variable (time) to calculate within-group, between-group,
+and total inequality in each year. It also decomposes the change over time into
+contributions from changing means, dispersions, and composition (Shapley-averaged by
+default).
 
 ```{r}
 print(desc)
@@ -99,7 +100,8 @@ print(params)
 Now we decompose the treatment effect on inequality:
 
 ```{r}
-result <- ineqx(params = params, se = "none")
+result <- ineqx("y", group = "group", params = params,
+                se = "none", data = data.frame(y = 1, group = "A"))
 print(result)
 ```
 
@@ -127,6 +129,7 @@ params_reversed <- ineqx_params(
   )
 )
 
-result_reversed <- ineqx(params = params_reversed, se = "none")
+result_reversed <- ineqx("y", group = "group", params = params_reversed,
+                         se = "none", data = data.frame(y = 1, group = "A"))
 print(result_reversed)
 ```

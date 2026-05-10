@@ -18,7 +18,7 @@ between-group inequality (e.g., [Western & Bloome
 in turn, are limited in addressing causal questions about why inequality
 is changing.
 
-[Rosche (2022)](https://osf.io/preprints/socarxiv/f53kz/) introduces a
+[Rosche (2026)](https://osf.io/preprints/socarxiv/f53kz/) introduces a
 novel approach to analyzing how a treatment variable affects both
 changes in within- and between-group inequality and decomposing these
 changes into compositional and behavioral effects. The procedure
@@ -30,7 +30,7 @@ mean but on the whole conditional distribution.
 The ineqx packages implements both the descriptive ([Western & Bloome
 2009](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9531.2009.01222.x))
 and causal variance decomposition ([Rosche
-2022](https://osf.io/preprints/socarxiv/f53kz/)). The package allows
+2026](https://osf.io/preprints/socarxiv/f53kz/)). The package allows
 decomposing both the variance and the squared coefficient of variation
 (CV²).
 

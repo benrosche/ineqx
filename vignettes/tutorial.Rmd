@@ -8,6 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+rm(list=ls())
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -25,12 +26,11 @@ This tutorial walks through the three main workflows of the **ineqx** package:
 2. [Causal decomposition](#causal) — decompose treatment effects on inequality
 3. [External GAMLSS model](#gamlss) — bring your own model, extract parameters, and decompose
 
-The package has three user-facing functions:
+The package has two user-facing functions:
 
 | Function | Purpose |
 |----------|---------|
-| `ineq()` | Descriptive decomposition from raw data |
-| `ineqx()` | Causal decomposition (from params or formula + data) |
+| `ineqx()` | Variance decomposition — descriptive (no `treat`) or causal (with `treat` or `params`) |
 | `ineqx_params()` | Create parameter object — manually or from a fitted gamlss |
 
 We use the simulated `incdat` dataset that ships with the package. It contains
@@ -38,7 +38,7 @@ panel data on individuals across multiple years, three groups
 (`group = 1, 2, 3`), and a binary treatment indicator (`x`).
 
 ```{r setup}
-library(ineqx)
+devtools::load_all()
 
 data("incdat")
 str(incdat)
@@ -49,30 +49,107 @@ str(incdat)
 ## 1. Descriptive decomposition {#descriptive}
 
 The simplest use case: given an outcome and a grouping variable, how much
-inequality is *within* groups versus *between* groups?
+inequality is *within* groups versus *between* groups? When no `treat`
+argument is provided, `ineqx()` performs a descriptive decomposition.
 
 ```{r desc}
-desc <- ineq(
+desc <- ineqx(
   y     = "inc",
   group = "group",
   time  = "year",
-  data  = incdat,
   ref   = 1,
-  ystat = "Var"
+  ystat = "Var",
+  data  = incdat
 )
 
 print(desc)
 ```
 
-When a time variable and reference period are provided, `ineq()`
+When a time variable and reference period are provided, `ineqx()`
 computes within-group, between-group, and total inequality for each period,
 and decomposes the change over time into contributions from changing group
 means ($\mu$), dispersions ($\sigma$), and composition ($\pi$), using
 Shapley averaging by default.
 
-```{r desc-plot, fig.height = 3.5}
+```{r desc-plot-deltas, fig.height = 3.5}
 plot(desc)
 ```
+
+The default plot type is `"decomp"`, which shows how inequality changed relative
+to the reference period and decomposes that change into $\mu$, $\sigma$, and
+$\pi$ contributions.
+
+### Within/between levels
+
+The `type = "wibe"` plot shows the raw within-group, between-group, and total
+inequality at each time point:
+
+```{r desc-wibe, fig.height = 3.5}
+plot(desc, type = "wibe")
+```
+
+### Group-level parameters
+
+The `type = "params"` plot shows group-level means and standard deviations over
+time. Pass `ci = TRUE` or `ci = "delta"` to add confidence intervals:
+
+```{r desc-params, fig.height = 4}
+plot(desc, type = "params")
+```
+
+### Inequality statistics
+
+The `type = "ineq"` plot computes and displays overall inequality statistics
+over time. You can choose from `"V"` (variance), `"VL"` (log-variance),
+`"CV2"`, `"Gini"`, and `"Theil"`, or pass custom functions:
+
+```{r desc-ineq, fig.height = 3.5}
+plot(desc, type = "ineq", stats = c("V", "Gini"))
+```
+
+The `type = "ineq.group"` variant shows per-group inequality statistics:
+
+```{r desc-ineq-group, fig.height = 3.5}
+plot(desc, type = "ineq.group", stats = c("V"))
+```
+
+### Counterfactual reference
+
+You can decompose inequality relative to a counterfactual baseline by
+passing a descriptive params object via `params`. Create it with
+`ineqx_params()` using columns `group`, `pi`, `mu`, `sigma` — this
+parallels the causal path where `params` supplies the reference state.
+
+For example, to decompose the observed inequality into contributions from
+group means, dispersions, and composition relative to a world of perfect
+equality (all parameters zero, equal group shares):
+
+```{r desc-ref}
+ref <- ineqx_params(
+  data = data.frame(
+    group = 1:3,
+    pi    = 1/3,
+    mu    = 0,
+    sigma = 0
+  )
+)
+
+desc_ref <- ineqx(
+  y     = "inc",
+  ystat = "Var",
+  group = "group",
+  time  = "year",
+  params = ref,
+  data  = incdat
+)
+
+print(desc_ref)
+```
+
+The deltas show how much each parameter contributes to the level of
+inequality at each time period: $\mu$ drives between-group inequality,
+$\sigma$ drives within-group inequality, and $\pi$ captures the effect
+of unequal group sizes.
 
 ---
 
@@ -87,47 +164,93 @@ into:
 - **Within-group** (behavioral): does treatment compress or expand dispersion
   within groups?
 
-### Integrated fitting (Mode B)
+### Integrated estimation
 
 The simplest approach: pass formulas and data directly to `ineqx()`, which
-fits a GAMLSS model internally:
+fits a GAMLSS model internally. Note that `formula_mu` is one-sided — the
+outcome is specified via the `y` argument:
 
-```{r causal-modeb, message = FALSE}
+```{r causal-integrated, message = FALSE}
 result <- ineqx(
-  formula_mu    = inc ~ x * factor(group),
+  y             = "inc",
+  treat         = "x",
+  group         = "group",
+  formula_mu    = ~ x * factor(group),
   formula_sigma = ~ x * factor(group),
-  data  = incdat,
-  treat = "x",
-  group = "group",
-  se    = "none"
+  se            = "delta",
+  data          = incdat
 )
 
 print(result)
 ```
 
+The default `type = "wibe"` shows the within- and between-group treatment
+effects as a bar chart. The `show` argument controls which sub-components
+to display (default: `c("tau", "cov")`):
+
 ```{r causal-cross-plot, fig.height = 3.5}
 plot(result)
 ```
 
-### Pre-extracted parameters (Mode A)
+### Group-level contributions
+
+The `type = "wibe.group"` plot shows each group's contribution to the
+within-group and between-group treatment effects:
+
+```{r causal-cross-wibe-group, fig.height = 3.5}
+plot(result, type = "wibe.group")
+```
+
+### Treatment effect parameters
+
+The `type = "treat.params"` plot shows the estimated treatment effect
+parameters ($\beta$ and $\lambda$) by group:
+
+```{r causal-cross-params, fig.height = 3.5}
+plot(result, type = "treat.params")
+```
+
+### Predicted outcomes
+
+The `type = "outcome.params"` plot compares predicted group-level means and
+standard deviations under control versus treatment:
+
+```{r causal-cross-outcome, fig.height = 3.5}
+plot(result, type = "outcome.params")
+```
+
+### Treatment effect distributions
+
+The `type = "treat"` plot overlays the predicted treatment effect
+distributions for each group. Use `type = "outcome"` to see the full
+predicted outcome distributions under control vs treatment:
+
+```{r dist-cross, fig.height = 5}
+plot(result, type = "treat")
+```
+
+```{r dist-cross-outcome, fig.height = 5}
+plot(result, type = "outcome")
+```
+
+### Externally estimated model
 
 For more control, create an `ineqx_params` object first and pass it to
 `ineqx()`:
 
-```{r causal-modea, message = FALSE}
+```{r causal-external, message = FALSE}
 # Extract params from a gamlss model
 params <- ineqx_params(
   model = gamlss::gamlss(
-    inc ~ x * factor(group) + factor(t),
-    sigma.formula = ~ x * factor(group) + factor(t),
-    data = incdat, family = gamlss.dist::NO(), trace = FALSE
+    inc ~ x * factor(group) + factor(year),
+    sigma.formula = ~ x * factor(group) + factor(year),
+    data = incdat, family = gamlss.dist::NO()
   ),
   data  = incdat,
   treat = "x",
   group = "group",
-  time  = "t",
-  ref   = 0,
-  vcov  = FALSE
+  time  = "year",
+  vcov  = TRUE
 )
 
 print(params)
@@ -140,16 +263,48 @@ longitudinal decomposition:
 
 ```{r causal-longit}
 result_longit <- ineqx(
-  params = params,
+  "inc",
+  group  = "group",
+  ref    = 1,
   order  = c("behavioral", "compositional", "pretreatment"),
-  se     = "none"
+  params = params,
+  se     = "delta",
+  data   = incdat
 )
 
 print(result_longit)
 ```
 
+The default `type = "decomp"` shows the three-component decomposition
+(behavioral, compositional, pre-treatment) of changes relative to the
+reference:
+
 ```{r causal-longit-plot, fig.height = 3.5}
 plot(result_longit)
+```
+
+### Six sub-component decomposition
+
+Setting `show` to individual delta components displays the six
+sub-components ($\Delta_\beta$, $\Delta_\lambda$, $\Delta_{\pi,b}$,
+$\Delta_{\pi,w}$, $\Delta_\mu$, $\Delta_\sigma$):
+
+```{r causal-longit-six, fig.height = 3.5}
+plot(result_longit, type = "decomp",
+     show = c("delta_beta", "delta_lambda", "delta_pi_b",
+              "delta_pi_w", "delta_mu", "delta_sigma"))
+```
+
+### Within- and between-group treatment effects
+
+The `type = "wibe"` plot shows the *levels* of the cross-sectional treatment
+effects ($\tau_B$, $\tau_W$) at each time point, rather than changes from
+the reference. The `show` argument controls which sub-components to display
+(default: `c("tau_b", "tau_w")`; also available: `"het_b"`, `"cov_b"`,
+`"het_w"`, `"cov_w"`):
+
+```{r causal-wibe, fig.height = 3.5}
+plot(result_longit, type = "wibe")
 ```
 
 ### Shapley values
@@ -158,13 +313,151 @@ Since the longitudinal decomposition depends on the ordering, you can
 average across all 6 orderings with `order = "shapley"`:
 
 ```{r shapley}
-result_shapley <- ineqx(params = params, order = "shapley", se = "none")
+result_shapley <- ineqx("inc", group = "group", ref = 1,
+                         params = params, order = "shapley",
+                         se = "none", data = incdat)
 print(result_shapley)
 ```
 
 ```{r shapley-plot, fig.height = 3.5}
 plot(result_shapley)
 ```
+
+The `type = "shapley"` plot shows the Shapley-averaged values with ribbons
+indicating the range across orderings — useful for assessing ordering
+dependence:
+
+```{r shapley-ranges, fig.height = 3.5}
+plot(result_shapley, type = "shapley")
+```
+
+### Treatment effect parameters over time
+
+The `type = "treat.params"` plot shows the estimated treatment effect
+parameters ($\beta$ and $\lambda$) by group over time:
+
+```{r params-longit, fig.height = 3.5}
+plot(result_shapley, type = "treat.params")
+```
+
+### Predicted outcomes over time
+
+The `type = "outcome.params"` plot compares predicted group-level means and
+standard deviations under control versus treatment over time:
+
+```{r outcome-longit, fig.height = 3.5}
+plot(result_shapley, type = "outcome.params")
+```
+
+### Predicted distributions
+
+The `type = "treat"` plot shows predicted treatment effect distributions.
+When `time` is specified, it shows per-group distributions at that time
+point. When `time = NULL` (default), it shows pi-weighted marginal
+distributions across all time points. Use `type = "outcome"` for predicted
+outcome distributions:
+
+```{r dist-longit, fig.height = 5}
+plot(result_shapley, type = "treat", time = 3)
+```
+
+```{r dist-longit-marginal, fig.height = 5}
+plot(result_shapley, type = "treat")
+```
+
+### Counterfactual reference (causal)
+
+Just as the descriptive decomposition supports a counterfactual baseline,
+the causal decomposition can blend user-provided counterfactual parameters
+with model-estimated parameters from data. This answers questions like:
+*"How did treatment effects on inequality evolve relative to a hypothetical
+baseline?"*
+
+Provide an `ineqx_params` object (with causal columns `mu0`, `sigma0`,
+`beta`, `lambda`) together with `treat`, `formula_mu`, and `formula_sigma`.
+The function fits a GAMLSS model on the data, then blends the
+model-estimated parameters with your counterfactual scenarios.
+
+You can specify counterfactual parameters at multiple time points. Periods
+covered by your params override the model estimates, while remaining periods
+are estimated from data. Here we place two counterfactual scenarios — one at
+the beginning (time 0: no treatment effect) and one in the middle (time 3:
+moderate, uniform treatment effect) — with data-estimated periods in between:
+
+```{r causal-blend, message = FALSE}
+# Two counterfactual scenarios at time 0 and time 3
+cf_ref <- ineqx_params(
+  data = data.frame(
+    group  = rep(1:3, 2),
+    time   = rep(c(0, 3), each = 3),
+    pi     = 1/3,
+    mu0    = 10,
+    sigma0 = 1,
+    # time 0: no treatment effect
+    # time 3: moderate uniform treatment effect
+    beta   = c(0, 0, 0, 5, 5, 5),
+    lambda = c(0, 0, 0, 1, 1, 1)
+  )
+)
+
+result_blend <- ineqx(
+  y             = "inc",
+  treat         = "x",
+  group         = "group",
+  time          = "year",
+  params        = cf_ref,
+  ref           = 0,
+  formula_mu    = ~ x * factor(group) + factor(year),
+  formula_sigma = ~ x * factor(group) + factor(year),
+  se            = "none",
+  data          = incdat
+)
+
+print(result_blend)
+```
+
+Time 0 and time 3 use the counterfactual parameters; times 1, 2, 4, and 5
+are estimated from data via GAMLSS. The longitudinal decomposition shows
+how treatment effects on inequality evolved across all periods relative to
+the reference (time 0).
+
+Note: delta method SEs are not available for blended parameters. Use
+`boot_config()` for bootstrap SEs if needed.
+
+### Comparing scenarios
+
+The `compare()` function stacks multiple ineqx results for side-by-side
+comparison. This is useful for contrasting an observed decomposition with
+one or more counterfactual baselines:
+
+```{r compare, fig.height = 3.5}
+comp <- compare(Observed = result_shapley, Counterfactual = result_blend)
+print(comp)
+```
+
+The default `type = "decomp"` plot uses color for the decomposition component
+and linetype for the scenario:
+
+```{r compare-decomp, fig.height = 3.5}
+plot(comp, type = "decomp")
+```
+
+Use `show` to display individual sub-components:
+
+```{r compare-decomp-six, fig.height = 3.5}
+plot(comp, type = "decomp",
+     show = c("delta_beta", "delta_lambda", "delta_pi_b",
+              "delta_pi_w", "delta_mu", "delta_sigma"))
+```
+
+The `type = "wibe"` plot compares within/between treatment effect levels
+across scenarios:
+
+```{r compare-wibe, fig.height = 3.5}
+plot(comp, type = "wibe")
+```
+
+The underlying stacked data is accessible via `comp$data`.
 
 ---
 
@@ -198,7 +491,7 @@ params_ext <- ineqx_params(
 print(params_ext)
 
 # Decompose
-ineqx(params = params_ext)
+ineqx(y="inc", group = "group", params = params_ext, data = incdat)
 ```
 
 ### Manual parameter specification
@@ -219,18 +512,21 @@ params_manual <- ineqx_params(
   ystat = "Var"
 )
 
-ineqx(params = params_manual, se = "none")
+ineqx(y="inc", group = "group", params = params_manual,
+      se = "none", data = incdat)
 ```
 
 ---
 
 ## Summary
 
-| Workflow | Functions | Input |
-|----------|-----------|-------|
-| Descriptive | `ineq()` | Raw data (y, group, time) |
-| Causal (integrated) | `ineqx(formula_mu=..., data=...)` | Raw data + treatment |
-| Causal (external model) | `ineqx_params(model=...)` + `ineqx(params=...)` | Fitted gamlss |
-| Causal (manual) | `ineqx_params(data=...)` + `ineqx(params=...)` | Parameter data.frame |
+| Workflow | Call | Input |
+|----------|------|-------|
+| Descriptive | `ineqx(y, group, data=...)` | Raw data |
+| Descriptive (counterfactual ref) | `ineqx_params(data=...)` then `ineqx(y, group, params=..., data=...)` | Reference params + raw data |
+| Causal (integrated) | `ineqx(y, treat, group, formula_mu=..., data=...)` | Raw data + treatment |
+| Causal (counterfactual ref) | `ineqx_params(data=...)` then `ineqx(y, treat, group, params=..., formula_mu=..., data=...)` | Reference params + raw data + treatment |
+| Causal (external model) | `ineqx_params(model=...)` then `ineqx(y, group, params=..., data=...)` | Fitted gamlss |
+| Causal (manual) | `ineqx_params(data=...)` then `ineqx(y, group, params=..., data=...)` | Parameter data.frame |
 
 For details on the methodology, see `vignette("model")`. For more examples, see `vignette("examples")`.

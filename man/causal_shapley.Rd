@@ -4,20 +4,20 @@
 \alias{causal_shapley}
 \title{Compute Shapley values for the longitudinal causal decomposition}
 \usage{
-causal_shapley(params)
+causal_shapley(params, ref = NULL)
 }
 \arguments{
 \item{params}{An \code{ineqx_params} object with multiple time periods}
 }
 \value{
-An object of class \code{"ineqx_shapley"} containing:
+An object of class \code{"ineqx_causal_longit"} with
+  \code{order = "shapley"} and additional fields:
 \describe{
   \item{shapley}{data.frame with Shapley-averaged values for each component
     at each time period}
   \item{all_orderings}{List of 6 \code{ineqx_causal_longit} results,
     one per ordering}
   \item{ranges}{data.frame showing min/max for each component across orderings}
-  \item{params}{The input ineqx_params object}
 }
 }
 \description{

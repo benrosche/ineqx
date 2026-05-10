@@ -5,45 +5,15 @@
 \title{Create a bootstrap configuration}
 \usage{
 boot_config(
-  data,
-  formula_mu,
-  formula_sigma,
-  treat,
-  group = NULL,
-  time = NULL,
-  post = NULL,
-  B = 200L,
-  family = NULL,
+  B = 100L,
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
-  verbose = TRUE,
-  gamlss_args = list()
+  verbose = TRUE
 )
 }
 \arguments{
-\item{data}{Data.frame, the original individual-level data used to fit
-the GAMLSS model}
-
-\item{formula_mu}{Formula for the mean (mu) equation}
-
-\item{formula_sigma}{Formula for the log-SD (sigma) equation (one-sided,
-e.g., \code{~treat*group})}
-
-\item{treat}{Character, name of the treatment variable (coded 0/1)}
-
-\item{group}{Character, name of the grouping variable. Required when
-using \code{boot_config} via \code{\link{ineqx}}.}
-
-\item{time}{Character, name of the time variable. NULL for cross-sectional.}
-
-\item{post}{Character, name of the pre/post indicator for DiD designs.
-NULL for simple difference estimator.}
-
-\item{B}{Integer, number of bootstrap replicates. Default 200.}
-
-\item{family}{A gamlss.family object (e.g., \code{gamlss.dist::NO()}).
-If NULL, uses the normal distribution.}
+\item{B}{Integer, number of bootstrap replicates. Default 100.}
 
 \item{parallel}{Logical, use parallel computation. Default FALSE.}
 
@@ -52,28 +22,27 @@ If NULL, uses the normal distribution.}
 \item{seed}{Integer, random seed for reproducibility. Default NULL.}
 
 \item{verbose}{Logical, print progress messages. Default TRUE.}
-
-\item{gamlss_args}{Named list of additional arguments passed to
-\code{gamlss::gamlss()}.}
 }
 \value{
 An object of class \code{"ineqx_boot_config"}
 }
 \description{
-Groups all bootstrap settings into a single object that can be passed to
-\code{\link{ineqx}} via the \code{boot} argument.
+Groups bootstrap settings into a single object that can be passed to
+\code{\link{ineqx}} via the \code{se} argument, or to plot methods via
+the \code{ci} argument. All model arguments (data, formulas, etc.) are
+inherited from the \code{ineqx()} call automatically.
 }
 \examples{
 \dontrun{
-bc <- boot_config(
-  data = mydata,
-  formula_mu = y ~ treat * group,
-  formula_sigma = ~ treat * group,
-  treat = "treat",
-  B = 500,
-  seed = 42
-)
-result <- ineqx(params, se_method = "bootstrap", boot = bc)
+# Bootstrap SEs with 500 replicates
+ineqx("income", treat = "treat", group = "group", data = mydata,
+      formula_mu = ~ treat * group,
+      formula_sigma = ~ treat * group,
+      se = boot_config(B = 500, seed = 42))
+
+# Bootstrap CIs in plot (explicit config or "boot" shorthand)
+plot(desc_result, ci = boot_config(B = 100))
+plot(desc_result, ci = "boot")  # equivalent to boot_config()
 }
 
 }

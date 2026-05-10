@@ -1,3 +1,22 @@
+# ineqx 0.4.0
+
+## Breaking changes
+
+* Merged `ineq()` and `ineqx()` into a single `ineqx()` function
+  - If no `treat` is specified: descriptive decomposition (was `ineq()`)
+  - If `treat` is specified or `params` provided: causal decomposition
+* `ineq()` removed — use `ineqx()` without `treat` instead
+* `y` is now a separate argument (character, column name in `data`); `formula_mu` is now one-sided (like `formula_sigma`)
+* `boot_config()` now requires `y` argument and one-sided `formula_mu`
+* Default `order` changed from `c("behavioral", "compositional", "pretreatment")` to `"shapley"`
+* Argument order: `y, ystat, treat, post, group, time, ref, order, formula_mu, formula_sigma, params, weights, se, data`
+* Renamed modes: "Mode A" → "integrated estimation", "Mode B" → "externally estimated model"
+
+## Improvements
+
+* Fully parallel argument structure: descriptive and causal paths share `y`, `group`, `time`, `ref`, `ystat`, `order`, `data`
+* Public API reduced to 2 main functions: `ineqx()` and `ineqx_params()`
+
 # ineqx 0.3.0
 
 ## Breaking changes
@@ -12,13 +31,12 @@
 ## New features
 
 * `ineq()`: descriptive W/B decomposition with counterfactual parameter-switching decomposition (mu, sigma, pi) and Shapley averaging
-* `ineqx()` Mode B: integrated GAMLSS fitting via `formula_mu`/`formula_sigma`/`data` arguments
-* `order = "shapley"` supported in both `ineq()` and `ineqx()` for ordering-robust decomposition
+* `ineqx()` integrated estimation: GAMLSS fitting via `formula_mu`/`formula_sigma`/`data` arguments
+* `order = "shapley"` supported for ordering-robust decomposition
 * `ineqx_params()` accepts either manual data.frame or fitted gamlss model (via `model` arg)
 
 ## Improvements
 
-* Parallel API design between `ineq()` and `ineqx()` (shared `ystat`, `order`, `ref` arguments)
 * Cleaner print/plot methods for all result classes
 
 # ineqx 0.2.0

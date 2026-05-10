@@ -1,57 +1,9 @@
 # ============================================================================ #
-# ineq: Descriptive within/between variance decomposition
+# Internal: Compute group-level within/between statistics from raw data
+# Shared helper used by .ineq_descriptive() and .ineq_descriptive_with_ref()
 # ============================================================================ #
 
-#' Descriptive variance decomposition
-#'
-#' Decomposes total variance (or CV^2) into within-group and between-group
-#' components. For longitudinal data with a reference period, further decomposes
-#' the change over time into components attributable to changing means (mu),
-#' dispersions (sigma), and group composition (pi), using sequential parameter
-#' switching with optional Shapley averaging.
-#'
-#' @param y Character, name of the outcome variable in \code{data}
-#' @param group Character, name of the grouping variable in \code{data}
-#' @param time Character, name of the time variable in \code{data}. If NULL,
-#'   a single cross-section is assumed.
-#' @param weights Character, name of the weight variable in \code{data}. If NULL,
-#'   equal weights are used.
-#' @param data A data.frame containing the variables
-#' @param ref Numeric, reference time period for computing deltas. If NULL,
-#'   deltas are not computed.
-#' @param ystat Character, either \code{"Var"} (default) or \code{"CV2"}.
-#' @param order Decomposition ordering for the counterfactual deltas. Either:
-#'   \itemize{
-#'     \item A character vector of length 3: a permutation of
-#'       \code{c("mu", "sigma", "pi")} for a single ordering.
-#'     \item \code{"shapley"} (default): averages across all 6 possible orderings.
-#'   }
-#'   Only used when \code{time} and \code{ref} are provided.
-#'
-#' @return An object of class \code{"ineqx_desc"} containing:
-#' \describe{
-#'   \item{wibe}{data.frame by group and time: n, pi, mu, sigma, sigma2}
-#'   \item{totals}{data.frame by time: W, B, Total (and CV2 variants)}
-#'   \item{deltas}{data.frame by time: counterfactual delta components
-#'     relative to ref (NULL if ref is not specified)}
-#'   \item{ystat}{The inequality measure used}
-#'   \item{order}{The ordering used for counterfactual decomposition}
-#' }
-#'
-#' @examples
-#' data(incdat)
-#' # Single cross-section
-#' ineq(y = "inc", group = "group", data = incdat[incdat$t == 0, ])
-#'
-#' # Over time with reference period
-#' ineq(y = "inc", group = "group", time = "year", data = incdat,
-#'      ref = 1, ystat = "Var")
-#'
-#' @export
-ineq <- function(y, group, time = NULL, weights = NULL,
-                 data, ref = NULL, ystat = "Var", order = "shapley") {
-
-  ystat <- match.arg(ystat, c("Var", "CV2"))
+.compute_wibe <- function(y, group, time = NULL, weights = NULL, data) {
 
   # Validate inputs
   if (!is.data.frame(data)) stop("'data' must be a data.frame")
@@ -85,16 +37,7 @@ ineq <- function(y, group, time = NULL, weights = NULL,
   group_levels <- sort(unique(d$group))
   time_levels <- sort(unique(d$time))
 
-  # Validate ref
-  if (!is.null(ref) && !(ref %in% time_levels)) {
-    stop("'ref' = ", ref, " not found in time variable. ",
-         "Available: ", paste(time_levels, collapse = ", "))
-  }
-
-  # ------------------------------------------------------------ #
-  # Compute group-level statistics (wibe)
-  # ------------------------------------------------------------ #
-
+  # Compute group-level statistics
   wibe_list <- list()
   for (t in time_levels) {
     for (g in group_levels) {
@@ -148,10 +91,16 @@ ineq <- function(y, group, time = NULL, weights = NULL,
   wibe_out <- wibe_df[, c("time", "group", "n", "pi", "mu", "sigma", "sigma2")]
   rownames(wibe_out) <- NULL
 
-  # ------------------------------------------------------------ #
-  # Compute totals by time
-  # ------------------------------------------------------------ #
+  list(wibe_out = wibe_out, time_levels = time_levels, group_levels = group_levels,
+       raw_data = d)
+}
 
+
+# ============================================================================ #
+# Internal: Compute totals from wibe (n-based, from raw data)
+# ============================================================================ #
+
+.compute_totals_n <- function(wibe_out, time_levels) {
   totals_list <- list()
   for (t in time_levels) {
     idx <- wibe_out$time == t
@@ -181,20 +130,78 @@ ineq <- function(y, group, time = NULL, weights = NULL,
 
   totals <- do.call(rbind, totals_list)
   rownames(totals) <- NULL
+  totals
+}
 
-  # ------------------------------------------------------------ #
+
+# ============================================================================ #
+# Internal: Compute totals from wibe (pi-based, from counterfactual params)
+# ============================================================================ #
+
+.compute_totals_pi <- function(wibe_out, time_levels) {
+  totals_list <- list()
+  for (t in time_levels) {
+    idx <- wibe_out$time == t
+    sub <- wibe_out[idx, ]
+    pi_vec <- sub$pi
+    mu_vec <- sub$mu
+    sigma_vec <- sub$sigma
+
+    W_var <- VarW_pi(pi_vec, sigma_vec)
+    B_var <- VarB_pi(pi_vec, mu_vec)
+    T_var <- W_var + B_var
+
+    W_cv2 <- CV2W_pi(pi_vec, mu_vec, sigma_vec)
+    B_cv2 <- CV2B_pi(pi_vec, mu_vec)
+    T_cv2 <- W_cv2 + B_cv2
+
+    N_total <- sum(sub$n)
+    gmu <- sum(pi_vec * mu_vec)
+
+    totals_list[[length(totals_list) + 1]] <- data.frame(
+      time = t, N = N_total, grand_mean = gmu,
+      VarW = W_var, VarB = B_var, VarT = T_var,
+      CV2W = W_cv2, CV2B = B_cv2, CV2T = T_cv2,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  totals <- do.call(rbind, totals_list)
+  rownames(totals) <- NULL
+  totals
+}
+
+
+# ============================================================================ #
+# Internal: Descriptive within/between variance decomposition (from raw data)
+# Called by ineqx() when treat is NULL and params is NULL
+# ============================================================================ #
+
+.ineq_descriptive <- function(y, group, time = NULL, weights = NULL,
+                               data, ref = NULL, ystat = "Var",
+                               order = "shapley") {
+
+  # Compute group-level statistics
+  wibe_result <- .compute_wibe(y, group, time, weights, data)
+  wibe_out <- wibe_result$wibe_out
+  time_levels <- wibe_result$time_levels
+
+  # Validate ref
+  if (!is.null(ref) && !(ref %in% time_levels)) {
+    stop("'ref' = ", ref, " not found in time variable. ",
+         "Available: ", paste(time_levels, collapse = ", "))
+  }
+
+  # Compute totals by time
+  totals <- .compute_totals_n(wibe_out, time_levels)
+
   # Compute counterfactual deltas (change relative to ref)
-  # ------------------------------------------------------------ #
-
   deltas <- NULL
   if (!is.null(ref) && length(time_levels) > 1) {
     deltas <- .compute_desc_deltas(wibe_out, time_levels, ref, ystat, order)
   }
 
-  # ------------------------------------------------------------ #
   # Remove time column if single cross-section
-  # ------------------------------------------------------------ #
-
   if (is.null(time)) {
     wibe_out$time <- NULL
     totals$time <- NULL
@@ -205,9 +212,106 @@ ineq <- function(y, group, time = NULL, weights = NULL,
       wibe = wibe_out,
       totals = totals,
       deltas = deltas,
+      raw_data = wibe_result$raw_data,
       ystat = ystat,
       order = order,
       ref = ref,
+      call = match.call()
+    ),
+    class = "ineqx_desc"
+  )
+}
+
+
+# ============================================================================ #
+# Internal: Descriptive decomposition with counterfactual reference params
+# Called by ineqx() when params is an ineqx_desc_params object
+# ============================================================================ #
+
+.ineq_descriptive_with_ref <- function(y, group, time = NULL, weights = NULL,
+                                        data, ref_params, ref,
+                                        ystat = "Var", order = "shapley") {
+
+  # Compute observed group-level statistics from raw data
+  wibe_result <- .compute_wibe(y, group, time, weights, data)
+  obs_wibe <- wibe_result$wibe_out
+  obs_time_levels <- wibe_result$time_levels
+  obs_groups <- wibe_result$group_levels
+
+  # Validate group alignment
+  ref_groups <- ref_params$groups
+  if (!setequal(obs_groups, ref_groups)) {
+    stop("Groups in 'params' (", paste(ref_groups, collapse = ", "),
+         ") do not match groups in data (", paste(obs_groups, collapse = ", "), ")")
+  }
+
+  # Build wibe rows from params
+  p_data <- ref_params$data
+  p_data <- p_data[order(p_data$group), ]
+
+  if (is.null(ref_params$times)) {
+    # Single cross-section params: auto-assign time=0
+    params_times <- 0L
+    p_data$time <- 0L
+  } else {
+    params_times <- ref_params$times
+  }
+
+  params_wibe <- data.frame(
+    time   = p_data$time,
+    group  = p_data$group,
+    n      = p_data$pi,
+    pi     = p_data$pi,
+    mu     = p_data$mu,
+    sigma  = p_data$sigma,
+    sigma2 = p_data$sigma^2,
+    stringsAsFactors = FALSE
+  )
+
+  # Merge: params periods override observed periods
+  # Keep observed periods that don't overlap with params
+  obs_only_times <- setdiff(obs_time_levels, params_times)
+  obs_wibe_keep <- obs_wibe[obs_wibe$time %in% obs_only_times, ]
+
+  # Combine: params periods + non-overlapping observed periods
+  wibe_out <- rbind(params_wibe, obs_wibe_keep)
+  wibe_out <- wibe_out[order(wibe_out$time, wibe_out$group), ]
+  rownames(wibe_out) <- NULL
+  all_time_levels <- sort(unique(wibe_out$time))
+
+  # Validate ref
+  if (!(ref %in% all_time_levels)) {
+    stop("'ref' = ", ref, " not found in merged time periods. ",
+         "Available: ", paste(all_time_levels, collapse = ", "))
+  }
+
+  # Compute totals: pi-based for params periods, n-based for observed periods
+  totals_list <- list()
+  for (t in all_time_levels) {
+    if (t %in% params_times) {
+      totals_list[[length(totals_list) + 1]] <-
+        .compute_totals_pi(wibe_out[wibe_out$time == t, ], t)
+    } else {
+      totals_list[[length(totals_list) + 1]] <-
+        .compute_totals_n(wibe_out[wibe_out$time == t, ], t)
+    }
+  }
+  totals <- do.call(rbind, totals_list)
+  rownames(totals) <- NULL
+
+  # Compute counterfactual deltas
+  deltas <- .compute_desc_deltas(wibe_out, all_time_levels, ref, ystat, order)
+
+  structure(
+    list(
+      wibe = wibe_out,
+      totals = totals,
+      deltas = deltas,
+      raw_data = wibe_result$raw_data,
+      ystat = ystat,
+      order = order,
+      ref = ref,
+      ref_params = ref_params,
       call = match.call()
     ),
     class = "ineqx_desc"
@@ -236,6 +340,12 @@ ineq <- function(y, group, time = NULL, weights = NULL,
   mu_0 <- ref_wibe$mu
   sigma_0 <- ref_wibe$sigma
 
+  # CV2 requires nonzero grand mean at reference (CV2 = Var/mean^2)
+  if (ystat == "CV2" && sum(pi_0 * mu_0) == 0) {
+    stop("CV2 decomposition requires a nonzero grand mean at the reference period. ",
+         "A zero-mean reference is not supported because CV2 = Var/mean^2 is undefined when mean = 0.")
+  }
+
   # Inequality evaluation function
   .eval_ineq <- function(pi, mu, sigma) {
     if (ystat == "Var") {
@@ -258,7 +368,6 @@ ineq <- function(y, group, time = NULL, weights = NULL,
 
     current <- list(pi = pi_0, mu = mu_0, sigma = sigma_0)
     prev <- .eval_ineq(current$pi, current$mu, current$sigma)
-    baseline <- prev
 
     components <- list()
     for (step in ord) {
@@ -319,13 +428,13 @@ ineq <- function(y, group, time = NULL, weights = NULL,
       # Per-parameter deltas
       delta_mu_W = components$mu$delta_W,
       delta_mu_B = components$mu$delta_B,
-      delta_mu_T = components$mu$delta_T,
+      delta_mu = components$mu$delta_T,
       delta_sigma_W = components$sigma$delta_W,
       delta_sigma_B = components$sigma$delta_B,
-      delta_sigma_T = components$sigma$delta_T,
+      delta_sigma = components$sigma$delta_T,
       delta_pi_W = components$pi$delta_W,
       delta_pi_B = components$pi$delta_B,
-      delta_pi_T = components$pi$delta_T,
+      delta_pi = components$pi$delta_T,
       # Aggregated
       delta_W = components$mu$delta_W + components$sigma$delta_W + components$pi$delta_W,
       delta_B = components$mu$delta_B + components$sigma$delta_B + components$pi$delta_B,
@@ -337,16 +446,4 @@ ineq <- function(y, group, time = NULL, weights = NULL,
   deltas <- do.call(rbind, deltas_list)
   rownames(deltas) <- NULL
   deltas
-}
-
-
-# ---------------------------------------------------------------------------- #
-# Backward compatibility wrapper
-# ---------------------------------------------------------------------------- #
-
-#' @keywords internal
-desc_decompose <- function(y, group, time = NULL, weights = NULL,
-                            data, ref = NULL, ystat = "Var") {
-  ineq(y = y, group = group, time = time, weights = weights,
-       data = data, ref = ref, ystat = ystat, order = "shapley")
 }
