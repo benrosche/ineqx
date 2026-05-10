@@ -15,21 +15,20 @@ bootstrap_se(
   ref = NULL,
   ystat = "Var",
   order = c("behavioral", "compositional", "pretreatment"),
-  B = 200L,
-  family = NULL,
+  B = 100L,
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
   verbose = TRUE,
-  gamlss_args = list()
+  blend_params = NULL
 )
 }
 \arguments{
 \item{data}{Data.frame, the original individual-level data}
 
-\item{formula_mu}{Formula for the mean (mu) equation}
+\item{formula_mu}{Two-sided formula for the mean (mu) equation}
 
-\item{formula_sigma}{Formula for the log-SD (sigma) equation}
+\item{formula_sigma}{One-sided formula for the log-SD (sigma) equation}
 
 \item{treat}{Character, treatment variable name}
 
@@ -45,9 +44,7 @@ bootstrap_se(
 
 \item{order}{Character vector of length 3, decomposition ordering}
 
-\item{B}{Integer, number of bootstrap replicates. Default 200.}
-
-\item{family}{A gamlss.family object. NULL uses normal distribution.}
+\item{B}{Integer, number of bootstrap replicates. Default 100.}
 
 \item{parallel}{Logical, use parallel computation. Default FALSE.}
 
@@ -56,8 +53,6 @@ bootstrap_se(
 \item{seed}{Integer, random seed. Default NULL.}
 
 \item{verbose}{Logical, print progress. Default TRUE.}
-
-\item{gamlss_args}{Named list of additional arguments for gamlss().}
 }
 \value{
 An object of class \code{"ineqx_boot"} containing:

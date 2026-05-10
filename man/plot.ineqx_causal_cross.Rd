@@ -4,13 +4,56 @@
 \alias{plot.ineqx_causal_cross}
 \title{Plot cross-sectional causal decomposition}
 \usage{
-\method{plot}{ineqx_causal_cross}(x, type = "bar", ...)
+\method{plot}{ineqx_causal_cross}(x, type = "wibe", ci = FALSE, stats = NULL, trim = 0.995, ...)
 }
 \arguments{
 \item{x}{An \code{ineqx_causal_cross} object}
 
-\item{type}{Character: \code{"bar"} for bar chart, \code{"group"} for
-group-level contributions.}
+\item{type}{Character, the plot type:
+\describe{
+  \item{\code{"wibe"}}{Within/between treatment effects (bar chart).}
+  \item{\code{"wibe.group"}}{Group-level contributions to within/between.}
+  \item{\code{"treat"}}{Predicted treatment effect distributions by group.}
+  \item{\code{"treat.params"}}{Treatment effect parameters (beta, lambda)
+    by group (bar chart).}
+  \item{\code{"outcome"}}{Predicted outcome distributions (control vs
+    treated) by group.}
+  \item{\code{"outcome.params"}}{Predicted means and SDs under control vs
+    treatment. For simple-difference models, a bar chart per group. For
+    DiD models, a netted-out line chart anchored at the pre-period
+    treated level: the post-period gap between observed and
+    counterfactual lines equals the DiD ATT.}
+}}
+
+\item{ci}{Whether to show confidence intervals. Accepts \code{FALSE} or
+\code{"none"} (no CIs), \code{TRUE} or \code{"delta"} (use stored SEs),
+\code{"boot"} (bootstrap with defaults), or \code{boot_config()} (bootstrap
+with custom settings). Default \code{FALSE}.}
+
+\item{stats}{Character vector. For \code{type = "wibe"}: components to
+display. The bar plot recognizes the same canonical vocabulary as the
+longitudinal \code{type = "wibe"} method:
+\code{"tau"} (Total τ bar), \code{"tau_b"} (Between τ bar),
+\code{"tau_w"} (Within τ bar), \code{"het_b"}, \code{"cov_b"},
+\code{"rescale_b"} (Between sub-components: heterogeneity, sorting,
+rescaling), and the within mirrors \code{"het_w"}, \code{"cov_w"},
+\code{"rescale_w"}. Single-segment bars are allowed. The legend labels
+\code{"cov_*"} as ``Sorting'' and \code{"rescale_*"} as ``Rescaling''.
+Shorthands: \code{"het_cov"} = the four heterogeneity / sorting sub-components
+(no rescaling),
+\code{"het_cov_b"} = \code{c("het_b","cov_b")},
+\code{"het_cov_w"} = \code{c("het_w","cov_w")},
+\code{"subs"} = all six sub-components (het + cov + rescale, between and within),
+\code{"subs_b"} = \code{c("het_b","cov_b","rescale_b")},
+\code{"subs_w"} = \code{c("het_w","cov_w","rescale_w")}.
+When \code{tau} and any sub-component appear at the same column, the bars
+are dodged. Default \code{"tau"} preserves the classic three-bar
+(Total/Between/Within) layout; \code{c("tau","het_cov")} preserves the
+dodged classic layout.}
+
+\item{trim}{Numeric between 0 and 1. For distribution plots
+(\code{"treat"}, \code{"outcome"}): quantile at which to trim tails.
+Default \code{0.995} (trims 0.5\% from each tail).}
 
 \item{...}{Additional arguments (currently unused)}
 }

@@ -6,7 +6,8 @@
 \usage{
 causal_decompose_longit(
   params,
-  order = c("behavioral", "compositional", "pretreatment")
+  order = c("behavioral", "compositional", "pretreatment"),
+  ref = NULL
 )
 }
 \arguments{
@@ -14,10 +15,13 @@ causal_decompose_longit(
 
 \item{order}{Character vector of length 3, a permutation of
 \code{c("behavioral", "compositional", "pretreatment")} specifying
-the order in which parameters are switched from baseline to time-t values.
-This ordering is applied in parallel to both the between-group
-(beta, pi, mu) and within-group (lambda, pi, sigma) sub-decompositions.
-Default: \code{c("behavioral", "compositional", "pretreatment")}.}
+the order in which parameter groups are switched from baseline to
+time-t values. The mapping to the underlying 5-parameter sequence is:
+\code{behavioral -> (beta, lambda)}, \code{compositional -> (pi)},
+\code{pretreatment -> (mu, sigma)}, with \eqn{\beta} switched before
+\eqn{\lambda} and \eqn{\mu} switched before \eqn{\sigma} within their
+meta-levels. Use \code{order = "shapley"} to average over all 6
+meta-orderings. Default: \code{c("behavioral", "compositional", "pretreatment")}.}
 }
 \value{
 An object of class \code{"ineqx_causal_longit"} containing:
@@ -32,22 +36,34 @@ An object of class \code{"ineqx_causal_longit"} containing:
 \description{
 Decomposes the change in treatment effect on inequality from a reference
 period to each subsequent period into behavioral, compositional, and
-pre-treatment components, using sequential parameter switching.
+pre-treatment components, using a unified sequential parameter switching
+scheme that tracks each switch's contribution to both \eqn{\tau_B} and
+\eqn{\tau_W} simultaneously.
 }
 \details{
-The six components are:
+For each parameter \eqn{p \in \{\beta, \lambda, \pi, \mu, \sigma\}}, the
+result reports two split components:
 \describe{
-  \item{Delta_beta}{Changing treatment effects on means (behavioral, between)}
-  \item{Delta_lambda}{Changing treatment effects on variances (behavioral, within)}
-  \item{Delta_pi_B}{Changing group composition (compositional, between)}
-  \item{Delta_pi_W}{Changing group composition (compositional, within)}
-  \item{Delta_mu}{Changing pre-treatment means (pre-treatment, between)}
-  \item{Delta_sigma}{Changing pre-treatment variances (pre-treatment, within)}
+  \item{Delta_<p>_B}{Contribution of switching p (from t0 to t) to the change in \eqn{\tau_B}}
+  \item{Delta_<p>_W}{Contribution of switching p (from t0 to t) to the change in \eqn{\tau_W}}
 }
 
-These group into four combined components:
-behavioral = Delta_beta + Delta_lambda,
-compositional = Delta_pi_B + Delta_pi_W,
-pre-treatment = Delta_mu + Delta_sigma.
+For the variance (\code{ystat = "Var"}), \eqn{\tau_B} depends only on
+\eqn{(\pi, \mu, \beta)} and \eqn{\tau_W} only on \eqn{(\pi, \sigma, \lambda)},
+so the off-diagonal split parts (\code{Delta_beta_W, Delta_lambda_B,
+Delta_mu_W, Delta_sigma_B}) are exactly zero. For CV\eqn{^2}, both
+\eqn{\tau_B} and \eqn{\tau_W} share the grand-mean denominator, so all five
+parameters can contribute to both sides; the split components capture this
+coupling exactly.
+
+By construction, the split components sum to the cross-sectional change:
+\eqn{\sum_p \text{Delta\_<p>\_B} = \tau_B(t) - \tau_B(t_0)} and similarly
+for the W side, so \code{Delta_total} equals
+\eqn{(\tau_B(t) + \tau_W(t)) - (\tau_B(t_0) + \tau_W(t_0))}.
+
+Aggregate parameter components (\code{Delta_beta, Delta_lambda, Delta_mu,
+Delta_sigma}) are reported as the sum of their B and W parts; for V they
+equal the previous (single-side) values exactly. Compositional effects
+remain split as \code{Delta_pi_B} and \code{Delta_pi_W}.
 }
 \keyword{internal}

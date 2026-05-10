@@ -4,14 +4,35 @@
 \alias{plot.ineqx_desc}
 \title{Plot descriptive variance decomposition}
 \usage{
-\method{plot}{ineqx_desc}(x, type = "deltas", ...)
+\method{plot}{ineqx_desc}(x, type = "decomp", stats = NULL, ci = FALSE, style = "line", ...)
 }
 \arguments{
 \item{x}{An \code{ineqx_desc} object}
 
 \item{type}{Character, plot type:
 \code{"wibe"} for within/between levels over time,
-\code{"deltas"} for change components over time (requires ref).}
+\code{"decomp"} for change contributions over time from
+delta-mu, delta-sigma, and delta-pi
+relative to the reference period (requires ref),
+\code{"params"} for group-level means and SDs over time,
+\code{"ineq"} for overall inequality statistics over time,
+\code{"ineq.group"} for per-group inequality statistics over time.}
+
+\item{stats}{For \code{type = "ineq"} or \code{"ineq.group"}: a list of
+inequality statistics to compute. Can be character strings
+(\code{"V"}, \code{"VL"}, \code{"CV2"}, \code{"Gini"}, \code{"Theil"})
+or custom functions with signature \code{f(y, w = NULL)}.
+Default: \code{c("V")}.}
+
+\item{ci}{How to compute confidence intervals. Options:
+\code{FALSE} or \code{"none"} (default): no CIs.
+\code{TRUE} or \code{"delta"}: delta method CIs (reads stored SEs from
+\code{ineqx()}).
+\code{"boot"}: bootstrap CIs with default settings.
+\code{boot_config()}: bootstrap CIs with custom settings.}
+
+\item{style}{Character: \code{"line"} (default) for connected lines with
+ribbon CIs, or \code{"point"} for points with error bar CIs.}
 
 \item{...}{Additional arguments (currently unused)}
 }

@@ -45,7 +45,9 @@ VarT_pi <- function(pi, mu, sigma) {
 #' @keywords internal
 CV2W_pi <- function(pi, mu, sigma) {
   gmu <- sum(pi * mu)
-  sum(pi * sigma^2) / gmu^2
+  num <- sum(pi * sigma^2)
+  if (gmu == 0) return(if (num == 0) 0 else Inf)
+  num / gmu^2
 }
 
 #' Between-group CV^2 (pi-based)
@@ -55,7 +57,9 @@ CV2W_pi <- function(pi, mu, sigma) {
 #' @keywords internal
 CV2B_pi <- function(pi, mu) {
   gmu <- sum(pi * mu)
-  sum(pi * (mu - gmu)^2) / gmu^2
+  num <- sum(pi * (mu - gmu)^2)
+  if (gmu == 0) return(if (num == 0) 0 else Inf)
+  num / gmu^2
 }
 
 #' Total CV^2 (pi-based)
@@ -112,8 +116,7 @@ VarT_n <- function(n, mu, sigma) {
 #' @keywords internal
 CV2W_n <- function(n, mu, sigma) {
   pi <- n / sum(n)
-  gmu <- sum(pi * mu)
-  sum(pi * sigma^2) / gmu^2
+  CV2W_pi(pi, mu, sigma)
 }
 
 #' Between-group CV^2 (count-based)
@@ -123,8 +126,7 @@ CV2W_n <- function(n, mu, sigma) {
 #' @keywords internal
 CV2B_n <- function(n, mu) {
   pi <- n / sum(n)
-  gmu <- sum(pi * mu)
-  sum(pi * (mu - gmu)^2) / gmu^2
+  CV2B_pi(pi, mu)
 }
 
 #' Total CV^2 (count-based)
@@ -212,17 +214,182 @@ compute_delta_WB <- function(pi, mu0, sigma0, beta, lambda, ystat) {
     W1 <- VarW_pi(pi, sigma1)
     W0 <- VarW_pi(pi, sigma0)
   } else {
-    gmu1 <- sum(pi * mu1)
-    gmu0 <- sum(pi * mu0)
-    B1 <- sum(pi * (mu1 - gmu1)^2) / gmu1^2
-    B0 <- sum(pi * (mu0 - gmu0)^2) / gmu0^2
-    W1 <- sum(pi * sigma1^2) / gmu1^2
-    W0 <- sum(pi * sigma0^2) / gmu0^2
+    B1 <- CV2B_pi(pi, mu1)
+    B0 <- CV2B_pi(pi, mu0)
+    W1 <- CV2W_pi(pi, mu1, sigma1)
+    W0 <- CV2W_pi(pi, mu0, sigma0)
   }
 
   list(
-    delta_B = B1 - B0,
-    delta_W = W1 - W0,
-    delta_total = (B1 + W1) - (B0 + W0)
+    tau_B = B1 - B0,
+    tau_W = W1 - W0,
+    tau_total = (B1 + W1) - (B0 + W0)
   )
 }
+
+
+# ============================================================================ #
+# Individual-level inequality statistics (for plot type = "ineq")
+# All take (y, w) where w = weights (NULL or numeric vector)
+# ============================================================================ #
+
+#' Weighted variance
+#' @keywords internal
+.ineq_V <- function(y, w = NULL) {
+  if (is.null(w)) return(stats::var(y))
+  n <- length(y)
+  sw <- sum(w)
+  mu <- sum(w * y) / sw
+  n / (sw * (n - 1)) * sum(w * (y - mu)^2)
+}
+
+#' Variance of log
+#' @keywords internal
+.ineq_VL <- function(y, w = NULL) {
+  y_pos <- y[y > 0]
+  if (is.null(w)) {
+    w_pos <- NULL
+  } else {
+    w_pos <- w[y > 0]
+  }
+  .ineq_V(log(y_pos), w_pos)
+}
+
+#' Coefficient of variation squared
+#' @keywords internal
+.ineq_CV2 <- function(y, w = NULL) {
+  v <- .ineq_V(y, w)
+  if (is.null(w)) {
+    mu <- mean(y)
+  } else {
+    mu <- sum(w * y) / sum(w)
+  }
+  if (mu == 0) return(if (v == 0) 0 else Inf)
+  v / mu^2
+}
+
+#' Weighted Gini coefficient
+#' @keywords internal
+.ineq_Gini <- function(y, w = NULL) {
+  n <- length(y)
+  if (n <= 1) return(0)
+  if (is.null(w)) w <- rep(1, n)
+
+  ord <- order(y)
+  y <- y[ord]
+  w <- w[ord]
+
+  sw <- sum(w)
+  mu <- sum(w * y) / sw
+  if (mu == 0) return(0)
+
+  cum_w <- cumsum(w)
+  # Weighted Gini using covariance formula
+  # G = (2 / (mu * sw^2)) * sum(w_i * y_i * (cum_w_i - w_i/2)) - 1
+  rank_w <- cum_w - w / 2
+  2 * sum(w * y * rank_w) / (mu * sw^2) - 1
+}
+
+#' Weighted Theil index (GE(1))
+#' @keywords internal
+.ineq_Theil <- function(y, w = NULL) {
+  y_pos <- y[y > 0]
+  if (is.null(w)) {
+    w_pos <- rep(1, length(y_pos))
+  } else {
+    w_pos <- w[y > 0]
+  }
+  if (length(y_pos) <= 1) return(0)
+
+  sw <- sum(w_pos)
+  mu <- sum(w_pos * y_pos) / sw
+  if (mu == 0) return(0)
+
+  s <- y_pos / mu
+  sum(w_pos * s * log(s)) / sw
+}
+
+#' Registry mapping stat names to functions
+#' @keywords internal
+.ineq_stat_registry <- list(
+  V     = .ineq_V,
+  VL    = .ineq_VL,
+  CV2   = .ineq_CV2,
+  Gini  = .ineq_Gini,
+  Theil = .ineq_Theil
+)
+
+
+# ============================================================================ #
+# Influence-function SEs for inequality statistics (for delta CIs)
+# All take (y, w, val) where val is the already-computed statistic value.
+# SE = sqrt(sum(w^2 * psi^2)) / sum(w)  (linearisation estimator)
+# ============================================================================ #
+
+#' @keywords internal
+.ineq_se_V <- function(y, w = NULL, val) {
+  if (is.null(w)) w <- rep(1, length(y))
+  sw <- sum(w)
+  mu <- sum(w * y) / sw
+  psi <- (y - mu)^2 - val
+  sqrt(sum(w^2 * psi^2)) / sw
+}
+
+#' @keywords internal
+.ineq_se_VL <- function(y, w = NULL, val) {
+  keep <- y > 0
+  y_k  <- log(y[keep])
+  w_k  <- if (is.null(w)) rep(1, sum(keep)) else w[keep]
+  .ineq_se_V(y_k, w_k, val)
+}
+
+#' @keywords internal
+.ineq_se_CV2 <- function(y, w = NULL, val) {
+  if (is.null(w)) w <- rep(1, length(y))
+  sw <- sum(w)
+  mu <- sum(w * y) / sw
+  V  <- val * mu^2
+  psi <- ((y - mu)^2 - V) / mu^2 - 2 * V * (y - mu) / mu^3
+  sqrt(sum(w^2 * psi^2)) / sw
+}
+
+#' Linearised SE for weighted Gini (Monti 1991 / Deville 1999)
+#' @keywords internal
+.ineq_se_Gini <- function(y, w = NULL, val) {
+  if (is.null(w)) w <- rep(1, length(y))
+  ord  <- order(y)
+  y    <- y[ord]
+  w    <- w[ord]
+  sw   <- sum(w)
+  mu   <- sum(w * y) / sw
+  if (mu == 0) return(0)
+  # weighted CDF at each point (mid-point convention)
+  cum_w <- cumsum(w)
+  F_i   <- (cum_w - w / 2) / sw          # centred weighted CDF
+  L_i   <- cumsum(w * y) / (mu * sw)     # weighted Lorenz ordinates
+  # influence function: psi_i = (2/mu)*(F_i*y_i - L_i*mu) - val
+  psi   <- (2 / mu) * (F_i * y - L_i * mu) - val
+  sqrt(sum(w^2 * psi^2)) / sw
+}
+
+#' @keywords internal
+.ineq_se_Theil <- function(y, w = NULL, val) {
+  keep <- y > 0
+  y_k  <- y[keep]
+  w_k  <- if (is.null(w)) rep(1, sum(keep)) else w[keep]
+  sw   <- sum(w_k)
+  mu   <- sum(w_k * y_k) / sw
+  if (mu == 0) return(0)
+  psi  <- (y_k / mu) * log(y_k / mu) - val
+  sqrt(sum(w_k^2 * psi^2)) / sw
+}
+
+#' Registry mapping stat names to SE functions (for delta CIs)
+#' @keywords internal
+.ineq_se_registry <- list(
+  V     = .ineq_se_V,
+  VL    = .ineq_se_VL,
+  CV2   = .ineq_se_CV2,
+  Gini  = .ineq_se_Gini,
+  Theil = .ineq_se_Theil
+)

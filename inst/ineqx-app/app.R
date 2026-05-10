@@ -339,12 +339,16 @@ shinyApp(
         }
         param_df <- do.call(rbind, rows)
 
-        params <- ineqx_params(data = param_df, ref = 1)
+        params <- ineqx_params(data = param_df)
 
         if (params$type == "cross_sectional") {
-          ineqx.out <- ineqx(params = params, se = "none")
+          ineqx.out <- ineqx("y", group = "group",
+                             params = params, se = "none",
+                             data = data.frame(y = 1, group = 1))
         } else {
-          ineqx.out <- ineqx(params = params, order = "shapley", se = "none")
+          ineqx.out <- ineqx("y", group = "group",
+                             params = params, order = "shapley", se = "none",
+                             data = data.frame(y = 1, group = 1))
         }
 
       } else {
@@ -364,9 +368,9 @@ shinyApp(
         }
         dat <- do.call(rbind, dat_list)
 
-        ineqx.out <- ineq(
+        ineqx.out <- ineqx(
           y = "y", group = "group", time = "time",
-          data = dat, ref = 1, ystat = "Var"
+          ref = 1, ystat = "Var", data = dat
         )
       }
 
@@ -413,7 +417,7 @@ shinyApp(
       })
 
       output$plot_ineqx <- renderPlot({
-        plot(ineqx.out, type = "deltas")
+        plot(ineqx.out, type = "decomp")
       })
 
     })

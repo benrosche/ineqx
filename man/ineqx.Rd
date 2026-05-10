@@ -2,92 +2,154 @@
 % Please edit documentation in R/ineqx.R
 \name{ineqx}
 \alias{ineqx}
-\title{Causal variance decomposition}
+\title{Variance decomposition}
 \usage{
 ineqx(
-  params = NULL,
-  formula_mu = NULL,
-  formula_sigma = NULL,
-  data = NULL,
+  y = NULL,
+  ystat = "Var",
   treat = NULL,
+  post = NULL,
   group = NULL,
   time = NULL,
-  weights = NULL,
-  post = NULL,
   ref = NULL,
-  ystat = "Var",
-  order = c("behavioral", "compositional", "pretreatment"),
-  se = "delta"
+  order = "shapley",
+  formula_mu = NULL,
+  formula_sigma = NULL,
+  params = NULL,
+  weights = NULL,
+  se = "delta",
+  data = NULL,
+  ...
 )
 }
 \arguments{
-\item{params}{An \code{ineqx_params} object for Mode A. If provided,
-formula/data arguments are ignored.}
+\item{y}{Character, name of the outcome variable in \code{data}.}
 
-\item{formula_mu}{Formula for the mean equation (Mode B). E.g.,
-\code{y ~ treat * group + controls}.}
+\item{ystat}{Character, one of \code{"Var"} (default), \code{"CV2"}, or
+\code{"VL"} (variance of log; descriptive only). \code{"VL"} is implemented
+by log-transforming \code{y} and running the standard \code{"Var"}
+decomposition; output is labelled as \code{"VL"}.}
 
-\item{formula_sigma}{Formula for the log-SD equation (Mode B). One-sided,
-e.g., \code{~ treat * group + controls}.}
+\item{treat}{Character, name of the treatment variable in \code{data}.
+Coded 0/1. If NULL, a descriptive decomposition is performed.}
 
-\item{data}{Data.frame for Mode B (individual-level data).}
+\item{post}{Character, pre/post indicator for DiD designs. NULL for
+simple difference estimator. Only used in integrated estimation mode.}
 
-\item{treat}{Character, treatment variable name (Mode B). Coded 0/1.}
+\item{group}{Character, name of the grouping variable in \code{data}.}
 
-\item{group}{Character, grouping variable name (Mode B).}
+\item{time}{Character, name of the time variable in \code{data}. If NULL,
+a single cross-section is assumed.}
 
-\item{time}{Character, time variable name (Mode B). NULL for cross-sectional.}
+\item{ref}{Numeric, reference time period. Required for longitudinal
+decomposition (both descriptive and causal).}
 
-\item{weights}{Character, weight variable name (Mode B). NULL for equal weights.}
-
-\item{post}{Character, pre/post indicator for DiD (Mode B). NULL for
-simple difference estimator.}
-
-\item{ref}{Numeric, reference time period. Used in Mode B; in Mode A,
-taken from \code{params}.}
-
-\item{ystat}{Character, \code{"Var"} or \code{"CV2"}. Default: \code{"Var"}.}
-
-\item{order}{Decomposition ordering for longitudinal data. Either:
+\item{order}{Decomposition ordering. Either:
 \itemize{
-  \item A character vector of length 3: a permutation of
-    \code{c("behavioral", "compositional", "pretreatment")} for a
-    single ordering.
-  \item \code{"shapley"}: averages across all 6 possible orderings.
+  \item \code{"shapley"} (default): averages across all 6 possible orderings.
+  \item For descriptive: a permutation of \code{c("mu", "sigma", "pi")}.
+  \item For causal: a permutation of
+    \code{c("behavioral", "compositional", "pretreatment")}.
 }
-Ignored for cross-sectional data. Default:
-\code{c("behavioral", "compositional", "pretreatment")}.}
+Only relevant for longitudinal data with a reference period.}
+
+\item{formula_mu}{One-sided formula for the mean equation (integrated
+estimation mode). E.g., \code{~ treat * group + controls}. The outcome
+\code{y} is prepended internally.}
+
+\item{formula_sigma}{One-sided formula for the log-SD equation (integrated
+estimation mode). E.g., \code{~ treat * group + controls}.}
+
+\item{params}{A parameter object created by \code{\link{ineqx_params}}.
+Either an \code{ineqx_desc_params} (descriptive counterfactual reference)
+or an \code{ineqx_params} (causal decomposition). When an
+\code{ineqx_params} is provided together with \code{treat},
+\code{formula_mu}, and \code{formula_sigma}, blending mode is used:
+the params define a counterfactual baseline, and a GAMLSS model is
+fitted to estimate parameters for observed periods. See Details.}
+
+\item{weights}{Character, name of the weight variable in \code{data}.
+If NULL, equal weights are used.}
 
 \item{se}{Standard error method. One of:
 \itemize{
-  \item \code{"delta"} (default): delta method SEs (requires vcov in params)
-  \item \code{"none"}: skip SE computation
-  \item A \code{boot_config} object: bootstrap SEs
+  \item \code{"delta"} or \code{TRUE} (default): delta method SEs. For
+    causal, requires vcov in params. For descriptive, uses sampling-based
+    covariance.
+  \item \code{"none"} or \code{FALSE}: skip SE computation
+  \item \code{"boot"}: bootstrap SEs with default settings (equivalent to
+    \code{se = boot_config()})
+  \item A \code{\link{boot_config}} object: bootstrap SEs with custom
+    settings (causal only)
 }}
+
+\item{data}{A data.frame containing the variables. For manual descriptive
+mode (when \code{y = NULL}), must contain columns \code{group}, \code{pi},
+\code{mu}, \code{sigma}, and optionally a time column.}
+
+\item{...}{Additional arguments passed to \code{gamlss::gamlss()} for the
+integrated- and blending-estimation paths. Useful for bumping the
+iteration limit on saturated models (\code{n.cyc = 100}) or selecting a
+non-default family.}
 }
 \value{
-For cross-sectional data: an \code{ineqx_causal_cross} object.
-  For longitudinal data with a specific ordering: an \code{ineqx_causal_longit}
-  object. For \code{order = "shapley"}: an \code{ineqx_shapley} object.
+For descriptive decomposition: an \code{ineqx_desc} object.
+  For cross-sectional causal: an \code{ineqx_causal_cross} object.
+  For longitudinal causal (both specific orderings and Shapley): an
+  \code{ineqx_causal_longit} object. Shapley results include additional
+  fields \code{$shapley}, \code{$all_orderings}, and \code{$ranges}.
 }
 \description{
-Decomposes the treatment effect on inequality into between-group and
-within-group components. Supports both cross-sectional and longitudinal
-designs, with automatic detection based on the input parameters.
+A unified function for both descriptive and causal variance decomposition.
+If \code{treat} is not specified (and no \code{params} are provided), a
+descriptive within/between decomposition is performed. If \code{treat} is
+specified or \code{params} are provided, a causal decomposition of the
+treatment effect on inequality is performed.
 }
 \details{
-There are two usage modes:
+There are five usage modes:
 \describe{
-  \item{Mode A: Pre-extracted params}{Pass an \code{ineqx_params} object
-    via \code{params}. Use \code{\link{ineqx_params}} to create one
-    manually or from a fitted gamlss model.}
-  \item{Mode B: Integrated fitting}{Pass \code{formula_mu},
-    \code{formula_sigma}, \code{data}, \code{treat}, and \code{group}.
-    The function fits a GAMLSS model, extracts parameters, and decomposes.}
+  \item{Descriptive (raw data)}{Provide \code{y} but omit \code{treat} and
+    \code{params}. Decomposes total inequality into within- and between-group
+    components. For longitudinal data with a reference period, further
+    decomposes the change over time into contributions from changing means,
+    dispersions, and group composition.}
+  \item{Descriptive (counterfactual reference)}{Provide \code{y}, \code{data},
+    and an \code{ineqx_desc_params} object via \code{params}. The params
+    define a counterfactual baseline; observed group-level statistics are
+    computed from the data. The decomposition shows how each parameter
+    contributes to the change from counterfactual to observed inequality.}
+  \item{Causal (integrated estimation)}{Provide \code{treat}, \code{formula_mu},
+    \code{formula_sigma}, and \code{data}. The function fits a GAMLSS model,
+    extracts parameters, and performs the causal decomposition.}
+  \item{Causal (counterfactual reference)}{Provide an \code{ineqx_params}
+    object via \code{params} together with \code{treat}, \code{formula_mu},
+    and \code{formula_sigma}. The params define a counterfactual baseline
+    (e.g., zero treatment effects), and a GAMLSS model is fitted to estimate
+    parameters for observed periods. The two are blended for a longitudinal
+    decomposition showing how treatment effects changed from the baseline.
+    Delta method SEs are not available; use \code{boot_config()} for
+    bootstrap SEs.}
+  \item{Causal (externally estimated model)}{Provide an \code{ineqx_params}
+    object via \code{params} (without \code{treat}/formulas). Use
+    \code{\link{ineqx_params}} to create one manually or from a fitted
+    gamlss model.}
 }
 }
 \examples{
-# Mode A: from manual params
+data(incdat)
+
+# Descriptive decomposition from raw data
+ineqx("inc", group = "group", time = "year", data = incdat, ref = 1)
+
+# Descriptive with counterfactual reference
+ref <- ineqx_params(data = data.frame(
+  group = 1:3, pi = 1/3, mu = 0, sigma = 0
+))
+ineqx("inc", group = "group", time = "year",
+      params = ref, data = incdat)
+
+# Causal: from manual params (externally estimated model)
 params <- ineqx_params(
   data = data.frame(
     group = c("workers", "managers"),
@@ -98,15 +160,25 @@ params <- ineqx_params(
     lambda = c(-0.1, -0.2)
   )
 )
-result <- ineqx(params = params)
+ineqx("inc", group = "group", data = incdat, params = params, se = "none")
 
 \dontrun{
-# Mode B: integrated GAMLSS fitting
-result <- ineqx(
-  formula_mu = inc ~ x * factor(group),
-  formula_sigma = ~ x * factor(group),
-  data = incdat, treat = "x", group = "group"
-)
+# Causal: integrated estimation
+ineqx("inc", treat = "x", group = "group", data = incdat,
+      formula_mu = ~ x * factor(group),
+      formula_sigma = ~ x * factor(group),
+      se = "delta")
+
+# Causal: counterfactual reference (blending)
+cf_ref <- ineqx_params(data = data.frame(
+  group = 1:3, pi = 1/3,
+  mu0 = 500, sigma0 = 100, beta = 0, lambda = 0
+))
+ineqx("inc", treat = "x", group = "group",
+      params = cf_ref,
+      formula_mu = ~ x * factor(group),
+      formula_sigma = ~ x * factor(group),
+      se = "none", data = incdat)
 }
 
 }

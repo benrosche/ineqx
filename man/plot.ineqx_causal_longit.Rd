@@ -4,15 +4,93 @@
 \alias{plot.ineqx_causal_longit}
 \title{Plot longitudinal causal decomposition}
 \usage{
-\method{plot}{ineqx_causal_longit}(x, type = "four", ...)
+\method{plot}{ineqx_causal_longit}(
+  x,
+  type = "decomp",
+  ci = FALSE,
+  style = "line",
+  stats = NULL,
+  time = NULL,
+  trim = 0.995,
+  ...
+)
 }
 \arguments{
-\item{x}{An \code{ineqx_causal_longit} object}
+\item{x}{An \code{ineqx_causal_longit} object (including Shapley-averaged results)}
 
-\item{type}{Character:
-\code{"four"} for four-component decomposition,
-\code{"six"} for six-component decomposition,
-\code{"wb"} for within/between totals.}
+\item{type}{Character, the plot type:
+\describe{
+  \item{\code{"decomp"}}{Decomposition of changes relative to reference.
+    Use \code{stats} to select components (default: 3 aggregate + total).}
+  \item{\code{"wibe"}}{Cross-sectional treatment effects on within/between
+    inequality at each time (levels, not changes).}
+  \item{\code{"treat"}}{Predicted treatment effect distributions.
+    When \code{time} is specified, shows per-group distributions.
+    When \code{time = NULL}, shows pi-weighted marginals across all times.}
+  \item{\code{"treat.params"}}{Treatment effect parameters (beta/lambda)
+    over time (line chart).}
+  \item{\code{"outcome"}}{Predicted outcome distributions (control vs
+    treated). When \code{time} is specified, shows per-group distributions.
+    When \code{time = NULL}, shows pi-weighted marginals.}
+  \item{\code{"outcome.params"}}{Predicted means and SDs under control vs
+    treatment over time (line chart). For DiD models, the "Control" line
+    represents the DiD-implied counterfactual untreated level for the
+    treated post-period subpopulation, so the gap between the lines
+    equals the DiD ATT.}
+  \item{\code{"pretrends"}}{Pre-period predicted Treated and Control
+    levels over time. Available only for DiD models. Under parallel
+    trends the two lines should evolve with the same slope; their
+    (constant) vertical gap reflects pre-existing selection. Diverging
+    slopes indicate a violation of parallel trends.}
+  \item{\code{"shapley"}}{Shapley averages with ordering ranges
+    (only when \code{order = "shapley"}). Use \code{stats} to select
+    components.}
+}}
+
+\item{ci}{Whether to show confidence intervals. Accepts \code{FALSE} or
+\code{"none"} (no CIs), \code{TRUE} or \code{"delta"} (use stored SEs),
+\code{"boot"} (bootstrap with defaults), or \code{boot_config()} (bootstrap
+with custom settings). Default \code{FALSE}.}
+
+\item{style}{Character: \code{"line"} (default) for connected lines with
+ribbon CIs, or \code{"point"} for points with error bar CIs.}
+
+\item{stats}{Character vector of components to display. Meaning depends on
+\code{type}:
+\describe{
+  \item{For \code{"decomp"} and \code{"shapley"}:}{Any combination of
+    aggregate components (\code{"behavioral"}, \code{"compositional"},
+    \code{"pretreatment"}, \code{"total"}) and/or individual deltas
+    (\code{"delta_beta"}, \code{"delta_lambda"}, \code{"delta_pi"},
+    \code{"delta_pi_b"}, \code{"delta_pi_w"}, \code{"delta_mu"},
+    \code{"delta_sigma"}).
+    Default for \code{"decomp"}: \code{c("behavioral", "compositional",
+    "pretreatment", "total")}.
+    Default for \code{"shapley"}: \code{c("behavioral", "compositional",
+    "pretreatment")}.}
+  \item{For \code{"wibe"}:}{Components to display,
+    default \code{c("tau", "tau_b", "tau_w")}. Canonical options:
+    \code{"tau"} (total), \code{"tau_b"}, \code{"tau_w"},
+    \code{"het_b"}, \code{"cov_b"}, \code{"rescale_b"},
+    \code{"het_w"}, \code{"cov_w"}, \code{"rescale_w"}.
+    Legend labels \code{"cov_*"} as ``Sorting'' and \code{"rescale_*"} as
+    ``Rescaling'' (rescaling values are zero under \code{ystat = "Var"}).
+    Shorthands: \code{"het_cov"} = the four het/cov sub-components
+    (no rescaling),
+    \code{"het_cov_b"} = \code{c("het_b","cov_b")},
+    \code{"het_cov_w"} = \code{c("het_w","cov_w")},
+    \code{"subs"} = all six sub-components,
+    \code{"subs_b"} = \code{c("het_b","cov_b","rescale_b")},
+    \code{"subs_w"} = \code{c("het_w","cov_w","rescale_w")}.}
+}}
+
+\item{time}{Numeric, time point for \code{type = "treat"} or
+\code{type = "outcome"}. If \code{NULL} (default), pi-weighted marginal
+distributions are shown across all time points.}
+
+\item{trim}{Numeric between 0 and 1. For distribution plots
+(\code{"treat"}, \code{"outcome"}): quantile at which to trim tails.
+Default \code{0.995}.}
 
 \item{...}{Additional arguments (currently unused)}
 }

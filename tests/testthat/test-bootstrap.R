@@ -7,38 +7,22 @@
 # ---------------------------------------------------------------------------- #
 
 test_that("boot_config validates inputs", {
-  df <- data.frame(y = 1:10, treat = rep(0:1, 5), group = rep(1:2, 5))
-
-  expect_error(boot_config(data = "not_df", formula_mu = y ~ treat,
-                           formula_sigma = ~treat, treat = "treat"),
-               "data.*data.frame")
-  expect_error(boot_config(data = df, formula_mu = "not_formula",
-                           formula_sigma = ~treat, treat = "treat"),
-               "formula_mu.*formula")
-  expect_error(boot_config(data = df, formula_mu = y ~ treat,
-                           formula_sigma = "not_formula", treat = "treat"),
-               "formula_sigma.*formula")
-  expect_error(boot_config(data = df, formula_mu = y ~ treat,
-                           formula_sigma = ~treat, treat = "nonexistent"),
-               "not found")
-  expect_error(boot_config(data = df, formula_mu = y ~ treat,
-                           formula_sigma = ~treat, treat = "treat", B = 1),
-               "B.*must be at least 2")
+  expect_error(boot_config(B = 1), "B.*must be at least 2")
 })
 
 test_that("boot_config creates valid object", {
-  df <- data.frame(y = 1:10, treat = rep(0:1, 5), group = rep(1:2, 5))
-  bc <- boot_config(data = df, formula_mu = y ~ treat * group,
-                     formula_sigma = ~treat * group, treat = "treat",
-                     group = "group", B = 50, seed = 42)
-
+  bc <- boot_config(B = 50, seed = 42)
   expect_s3_class(bc, "ineqx_boot_config")
   expect_equal(bc$B, 50L)
   expect_equal(bc$seed, 42)
-  expect_equal(bc$group, "group")
-  expect_equal(bc$treat, "treat")
   expect_true(bc$verbose)
   expect_false(bc$parallel)
+
+  # Only bootstrap-specific args, no model args
+  bc2 <- boot_config(B = 200, parallel = TRUE, ncores = 2)
+  expect_equal(bc2$B, 200L)
+  expect_true(bc2$parallel)
+  expect_equal(bc2$ncores, 2)
 })
 
 # ---------------------------------------------------------------------------- #
@@ -87,13 +71,13 @@ test_that("seed produces reproducible indices", {
 # ---------------------------------------------------------------------------- #
 
 test_that(".format_boot_se works for cross-sectional", {
-  sds <- c(delta_B = 0.5, delta_W = 0.3, delta_total = 0.6)
+  sds <- c(tau_B = 0.5, tau_W = 0.3, tau_total = 0.6)
   result <- ineqx:::.format_boot_se(sds, "cross", sds)
 
-  expect_named(result, c("se_delta_B", "se_delta_W", "se_delta_total"))
-  expect_equal(result$se_delta_B, 0.5)
-  expect_equal(result$se_delta_W, 0.3)
-  expect_equal(result$se_delta_total, 0.6)
+  expect_named(result, c("se_tau_B", "se_tau_W", "se_tau_total"))
+  expect_equal(result$se_tau_B, 0.5)
+  expect_equal(result$se_tau_W, 0.3)
+  expect_equal(result$se_tau_total, 0.6)
 })
 
 test_that(".format_boot_se works for longitudinal", {
@@ -119,22 +103,22 @@ test_that(".format_boot_se works for longitudinal", {
 test_that("attach_boot_se replaces SEs", {
   # Create a mock causal result
   result <- structure(
-    list(delta_B = 100, delta_W = -50, delta_total = 50,
-         se = list(se_delta_B = 10, se_delta_W = 5, se_delta_total = 8),
+    list(tau_B = 100, tau_W = -50, tau_total = 50,
+         se = list(se_tau_B = 10, se_tau_W = 5, se_tau_total = 8),
          se_method = "delta", ystat = "Var"),
     class = "ineqx_causal_cross"
   )
 
   # Create a mock boot object
   boot_obj <- structure(
-    list(se = list(se_delta_B = 12, se_delta_W = 6, se_delta_total = 9),
+    list(se = list(se_tau_B = 12, se_tau_W = 6, se_tau_total = 9),
          B = 100, B_successful = 98, B_failed = 2, type = "cross"),
     class = "ineqx_boot"
   )
 
   updated <- attach_boot_se(result, boot_obj)
 
-  expect_equal(updated$se$se_delta_B, 12)
+  expect_equal(updated$se$se_tau_B, 12)
   expect_equal(updated$se_method, "bootstrap")
   expect_s3_class(updated$boot, "ineqx_boot")
 })
@@ -173,10 +157,16 @@ test_that("cross-sectional bootstrap smoke test", {
   expect_s3_class(result, "ineqx_boot")
   expect_equal(result$type, "cross")
   expect_true(result$B_successful >= 15)  # most should succeed
-  expect_named(result$se, c("se_delta_B", "se_delta_W", "se_delta_total"))
+  expect_named(result$se, c("se_tau_B", "se_tau_W", "se_tau_total"))
   expect_true(all(vapply(result$se, is.numeric, logical(1))))
   expect_true(all(vapply(result$se, function(x) x >= 0, logical(1))))
-  expect_equal(ncol(result$replicates), 3)
+  # 3 tau columns + (beta, lambda, mu0, sigma0, mu1, sigma1) per group for
+  # *.params plot CIs (mu1/sigma1 are always populated post-fix).
+  n_groups <- length(unique(df$group))
+  expect_equal(ncol(result$replicates), 3 + 6 * n_groups)
+  expect_true(all(c("tau_B", "tau_W", "tau_total") %in% colnames(result$replicates)))
+  expect_true(all(paste0("mu0_", unique(df$group)) %in% colnames(result$replicates)))
+  expect_true(all(paste0("mu1_", unique(df$group)) %in% colnames(result$replicates)))
   expect_equal(result$seed, 123)
 })
 
@@ -240,14 +230,14 @@ test_that("CV2 bootstrap works", {
 
   expect_s3_class(result, "ineqx_boot")
   expect_equal(result$type, "cross")
-  expect_named(result$se, c("se_delta_B", "se_delta_W", "se_delta_total"))
+  expect_named(result$se, c("se_tau_B", "se_tau_W", "se_tau_total"))
 })
 
 # ---------------------------------------------------------------------------- #
 # Integration via ineqx()
 # ---------------------------------------------------------------------------- #
 
-test_that("ineqx() with bootstrap SEs works", {
+test_that("ineqx() with bootstrap SEs works (integrated)", {
   skip_if_not_installed("gamlss")
 
   set.seed(42)
@@ -257,22 +247,38 @@ test_that("ineqx() with bootstrap SEs works", {
   y <- 10 + ifelse(group == "B", 5, 0) + 3 * treat + rnorm(n, 0, 2)
   df <- data.frame(y = y, treat = treat, group = group)
 
-  # Fit model and extract params
-  model <- gamlss::gamlss(y ~ treat * group, sigma.formula = ~ treat * group,
-                           data = df, trace = FALSE)
-  params <- ineqx_params(model = model, data = df, treat = "treat",
-                          group = "group", ystat = "Var", vcov = FALSE)
+  bc <- boot_config(B = 15, seed = 42, verbose = FALSE)
 
-  bc <- boot_config(data = df, formula_mu = y ~ treat * group,
-                     formula_sigma = ~ treat * group, treat = "treat",
-                     group = "group", B = 15, seed = 42, verbose = FALSE)
-
-  result <- ineqx(params = params, se = bc)
+  result <- ineqx("y", treat = "treat", group = "group", data = df,
+                   formula_mu = ~ treat * group,
+                   formula_sigma = ~ treat * group,
+                   se = bc)
 
   expect_s3_class(result, "ineqx_causal_cross")
   expect_equal(result$se_method, "bootstrap")
   expect_true(!is.null(result$boot))
   expect_s3_class(result$boot, "ineqx_boot")
+})
+
+test_that("ineqx() with simplified boot_config inherits args", {
+  skip_if_not_installed("gamlss")
+
+  set.seed(42)
+  n <- 200
+  group <- rep(c("A", "B"), each = n / 2)
+  treat <- rbinom(n, 1, 0.5)
+  y <- 10 + ifelse(group == "B", 5, 0) + 3 * treat + rnorm(n, 0, 2)
+  df <- data.frame(y = y, treat = treat, group = group)
+
+  # Simplified: only bootstrap-specific settings, model args inherited from ineqx()
+  result <- ineqx("y", treat = "treat", group = "group", data = df,
+                   formula_mu = ~ treat * group,
+                   formula_sigma = ~ treat * group,
+                   se = boot_config(B = 15, seed = 42, verbose = FALSE))
+
+  expect_s3_class(result, "ineqx_causal_cross")
+  expect_equal(result$se_method, "bootstrap")
+  expect_true(!is.null(result$boot))
 })
 
 test_that("ineqx() with se='none' suppresses SEs", {
@@ -290,10 +296,10 @@ test_that("ineqx() with se='none' suppresses SEs", {
   params <- ineqx_params(model = model, data = df, treat = "treat",
                           group = "group", ystat = "Var", vcov = TRUE)
 
-  result <- ineqx(params = params, se = "none")
+  result <- ineqx("y", group = "group", data = df, params = params, se = "none")
 
   # delta method SEs should be suppressed
-  expect_null(result$se)
+  expect_null(result[["se"]])
 })
 
 test_that("ineqx() errors with invalid se argument", {
@@ -302,6 +308,7 @@ test_that("ineqx() errors with invalid se argument", {
                       mu0 = c(500, 1000), sigma0 = c(200, 400),
                       beta = c(60, 100), lambda = c(-0.1, -0.2))
   )
-  expect_error(ineqx(params = params, se = "bootstrap"),
+  expect_error(ineqx("y", group = "A", data = data.frame(y = 1),
+                     params = params, se = "bootstrap"),
                "delta.*none")
 })

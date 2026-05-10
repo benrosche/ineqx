@@ -57,22 +57,25 @@ fit_ineqx_model <- function(formula_mu, formula_sigma, data,
     family <- gamlss.dist::NO()
   }
 
-  # Handle weights
-  w <- NULL
+  # Handle weights — add to data frame under a known column name so that
+  # gamlss can resolve it. gamlss uses match.call() + model.frame() which
+  # evaluates the weights expression. By putting weights in the data frame
+  # as `.ineqx_w` and passing `weights = .ineqx_w` to gamlss, the symbol
+  # `.ineqx_w` is resolved from the data frame by model.frame().
   if (!is.null(weights)) {
     if (is.character(weights)) {
       if (!weights %in% names(data)) {
         stop("Weight variable '", weights, "' not found in data")
       }
-      w <- data[[weights]]
+      data$.ineqx_w <- data[[weights]]
     } else {
-      w <- weights
+      data$.ineqx_w <- weights
     }
   }
 
   # Fit the model
-  if (is.null(w)) {
-    gamlss::gamlss(
+  if (is.null(weights)) {
+    model <- gamlss::gamlss(
       formula = formula_mu,
       sigma.formula = formula_sigma,
       data = data,
@@ -80,13 +83,19 @@ fit_ineqx_model <- function(formula_mu, formula_sigma, data,
       ...
     )
   } else {
-    gamlss::gamlss(
+    # `.ineqx_w` must exist both as a column in `data` (for model.frame()
+    # resolution in predict()) AND as a local variable (for R's standard
+    # argument evaluation when gamlss() is called).
+    .ineqx_w <- data$.ineqx_w  # nolint
+    model <- gamlss::gamlss(
       formula = formula_mu,
       sigma.formula = formula_sigma,
-      weights = w,
+      weights = .ineqx_w,
       data = data,
       family = family,
       ...
     )
   }
+
+  model
 }

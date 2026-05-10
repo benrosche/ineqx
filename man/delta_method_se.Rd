@@ -4,7 +4,7 @@
 \alias{delta_method_se}
 \title{Compute delta method standard errors for causal decomposition}
 \usage{
-delta_method_se(params, type = c("cross", "longit"), order = NULL)
+delta_method_se(params, type = c("cross", "longit"), order = NULL, ref = NULL)
 }
 \arguments{
 \item{params}{An \code{ineqx_params} object with a non-NULL \code{vcov} field}

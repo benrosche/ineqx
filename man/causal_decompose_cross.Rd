@@ -4,7 +4,7 @@
 \alias{causal_decompose_cross}
 \title{Cross-sectional causal variance decomposition}
 \usage{
-causal_decompose_cross(params)
+causal_decompose_cross(params, ref = NULL)
 }
 \arguments{
 \item{params}{An \code{ineqx_params} object. For cross-sectional
@@ -13,9 +13,9 @@ decomposition, this should contain a single time period (or no time column).}
 \value{
 An object of class \code{"ineqx_causal_cross"} containing:
 \describe{
-  \item{delta_B}{Scalar, between-group treatment effect on inequality}
-  \item{delta_W}{Scalar, within-group treatment effect on inequality}
-  \item{delta_total}{Scalar, total treatment effect (delta_B + delta_W)}
+  \item{tau_B}{Scalar, between-group treatment effect on inequality}
+  \item{tau_W}{Scalar, within-group treatment effect on inequality}
+  \item{tau_total}{Scalar, total treatment effect (tau_B + tau_W)}
   \item{components}{List of sub-components for interpretive analysis}
   \item{by_group}{data.frame of group-level contributions}
   \item{params}{The input ineqx_params object}
