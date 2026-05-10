@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,10 +42,111 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="ineqx-010">ineqx 0.1.0<a class="anchor" aria-label="anchor" href="#ineqx-010"></a></h2>
-<ul><li>Added a <code>NEWS.md</code> file to track changes to the package.</li>
+<h2 class="pkg-version" data-toc-text="0.4.0" id="ineqx-040">ineqx 0.4.0<a class="anchor" aria-label="anchor" href="#ineqx-040"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-4-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-4-0"></a></h3>
+<ul><li>Merged <code>ineq()</code> and <code><a href="../reference/ineqx.html">ineqx()</a></code> into a single <code><a href="../reference/ineqx.html">ineqx()</a></code> function
+<ul><li>If no <code>treat</code> is specified: descriptive decomposition (was <code>ineq()</code>)</li>
+<li>If <code>treat</code> is specified or <code>params</code> provided: causal decomposition</li>
+</ul></li>
+<li>
+<code>ineq()</code> removed — use <code><a href="../reference/ineqx.html">ineqx()</a></code> without <code>treat</code> instead</li>
+<li>
+<code>y</code> is now a separate argument (character, column name in <code>data</code>); <code>formula_mu</code> is now one-sided (like <code>formula_sigma</code>)</li>
+<li>
+<code><a href="../reference/boot_config.html">boot_config()</a></code> now requires <code>y</code> argument and one-sided <code>formula_mu</code>
+</li>
+<li>Default <code>order</code> changed from <code>c("behavioral", "compositional", "pretreatment")</code> to <code>"shapley"</code>
+</li>
+<li>Argument order: <code>y, ystat, treat, post, group, time, ref, order, formula_mu, formula_sigma, params, weights, se, data</code>
+</li>
+<li>Renamed modes: “Mode A” → “integrated estimation”, “Mode B” → “externally estimated model”</li>
 </ul></div>
-  </main></div>
+<div class="section level3">
+<h3 id="improvements-0-4-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-4-0"></a></h3>
+<ul><li>Fully parallel argument structure: descriptive and causal paths share <code>y</code>, <code>group</code>, <code>time</code>, <code>ref</code>, <code>ystat</code>, <code>order</code>, <code>data</code>
+</li>
+<li>Public API reduced to 2 main functions: <code><a href="../reference/ineqx.html">ineqx()</a></code> and <code><a href="../reference/ineqx_params.html">ineqx_params()</a></code>
+</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="ineqx-030">ineqx 0.3.0<a class="anchor" aria-label="anchor" href="#ineqx-030"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-3-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-3-0"></a></h3>
+<ul><li>Streamlined to 3 user-facing functions: <code>ineq()</code>, <code><a href="../reference/ineqx.html">ineqx()</a></code>, <code><a href="../reference/ineqx_params.html">ineqx_params()</a></code>
+</li>
+<li>
+<code>desc_decompose()</code> replaced by <code>ineq()</code> with enhanced counterfactual decomposition</li>
+<li>
+<code>extract_params()</code> merged into <code>ineqx_params(model = ...)</code>
+</li>
+<li>
+<code><a href="../reference/causal_decompose_cross.html">causal_decompose_cross()</a></code>, <code><a href="../reference/causal_decompose_longit.html">causal_decompose_longit()</a></code>, <code><a href="../reference/causal_shapley.html">causal_shapley()</a></code>, <code><a href="../reference/fit_ineqx_model.html">fit_ineqx_model()</a></code> are now internal</li>
+<li>
+<code><a href="../reference/ineqx.html">ineqx()</a></code> <code>se_method</code>/<code>boot</code> arguments replaced by unified <code>se</code> argument: <code>"delta"</code> (default), <code>"none"</code>, or <code><a href="../reference/boot_config.html">boot_config()</a></code> object</li>
+<li>
+<code><a href="../reference/ineqx.html">ineqx()</a></code> no longer returns <code>ineqx_result</code> wrapper; returns decomposition object directly</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-0"></a></h3>
+<ul><li>
+<code>ineq()</code>: descriptive W/B decomposition with counterfactual parameter-switching decomposition (mu, sigma, pi) and Shapley averaging</li>
+<li>
+<code><a href="../reference/ineqx.html">ineqx()</a></code> integrated estimation: GAMLSS fitting via <code>formula_mu</code>/<code>formula_sigma</code>/<code>data</code> arguments</li>
+<li>
+<code>order = "shapley"</code> supported for ordering-robust decomposition</li>
+<li>
+<code><a href="../reference/ineqx_params.html">ineqx_params()</a></code> accepts either manual data.frame or fitted gamlss model (via <code>model</code> arg)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-3-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-3-0"></a></h3>
+<ul><li>Cleaner print/plot methods for all result classes</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="ineqx-020">ineqx 0.2.0<a class="anchor" aria-label="anchor" href="#ineqx-020"></a></h2>
+<div class="section level3">
+<h3 id="changes-0-2-0">Changes<a class="anchor" aria-label="anchor" href="#changes-0-2-0"></a></h3>
+<ul><li>Complete package redesign with new modular architecture</li>
+<li>Old functions removed: <code>wibe()</code>, <code>calcAME()</code>, <code>plot.ineqx()</code>
+</li>
+<li>Replaced by: <code>desc_decompose()</code>, <code>extract_params()</code>, new S3 plot methods</li>
+<li>The <code>c.</code>/<code>i.</code> variable prefix convention has been removed; use plain column names</li>
+<li>
+<code>zeallot</code> dependency removed; <code>gamlss</code> moved from <code>Depends</code> to <code>Suggests</code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/ineqx_params.html">ineqx_params()</a></code>: Standardized input format that decouples estimation from decomposition. Users can construct parameters from any estimation method.</li>
+<li>
+<code><a href="../reference/causal_decompose_cross.html">causal_decompose_cross()</a></code>: Cross-sectional causal decomposition (treatment effect on variance = within + between)</li>
+<li>
+<code><a href="../reference/causal_decompose_longit.html">causal_decompose_longit()</a></code>: Longitudinal causal decomposition with configurable decomposition ordering (6 possible orderings via the <code>order</code> parameter)</li>
+<li>
+<code><a href="../reference/causal_shapley.html">causal_shapley()</a></code>: Shapley values averaged across all 6 orderings as robustness check</li>
+<li>
+<code>desc_decompose()</code>: Clean descriptive within/between decomposition</li>
+<li>
+<code>extract_params()</code>: Extract decomposition parameters from fitted GAMLSS models</li>
+<li>
+<code><a href="../reference/fit_ineqx_model.html">fit_ineqx_model()</a></code>: Convenience wrapper for fitting GAMLSS models</li>
+<li>Both <code>Var</code> (variance) and <code>CV2</code> (squared coefficient of variation) supported throughout</li>
+<li>Print, summary, and plot methods for all result classes</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-0"></a></h3>
+<ul><li>CV2 decomposition corrected (was marked as incorrect in v0.1.0)</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="ineqx-010">ineqx 0.1.0<a class="anchor" aria-label="anchor" href="#ineqx-010"></a></h2>
+<ul><li>Initial release</li>
+</ul></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

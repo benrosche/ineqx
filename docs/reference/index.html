@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,9 +41,32 @@
     </div>
 
     <div class="section level2">
-      <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>
+      <h2 id="main-entry-points">Main entry points<a class="anchor" aria-label="anchor" href="#main-entry-points"></a></h2>
+
+      <div class="section-desc"><p>Unified function for descriptive and causal variance decomposition.</p></div>
+
+      <dl></dl></div><div class="section level2">
 
 
+
+
+      <dl><dt>
+
+          <code><a href="ineqx.html">ineqx()</a></code>
+
+        </dt>
+        <dd>Variance decomposition</dd>
+
+        <dt>
+
+          <code><a href="ineqx_params.html">ineqx_params()</a></code>
+
+        </dt>
+        <dd>Create an ineqx_params object</dd>
+      </dl></div><div class="section level2">
+      <h2 id="standard-errors">Standard errors<a class="anchor" aria-label="anchor" href="#standard-errors"></a></h2>
+
+      <div class="section-desc"><p>Bootstrap configuration; delta-method SEs are computed automatically inside ineqx().</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -56,43 +79,33 @@
 
         </dt>
         <dd>Create a bootstrap configuration</dd>
+      </dl></div><div class="section level2">
+      <h2 id="comparing-scenarios">Comparing scenarios<a class="anchor" aria-label="anchor" href="#comparing-scenarios"></a></h2>
 
-        <dt>
 
-          <code><a href="cps_sample.html">cps_sample</a></code>
 
-        </dt>
-        <dd>CPS sample data</dd>
+      <dl></dl></div><div class="section level2">
 
-        <dt>
 
-          <code><a href="incdat.html">incdat</a></code>
 
-        </dt>
-        <dd>Income data</dd>
 
-        <dt>
+      <dl><dt>
 
-          <code><a href="ineq.html">ineq()</a></code>
+          <code><a href="compare.html">compare()</a></code>
 
         </dt>
-        <dd>Descriptive variance decomposition</dd>
+        <dd>Compare multiple ineqx results</dd>
+      </dl></div><div class="section level2">
+      <h2 id="plotting-theme">Plotting &amp; theme<a class="anchor" aria-label="anchor" href="#plotting-theme"></a></h2>
 
-        <dt>
 
-          <code><a href="ineqx.html">ineqx()</a></code>
 
-        </dt>
-        <dd>Causal variance decomposition</dd>
+      <dl></dl></div><div class="section level2">
 
-        <dt>
 
-          <code><a href="ineqx_params.html">ineqx_params()</a></code>
 
-        </dt>
-        <dd>Create an ineqx_params object</dd>
 
-        <dt>
+      <dl><dt>
 
           <code><a href="plot.ineqx_causal_cross.html">plot(<i>&lt;ineqx_causal_cross&gt;</i>)</a></code>
 
@@ -108,6 +121,13 @@
 
         <dt>
 
+          <code><a href="plot.ineqx_compare.html">plot(<i>&lt;ineqx_compare&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot comparison of ineqx results</dd>
+
+        <dt>
+
           <code><a href="plot.ineqx_desc.html">plot(<i>&lt;ineqx_desc&gt;</i>)</a></code>
 
         </dt>
@@ -115,26 +135,62 @@
 
         <dt>
 
-          <code><a href="plot.ineqx_shapley.html">plot(<i>&lt;ineqx_shapley&gt;</i>)</a></code>
+          <code><a href="theme_ineqx.html">theme_ineqx</a></code>
 
         </dt>
-        <dd>Plot Shapley values</dd>
+        <dd>ineqx ggplot2 theme</dd>
+      </dl></div><div class="section level2">
+      <h2 id="print-summary">Print &amp; summary<a class="anchor" aria-label="anchor" href="#print-summary"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl></dl></div><div class="section level2">
+      <h2 id="datasets">Datasets<a class="anchor" aria-label="anchor" href="#datasets"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="cps_sample.html">cps_sample</a></code>
+
+        </dt>
+        <dd>CPS sample data</dd>
 
         <dt>
+
+          <code><a href="incdat.html">incdat</a></code>
+
+        </dt>
+        <dd>Income data</dd>
+      </dl></div><div class="section level2">
+      <h2 id="shiny-demo">Shiny demo<a class="anchor" aria-label="anchor" href="#shiny-demo"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="runShinyExample.html">runShinyExample()</a></code>
 
         </dt>
         <dd>Run Shiny example app</dd>
-
-        <dt>
-
-          <code><a href="theme_ineqx.html">theme_ineqx</a></code>
-
-        </dt>
-        <dd>ineqx ggplot2 theme</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

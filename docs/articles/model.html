@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,271 +72,187 @@
 <style type="text/css">
 .math {font-size: small;}
 </style>
+<p>This page sketches the methodology behind <code>ineqx</code>. Three
+equations carry the intuition; for the full derivations see <a href="https://osf.io/preprints/socarxiv/f53kz/" class="external-link">Rosche (2026)</a>.</p>
 <div class="section level3">
-<h3 id="descriptive-variance-decomposition">1 Descriptive variance decomposition<a class="anchor" aria-label="anchor" href="#descriptive-variance-decomposition"></a>
+<h3 id="descriptive-withinbetween-decomposition">1. Descriptive within/between decomposition<a class="anchor" aria-label="anchor" href="#descriptive-withinbetween-decomposition"></a>
 </h3>
 <p>Take the vector
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Y</mi><mi>t</mi></msub><annotation encoding="application/x-tex">Y_t</annotation></semantics></math>
-to be individual incomes at time
+of individual incomes at time
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
 and the vector
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>G</mi><mi>t</mi></msub><annotation encoding="application/x-tex">G_t</annotation></semantics></math>
-to be the group to which the individuals belong, where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub><mo>=</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">G_t=j</annotation></semantics></math>
-is a categorical variable with
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>J</mi></mrow><annotation encoding="application/x-tex">j=1,…,J</annotation></semantics></math>
-categories that represent mutually exclusive and exhaustive groups. The
-variance
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
-in income at time
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-can then be expressed as the sum of the variance within and between
-groups:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>V</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mi>V</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>G</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>V</mi><mo stretchy="false" form="prefix">(</mo><mi>E</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>G</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>W</mi><mi>t</mi></msub><mo>+</mo><msub><mi>B</mi><mi>t</mi></msub></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msubsup><mi>σ</mi><mrow><mi>j</mi><mi>t</mi></mrow><mn>2</mn></msubsup><mo>+</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{equation} 
-\begin{split} 
-V_t(Y_t) 
-&amp;= E(V(Y_t |G_t))+V(E(Y_t |G_t )) \\[10pt] 
-&amp;= W_t + B_t \\[10pt]
-&amp;= \sum_j\pi_{jt}\sigma_{jt}^2+\sum_j\pi_{jt}\big(\mu_{jt}-\sum_j\pi_{jt}\mu_{jt}\big)^2
-\end{split}
+of group memberships
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub><mo>=</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">G_t = j</annotation></semantics></math>
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>J</mi></mrow><annotation encoding="application/x-tex">j = 1,\dots,J</annotation></semantics></math>
+mutually exclusive groups). The variance of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Y</mi><mi>t</mi></msub><annotation encoding="application/x-tex">Y_t</annotation></semantics></math>
+splits cleanly into a within- and a between-group part:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>t</mi></msub><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><munder><munder><mrow><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mspace width="0.167em"></mspace><msubsup><mi>σ</mi><mrow><mi>j</mi><mi>t</mi></mrow><mn>2</mn></msubsup></mrow><mo accent="true">⏟</mo></munder><mrow><mrow><mtext mathvariant="normal">within </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>W</mi><mi>t</mi></msub></mrow></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mspace width="0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><msub><mover><mi>μ</mi><mo accent="true">‾</mo></mover><mi>t</mi></msub><msup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup></mrow><mo accent="true">⏟</mo></munder><mrow><mrow><mtext mathvariant="normal">between </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>B</mi><mi>t</mi></msub></mrow></munder></mrow><annotation encoding="application/x-tex">\begin{equation}
+V_t \;=\; \underbrace{\sum_j \pi_{jt}\,\sigma_{jt}^2}_{\text{within } W_t}
+       \;+\; \underbrace{\sum_j \pi_{jt}\,\big(\mu_{jt} - \bar\mu_t\big)^2}_{\text{between } B_t}
 \tag{1}
 \end{equation}</annotation></semantics></math></p>
-<p>where
+<p>with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">\pi_{jt}</annotation></semantics></math>
-is the proportion of individuals in group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-at time
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
+the share of group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">\mu_{jt}</annotation></semantics></math>
-is the mean income in group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-at time
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
-and
+its mean,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mrow><mi>j</mi><mi>t</mi></mrow><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_{jt}^2</annotation></semantics></math>
-is the variance around this mean in group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-at time
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
-<p>With repeated cross-sectional or panel data, the change in variance
-from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mn>0</mn></msub><annotation encoding="application/x-tex">t_0</annotation></semantics></math>
-(baseline) to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-(any timepoint post baseline) can then be decomposed into the sum of a
-within-group effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mi>W</mi></msub><annotation encoding="application/x-tex">\delta_W</annotation></semantics></math>),
-a between-group effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mi>B</mi></msub><annotation encoding="application/x-tex">\delta_B</annotation></semantics></math>),
-and a compositional effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mi>C</mi></msub><annotation encoding="application/x-tex">\delta_C</annotation></semantics></math>).
-That is, <span class="math display">$$\begin{equation}
-V_t-V_{t_0} = \delta_W^t + \delta_B^t + \delta_C^t \\[10pt]
-\text{where} \\[10pt]
-\begin{split}
-\delta_W^t &amp;= \sum_j \pi_{jt_0} \big( \sigma_{jt}^2 -
-\sigma_{jt_0}^2 \big) \\[10pt]
-\delta_B^t &amp;= \sum_j \pi_{jt_0} \big( (\mu_{jt} -
-\sum_j\pi_{jt}\mu_{jt})^2 - (\mu_{jt_0} - \sum_j\pi_{jt_0}\mu_{jt_0})^2
-\big) \\[10pt]
-\delta_C^t &amp;= \sum_j \big( \pi_{jt}-\pi_{jt_0} \big) \big( (\mu_{jt}
-- \sum_j\pi_{jt}\mu_{jt})^2 + \sigma_{jt}^2 \big)
-\end{split}
-\tag{2}
-\end{equation}$$</span></p>
-<p>The between-group effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>B</mi><mi>t</mi></msubsup><annotation encoding="application/x-tex">\delta_B^t</annotation></semantics></math>)
-captures the change in total variance induced by changes in the mean of
-each group. The within-group effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>W</mi><mi>t</mi></msubsup><annotation encoding="application/x-tex">\delta_W^t</annotation></semantics></math>)
-captures the change in total variance induced by changes in the variance
-around the mean of each group. Finally, the compositional effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>C</mi><mi>t</mi></msubsup><annotation encoding="application/x-tex">\delta_C^t</annotation></semantics></math>)
-captures the change in total variance induced by changes in the relative
-size of each group. The superscript
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-on the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>δ</mi><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">\delta\text{s}</annotation></semantics></math>
-indicates that the change over time is considered.</p>
+its variance, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>μ</mi><mo accent="true">‾</mo></mover><mi>t</mi></msub><mo>=</mo><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\bar\mu_t = \sum_j \pi_{jt}\mu_{jt}</annotation></semantics></math>
+the overall mean. Cross sections collapse to a single
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+With repeated cross-sections, the change
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>t</mi></msub><mo>−</mo><msub><mi>V</mi><msub><mi>t</mi><mn>0</mn></msub></msub></mrow><annotation encoding="application/x-tex">V_t - V_{t_0}</annotation></semantics></math>
+further decomposes into contributions from changing means
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="normal">Δ</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\Delta_\mu)</annotation></semantics></math>,
+changing dispersions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\Delta_\sigma)</annotation></semantics></math>,
+and changing group shares
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="normal">Δ</mi><mi>π</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\Delta_\pi)</annotation></semantics></math>,
+with each component split into its between- and within-group share. This
+is what <code><a href="../reference/ineqx.html">ineqx()</a></code> returns when no <code>treat</code> is
+supplied — it is essentially the Western &amp; Bloome (2009)
+decomposition with a Shapley-averaged path.</p>
 </div>
 <div class="section level3">
-<h3 id="causal-variance-decomposition">2 Causal variance decomposition<a class="anchor" aria-label="anchor" href="#causal-variance-decomposition"></a>
+<h3 id="causal-cross-sectional-decomposition">2. Causal cross-sectional decomposition<a class="anchor" aria-label="anchor" href="#causal-cross-sectional-decomposition"></a>
 </h3>
-<p>I first entertain the treatment effect framework at a single point in
-time. Let
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">D\in\{0,1\}</annotation></semantics></math>
+<p>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">D \in \{0,1\}</annotation></semantics></math>
 be a binary treatment,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mi>D</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Y(D)</annotation></semantics></math>
-be the potential outcome of the same outcome vector as before, and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\tau=Y(1)-Y(0)</annotation></semantics></math>
-be the intra-individual causal effect of treatment on the outcome.</p>
-<p>The group-specific treatment effect on the mean of the treated
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">ATT</annotation></semantics></math>)
-then equals the expected value of the differences in the potential
-outcomes in each group:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><msub><mi>T</mi><mi>j</mi></msub><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo>=</mo><mi>j</mi><mo>,</mo><mi>D</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\begin{equation} 
-ATT_j=E[Y(1)-Y(0)|G=j,D=1]
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\beta_j</annotation></semantics></math>
+its causal effect on group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s
+mean, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\lambda_j</annotation></semantics></math>
+its causal effect on group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s
+log-SD (so the treated SD is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msup><mi>e</mi><msub><mi>λ</mi><mi>j</mi></msub></msup></mrow><annotation encoding="application/x-tex">\sigma_j(0)\cdot e^{\lambda_j}</annotation></semantics></math>).
+The treatment effect on inequality,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mi>V</mi><mo stretchy="false" form="prefix">[</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>∣</mo><mi>D</mi><mo stretchy="false" form="postfix">]</mo><mo>−</mo><mi>V</mi><mo stretchy="false" form="prefix">[</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>∣</mo><mi>D</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\tau = V[Y(1)\mid D] - V[Y(0)\mid D]</annotation></semantics></math>,
+splits into a between- and a within-group part, <strong>and each of
+those further splits into a heterogeneity and a covariance
+term</strong>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><mspace width="0.278em"></mspace><msub><mi>τ</mi><mi>B</mi></msub><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><munder><munder><mrow><msub><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi></mrow><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><msub><mtext mathvariant="normal">het</mtext><mi>B</mi></msub></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><mn>2</mn><mspace width="0.167em"></mspace><msub><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="0.167em"></mspace><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><msub><mtext mathvariant="normal">cov</mtext><mi>B</mi></msub></munder><mspace width="0.278em"></mspace></mrow></menclose><mspace width="2.0em"></mspace><menclose notation="box"><mrow><mspace width="0.278em"></mspace><msub><mi>τ</mi><mi>W</mi></msub><mspace width="0.278em"></mspace><mo>≈</mo><mspace width="0.278em"></mspace><munder><munder><mrow><mn>2</mn><mspace width="0.167em"></mspace><msup><mover><mi>σ</mi><mo accent="true">‾</mo></mover><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mover><mi>λ</mi><mo accent="true">‾</mo></mover></mrow><mo accent="true">⏟</mo></munder><msub><mtext mathvariant="normal">het</mtext><mi>W</mi></msub></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><mn>2</mn><mspace width="0.167em"></mspace><msub><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="0.167em"></mspace><mi>λ</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><msub><mtext mathvariant="normal">cov</mtext><mi>W</mi></msub></munder><mspace width="0.278em"></mspace></mrow></menclose></mrow><annotation encoding="application/x-tex">\begin{equation}
+\boxed{\;\tau_B \;=\; \underbrace{\mathrm{Var}_\pi(\beta)}_{\text{het}_B}
+            \;+\; \underbrace{2\,\mathrm{Cov}_\pi(\mu(0),\,\beta)}_{\text{cov}_B}
+\;}
+\qquad
+\boxed{\;\tau_W \;\approx\; \underbrace{2\,\bar\sigma^2(0)\,\bar\lambda}_{\text{het}_W}
+            \;+\; \underbrace{2\,\mathrm{Cov}_\pi(\sigma^2(0),\,\lambda)}_{\text{cov}_W}\;}
+\tag{2}
+\end{equation}</annotation></semantics></math></p>
+<p>The four sub-components have direct substantive readings:</p>
+<ul>
+<li>
+<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">het</mtext><mi>B</mi></msub><mo>=</mo><msub><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi></mrow><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\text{het}_B = \mathrm{Var}_\pi(\beta) \ge 0</annotation></semantics></math>.</strong>
+Heterogeneity in the treatment effect on the mean <em>always</em> widens
+between-group inequality. Equal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+across groups means
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">het</mtext><mi>B</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\text{het}_B = 0</annotation></semantics></math>.</li>
+<li>
+<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">cov</mtext><mi>B</mi></msub><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><msub><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{cov}_B = 2\,\mathrm{Cov}_\pi(\mu(0),\beta)</annotation></semantics></math>.</strong>
+Sorting of gains. If positive, larger gains accrue to already-advantaged
+groups (reinforces the hierarchy). If negative, treatment compresses the
+hierarchy.</li>
+<li>
+<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">het</mtext><mi>W</mi></msub><mo>∝</mo><mover><mi>λ</mi><mo accent="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\text{het}_W \propto \bar\lambda</annotation></semantics></math>.</strong>
+The average effect on within-group dispersion. Sign tracks
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>λ</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar\lambda</annotation></semantics></math>:
+treatment can stretch or compress within-group spread.</li>
+<li>
+<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">cov</mtext><mi>W</mi></msub><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><msub><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mi>π</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>λ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{cov}_W = 2\,\mathrm{Cov}_\pi(\sigma^2(0),\lambda)</annotation></semantics></math>.</strong>
+Sorting of variance effects. If positive, treatment amplifies dispersion
+most in already-disperse groups.</li>
+</ul>
+<p><code>plot(&lt;causal&gt;, type = "wibe", stats = c("het_b","cov_b","het_w","cov_w"))</code>
+shows these four series directly.</p>
+<p>The package supports both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
+(variance) and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup><mo>=</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msup><mi>μ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">CV^2 = \sigma^2/\mu^2</annotation></semantics></math>
+(squared coefficient of variation) as the underlying inequality
+measure.</p>
+</div>
+<div class="section level3">
+<h3 id="longitudinal-three-channel-decomposition">3. Longitudinal three-channel decomposition<a class="anchor" aria-label="anchor" href="#longitudinal-three-channel-decomposition"></a>
+</h3>
+<p>With repeated cross-sections, the <em>change</em> in the treatment
+effect on inequality,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>τ</mi><mo>=</mo><msub><mi>τ</mi><mi>t</mi></msub><mo>−</mo><msub><mi>τ</mi><msub><mi>t</mi><mn>0</mn></msub></msub></mrow><annotation encoding="application/x-tex">\Delta\tau = \tau_t - \tau_{t_0}</annotation></semantics></math>,
+decomposes into three interpretable channels:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>τ</mi><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="normal">Δ</mi><mi>β</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mi>λ</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">behavioral</mtext></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="normal">Δ</mi><mrow><mi>π</mi><mo>,</mo><mi>B</mi></mrow></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mrow><mi>π</mi><mo>,</mo><mi>W</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">compositional</mtext></munder><mspace width="0.278em"></mspace><mo>+</mo><mspace width="0.278em"></mspace><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="normal">Δ</mi><mi>μ</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">pre-treatment</mtext></munder></mrow><annotation encoding="application/x-tex">\begin{equation}
+\Delta\tau \;=\; \underbrace{(\Delta_\beta + \Delta_\lambda)}_{\text{behavioral}}
+\;+\; \underbrace{(\Delta_{\pi,B} + \Delta_{\pi,W})}_{\text{compositional}}
+\;+\; \underbrace{(\Delta_\mu + \Delta_\sigma)}_{\text{pre-treatment}}
 \tag{3}
 \end{equation}</annotation></semantics></math></p>
-<p>Further, the group-specific treatment effect on the variance of the
-treated
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>T</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">VTT</annotation></semantics></math>)
-equals the difference in the variance in the potential outcomes in each
-group:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>T</mi><msub><mi>T</mi><mi>j</mi></msub><mo>=</mo><mi>V</mi><mo stretchy="false" form="prefix">[</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo>=</mo><mi>j</mi><mo>,</mo><mi>D</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo><mo>−</mo><mi>V</mi><mo stretchy="false" form="prefix">[</mo><mi>Y</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo>=</mo><mi>j</mi><mo>,</mo><mi>D</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\begin{equation} 
-VTT_j=V[Y(1)|G=j,D=1]-V[Y(0)|G=j,D=1]
-\tag{4}
-\end{equation}</annotation></semantics></math></p>
-<div class="section level4">
-<h4 id="a-decomposing-the-effect-of-treatment">2a Decomposing the effect of treatment<a class="anchor" aria-label="anchor" href="#a-decomposing-the-effect-of-treatment"></a>
-</h4>
-<p>The focus here is on the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">ATT</annotation></semantics></math>
-rather than the average treatment effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>E</mi></mrow><annotation encoding="application/x-tex">ATE</annotation></semantics></math>)
-as we are interested in the aggregate consequences of treatment, which
-depends on the actual distribution of treatment across groups,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>D</mi><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">E[D|G]</annotation></semantics></math>,
-and therefore on the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">ATT</annotation></semantics></math>.
-Note that we assume that the treatment effect on the variance is fully
-described by its effect on the group-specific means and variances. Given
-these definitions, the effect of treatment on the variance can be
-decomposed into a within- and between group component, where the
-variance in the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>T</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">ATT</annotation></semantics></math>
-equals the between-group component and the expected value of the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mi>T</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">VTT</annotation></semantics></math>
-equals the within-group component:</p>
-<p><span class="math display">$$\begin{equation}
-V[Y(1)|D]-V[Y(0)|D] = \delta_B^D + \delta_W^D \\[10pt]
-\text{where} \\[10pt]
-\begin{split}
-\delta_B^D &amp;= \sum_j \pi_j \big( (\mu_j+\beta_j-
-\sum_j\pi_j(\mu_j+\beta_j))^2 - (\mu_j - \sum_j\pi_j\mu_j)^2 \big)
-\\[10pt]
-\delta_W^D &amp;= \sum_j \pi_j \big( (\sigma_j+\lambda_j )^2 -
-\sum_j\pi_j\sigma_j^2 \big)
-\end{split}
-\tag{5}
-\end{equation}$$</span></p>
-<p>Note that the interpretation of some quantities changes as compared
-to equation (2). In equation (5),
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>π</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\pi_j</annotation></semantics></math>
-is the proportion of individuals in each group receiving treatment
-(i.e.,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>D</mi><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">E[D|G]</annotation></semantics></math>),
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\mu_j</annotation></semantics></math>
-is the pre-treatment mean in group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\sigma_j</annotation></semantics></math>
-is the pre-treatment standard deviation in group
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\beta_j</annotation></semantics></math>
-is the causal effect of treatment on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\mu_j</annotation></semantics></math>,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\lambda_j</annotation></semantics></math>
-is the causal effect of treatment on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\sigma_j</annotation></semantics></math>.
-The superscript
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
-on the
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>δ</mi><mtext mathvariant="normal">s</mtext></mrow><annotation encoding="application/x-tex">\delta\text{s}</annotation></semantics></math>
-indicates that the change caused by treatment (at a single point in
-time) is considered. The between-group effect
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>B</mi><mi>D</mi></msubsup><annotation encoding="application/x-tex">\delta_B^D</annotation></semantics></math>
-captures the change in total variance induced by the effect of treatment
-on the mean of each group. The within-group effect
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>W</mi><mi>D</mi></msubsup><annotation encoding="application/x-tex">\delta_W^D</annotation></semantics></math>
-captures the change in total variance induced by the effect of treatment
-on the variance of each group.</p>
+<ul>
+<li>
+<strong>Behavioral</strong> — changes in <em>how</em> treatment
+affects each group’s mean and variance
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\Delta_\beta</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>λ</mi></msub><annotation encoding="application/x-tex">\Delta_\lambda</annotation></semantics></math>).
+The Kitagawa-Blinder-Oaxaca “coefficient effect.”</li>
+<li>
+<strong>Compositional</strong> — changes in <em>who gets
+treated</em> across groups
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mrow><mi>π</mi><mo>,</mo><mi>B</mi></mrow></msub><mo>,</mo><msub><mi mathvariant="normal">Δ</mi><mrow><mi>π</mi><mo>,</mo><mi>W</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\Delta_{\pi,B}, \Delta_{\pi,W}</annotation></semantics></math>).
+The KBO “endowment effect.”</li>
+<li>
+<strong>Pre-treatment</strong> — changes in the baseline
+distribution that determine how much a fixed treatment effect
+<em>translates into</em> inequality
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>μ</mi></msub><mo>,</mo><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub></mrow><annotation encoding="application/x-tex">\Delta_\mu, \Delta_\sigma</annotation></semantics></math>).
+Has no KBO analogue — this is what the variance-decomposition framing
+adds.</li>
+</ul>
+<p>Sequential decompositions of this kind are path-dependent: the size
+of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\Delta_\beta</annotation></semantics></math>
+depends on whether you switch
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+before or after
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>.
+<code><a href="../reference/ineqx.html">ineqx()</a></code> defaults to <code>order = "shapley"</code>, which
+averages across all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>!</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">3! = 6</annotation></semantics></math>
+orderings to give an order-invariant decomposition.
+<code>plot(&lt;causal&gt;, type = "shapley")</code> displays the Shapley
+point estimate and the range across orderings.</p>
 </div>
-<div class="section level4">
-<h4 id="b-decomposing-the-change-in-the-effect-of-treatment">2b Decomposing the change in the effect of treatment<a class="anchor" aria-label="anchor" href="#b-decomposing-the-change-in-the-effect-of-treatment"></a>
-</h4>
-<p>The treatment effect on the variance depends both on the treatment
-effects on the group-specific means and variances and on the
-distribution of treatment across groups and on the level of
-pre-treatment inequality. Therefore, with repeated cross-sectional or
-panel data, the change in total variance from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mn>0</mn></msub><annotation encoding="application/x-tex">t_0</annotation></semantics></math>
-(baseline) to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
-(any timepoint post baseline) due to change in the effect of treatment
-can be decomposed into the sum of a between-group effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>B</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup><annotation encoding="application/x-tex">\delta_B^{D,t}</annotation></semantics></math>),
-within-group effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>W</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup><annotation encoding="application/x-tex">\delta_W^{D,t}</annotation></semantics></math>)
-a compositional effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup><annotation encoding="application/x-tex">\delta_C^{D,t}</annotation></semantics></math>),
-and a pre-treatment effect
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>δ</mi><mi>P</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup><annotation encoding="application/x-tex">\delta_P^{D,t}</annotation></semantics></math>):</p>
-<p><span class="math display">$$\begin{equation}
-(V[Y_t(1)|D_t]-V[Y_t(0)|D_t]) -
-(V[Y_{t_0}(1)|D_{t_0}]-V[Y_{t_0}(0)|D_{t_0}])
-= \delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t}
-\\[10pt]
-\text{where}
-\end{equation}$$</span>
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>B</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>μ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>μ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>β</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>W</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>σ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>λ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>σ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>λ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>μ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>μ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>μ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>μ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>σ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>λ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>σ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>λ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>σ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>σ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><munder><mo>∑</mo><mi>j</mi></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="postfix">)</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><msubsup><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>P</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>μ</mi><mi>t</mi></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>μ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>σ</mi><mi>t</mi></msub><mo>+</mo><msub><mi>λ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>σ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>+</mo><msub><mi>λ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>μ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>μ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>σ</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>W</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo>,</mo><msub><mi>σ</mi><msub><mi>t</mi><mn>0</mn></msub></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><msub><mi>μ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><msubsup><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow><mn>2</mn></msubsup><mo>−</mo><msubsup><mi>σ</mi><mrow><mi>j</mi><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub></mrow><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{equation}
-\begin{split}
-
-\delta_B^{D,t} 
-&amp;= B(\pi_{t_0},\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_0) \\
-&amp;= \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t_0} + \beta_{j,t} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0} + \beta_{j,t_0} - \sum_j\pi_{j,t_0}(\mu_{j,t_0}+\beta_{j,t_0} ) \Big)^2 \right) \\[10pt]
-        
-\delta_W^{D,t}
-&amp;= W(\pi_{t_0},\sigma_{t_0}+\lambda_t) - W(\pi_{t_0},\sigma_{t_0}+\lambda_{t_0}) \\
-&amp;= \sum_j\pi_{j,t_0} \left( \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t_0}\Big)^2 \right) \\[10pt] 
-
-\delta_C^{D,t}
-&amp;= \Big( B(\pi_t,\mu_{t_0}+\beta_t) - B(\pi_{t_0},\mu_{t_0}+\beta_t ) \Big) - \Big( B(\pi_t,\mu_t ) - B(\pi_{t_0},\mu_t ) \Big) + \Big( W(\pi_t,\sigma_{t_0}+\lambda_t ) - W(\pi_{t_0},\sigma_{t_0}+\lambda_t ) \Big) - \Big( W(\pi_t,\sigma_t ) - W(\pi_{t_0},\sigma_t ) \Big) \\
-&amp;\approx \sum_j(\pi_{j,t}-\pi_{j,t_0} ) \left( \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 - \Big(\mu_{j,t}-\sum_j\pi_{j,t}\mu_{j,t}\Big)^2 + \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2-\sigma_{j,t}^2 \right) \\[10pt]
-
-\delta_P^{D,t}
-&amp;= B(\pi_t,\mu_t+\beta_t) - B(\pi_t,\mu_{t_0}+\beta_t) + W(\pi_t,\sigma_t+\lambda_t) - W(\pi_t,\sigma_{t_0}+\lambda_t) - \Big( B(\pi_{t_0},\mu_t) - B(\pi_{t_0},\mu_{t_0}) + W(\pi_{t_0},\sigma_t) - W(\pi_{t_0},\sigma_{t_0}) \Big) \\
-&amp;= \sum_j\pi_{j,t} \left( \Big(\mu_{j,t}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t}+\beta_{j,t}) \Big)^2 - \Big(\mu_{j,t_0}+\beta_{j,t}-\sum_j\pi_{j,t}(\mu_{j,t_0}+\beta_{j,t})\Big)^2 + \Big(\sigma_{j,t}+\lambda_{j,t} \Big)^2 - \Big(\sigma_{j,t_0}+\lambda_{j,t}\Big)^2 \right) - \sum_j\pi_{j,t_0} \left( \Big(\mu_{j,t}-\sum_j\pi_{j,t_0}\mu_{j,t}\Big)^2 - \Big(\mu_{j,t_0}-\sum_j\pi_{j,t_0}\mu_{j,t_0}\Big)^2 + \sigma_{j,t}^2-\sigma_{j,t_0}^2 \right)
-
-\end{split}
-\tag{6}
-\end{equation}</annotation></semantics></math></p>
-</div>
-<div class="section level4">
-<h4 id="c-decomposing-the-change-in-the-post-treatment-variance-due-to-treatment">2c Decomposing the change in the post-treatment variance due to
-treatment<a class="anchor" aria-label="anchor" href="#c-decomposing-the-change-in-the-post-treatment-variance-due-to-treatment"></a>
-</h4>
-<p>Rather than decomposing the change in the effect of treatment on the
-variance, the change in post-treatment variance induced by the change in
-the effect of treatment, i.e.,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo stretchy="false" form="prefix">[</mo><msub><mi>Y</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>D</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">]</mo><mo>−</mo><mi>V</mi><mo stretchy="false" form="prefix">[</mo><msub><mi>Y</mi><mo stretchy="false" form="prefix">(</mo></msub><msub><mi>t</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>D</mi><mo stretchy="false" form="prefix">(</mo></msub><msub><mi>t</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]</annotation></semantics></math>,
-can also be decomposed.</p>
-<p><span class="math display">$$\begin{equation}
-V[Y_t(1)|D_t] - V[Y_(t_0 )(1)|D_(t_0 )]
-= \delta_B^{D,t} + \delta_W^{D,t} + \delta_C^{D,t} + \delta_P^{D,t}
-\\[10pt]
-\text{where}
-\end{equation}$$</span>
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>B</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>W</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msubsup><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow><mn>2</mn></msubsup><mo>−</mo><msubsup><mi>λ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow><mn>2</mn></msubsup><mo>+</mo><mn>2</mn><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><msub><mi>λ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><munder><mo>∑</mo><mi>j</mi></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><msub><mi>π</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo stretchy="false" form="postfix">)</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>δ</mi><mi>P</mi><mrow><mi>D</mi><mo>,</mo><mi>t</mi></mrow></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>π</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>μ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo>−</mo><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><msub><mi>σ</mi><mrow><mi>j</mi><msub><mi>t</mi><mn>0</mn></msub></mrow></msub><mo>+</mo><msub><mi>λ</mi><mrow><mi>j</mi><mi>t</mi></mrow></msub><msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{equation}
-\begin{split}
-
-\delta_B^{D,t}
-&amp;=\sum_j\pi_{jt_0} \left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt_0}-\sum_j\pi_{jt_0}(\mu_{jt_0}+\beta_{jt_0})\Big)^2 \right) \\[10pt]
-
-\delta_W^{D,t}
-&amp;= \sum_j\pi_{jt_0}\left( \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt_0}\Big)^2 \right) 
-= \sum_j\pi_{jt_0} \Big( \lambda_{jt}^2-\lambda_{jt_0}^2 + 2\sigma_{jt_0}(\lambda_{jt}-\lambda_{jt_0}) \Big) \\[10pt]
-
-\delta_C^{D,t}
-&amp;= \sum_j\pi_{jt}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda{jt}\Big)^2 \right) - \sum_j\pi_{jt_0}\left( \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt_0} (\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right) \\
-&amp;\approx \sum_j(\pi_{jt}-\pi_{jt_0}) \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt_0}+\lambda_{jt} \Big)^2 \right) \\[10pt] 
-
-\delta_P^{D,t}
-&amp;=\sum_j\pi_{jt} \left( \Big(\mu_{jt}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt}+\beta_{jt})\Big)^2 - \Big(\mu_{jt_0}+\beta_{jt}-\sum_j\pi_{jt}(\mu_{jt_0}+\beta_{jt})\Big)^2 + \Big(\sigma_{jt}+\lambda_{jt}\Big)^2 - \Big(\sigma_{jt_0}+\lambda_{jt}\Big)^2 \right)
-
-\end{split}
-\tag{7}
-\end{equation}</annotation></semantics></math></p>
-</div>
+<div class="section level3">
+<h3 id="a-note-on-the-variance-of-logs">4. A note on the variance of logs<a class="anchor" aria-label="anchor" href="#a-note-on-the-variance-of-logs"></a>
+</h3>
+<p><code><a href="../reference/ineqx.html">ineqx()</a></code> accepts <code>ystat = "VL"</code> for the
+descriptive case (it log-transforms
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+and runs the standard variance decomposition), but the paper recommends
+<strong>against</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>L</mi></msub><annotation encoding="application/x-tex">V_L</annotation></semantics></math>
+for substantive decomposition work. The reason: because the log
+transformation is non-linear, the within- and between-group components
+of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>L</mi></msub><annotation encoding="application/x-tex">V_L</annotation></semantics></math>
+can move in the <em>opposite direction</em> from within- and
+between-group changes on the income scale. A treatment that
+unambiguously raises within-group dispersion in dollars can register as
+compressing it in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>L</mi></msub><annotation encoding="application/x-tex">V_L</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">CV^2</annotation></semantics></math>
+do not have this pathology and decompose into components that remain
+interpretable on the original income scale. <code><a href="../reference/ineqx.html">ineqx()</a></code> issues
+a runtime warning whenever <code>ystat = "VL"</code> is used — see the
+FAQ for details.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

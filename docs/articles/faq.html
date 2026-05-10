@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>faq • ineqx</title>
+<title>FAQ • ineqx</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<meta property="og:title" content="faq">
+<meta property="og:title" content="FAQ">
 <!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-56931813-1"></script><script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>faq</h1>
+      <h1>FAQ</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/benrosche/ineqx/blob/HEAD/vignettes/faq.Rmd" class="external-link"><code>vignettes/faq.Rmd</code></a></small>
@@ -69,8 +69,190 @@
 
     
     
-
-  </main>
+<pre><code><span><span class="co">#&gt; Warning: package 'ineqx' was built under R version 4.5.2</span></span></code></pre>
+<div class="section level3">
+<h3 id="var-cv²-or-vl-which-inequality-measure-should-i-use">Var, CV², or VL — which inequality measure should I use?<a class="anchor" aria-label="anchor" href="#var-cv%C2%B2-or-vl-which-inequality-measure-should-i-use"></a>
+</h3>
+<p><code><a href="../reference/ineqx.html">ineqx()</a></code> accepts <code>ystat = "Var"</code>,
+<code>"CV2"</code>, or (descriptive only) <code>"VL"</code>. As a
+default, prefer <strong><code>"CV2"</code></strong> when groups have
+very different mean levels — without normalising by the squared mean,
+the <code>Var</code> decomposition is mechanically dominated by
+whichever group has the highest mean. Use
+<strong><code>"Var"</code></strong> when levels are comparable across
+groups or when the dollar-scale interpretation matters. <strong>Avoid
+<code>"VL"</code></strong> for substantive decomposition work: because
+the log transform is non-linear, the within- and between-group
+components of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>L</mi></msub><annotation encoding="application/x-tex">V_L</annotation></semantics></math>
+can move in the <em>opposite direction</em> from within- and
+between-group changes on the income scale. <code><a href="../reference/ineqx.html">ineqx()</a></code> issues a
+runtime warning whenever <code>"VL"</code> is used. See the <a href="model.html">Model structure</a> page §4 for detail.</p>
+</div>
+<div class="section level3">
+<h3 id="what-is-the-difference-between-descriptive-and-causal-decomposition">What is the difference between descriptive and causal
+decomposition?<a class="anchor" aria-label="anchor" href="#what-is-the-difference-between-descriptive-and-causal-decomposition"></a>
+</h3>
+<p>Both run through the same <code><a href="../reference/ineqx.html">ineqx()</a></code> function — the
+dispatch is on whether <code>treat</code> is supplied:</p>
+<ul>
+<li>
+<strong>Descriptive</strong> (no <code>treat</code>): how does total
+inequality split into within- and between-group components, and how have
+those components shifted over time? Calls the Western &amp; Bloome
+(2009) decomposition.</li>
+<li>
+<strong>Causal</strong> (with <code>treat</code>): given a binary
+treatment, how does the <em>treatment effect</em> on inequality split?
+<code><a href="../reference/ineqx.html">ineqx()</a></code> fits a GAMLSS model for both the mean and log-SD,
+then decomposes the implied effect on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">CV^2</annotation></semantics></math>
+into between vs within (and further into heterogeneity vs covariance
+sub-components).</li>
+</ul>
+<p>The descriptive case answers <em>“how unequal is this and where is it
+growing?”</em>; the causal case answers <em>“how would inequality differ
+if we removed the treatment?”</em> See the <a href="examples.html">Examples</a> for both.</p>
+</div>
+<div class="section level3">
+<h3 id="why-is-order-shapley-the-default">Why is <code>order = "shapley"</code> the default?<a class="anchor" aria-label="anchor" href="#why-is-order-shapley-the-default"></a>
+</h3>
+<p>The longitudinal decomposition splits the change in the treatment
+effect on inequality into three channels (behavioral, compositional,
+pre-treatment). Computing each channel requires a sequential
+parameter-switching argument, and the size of any one channel depends on
+the <em>order</em> in which parameters are switched. With three
+parameter blocks there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>!</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">3! = 6</annotation></semantics></math>
+orderings. Shapley averaging takes the unweighted mean across all six
+and is the canonical fix for path-dependence in this kind of
+decomposition. The <code>type = "shapley"</code> plot also displays the
+<em>range</em> across orderings, so you can see which channels are
+robust to the choice and which are sensitive.</p>
+</div>
+<div class="section level3">
+<h3 id="when-should-i-use-se-delta-vs-se-boot_config">When should I use <code>se = "delta"</code> vs
+<code>se = boot_config()</code>?<a class="anchor" aria-label="anchor" href="#when-should-i-use-se-delta-vs-se-boot_config"></a>
+</h3>
+<ul>
+<li>
+<strong><code>se = "delta"</code></strong> (default): closed-form
+standard errors via the delta method, evaluated at the GAMLSS
+coefficient vcov. Fast, no resampling, and available for the integrated
+estimation mode. Use this unless you have a reason not to.</li>
+<li>
+<strong><code>se = boot_config(B = 500, ...)</code></strong>:
+nonparametric bootstrap. Use it when
+<ol style="list-style-type: lower-alpha">
+<li>you want CIs that don’t rely on a normal-approximation, (b) you are
+blending user-supplied params with model params (delta method is not
+supported there), or (c) you want CIs on quantities that aren’t covered
+by the closed-form gradients yet. Note that with small <code>B</code>
+(e.g. <code>B = 10</code>) the percentile CIs will be very noisy — bump
+to <code>B = 500+</code> for production use.</li>
+</ol>
+</li>
+<li>
+<strong><code>se = "none"</code></strong> / <code>FALSE</code>: skip
+SE computation entirely. Useful for exploratory work where you just want
+point estimates fast.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="how-do-i-supply-externally-estimated-parameters">How do I supply externally estimated parameters?<a class="anchor" aria-label="anchor" href="#how-do-i-supply-externally-estimated-parameters"></a>
+</h3>
+<p>Use <code>ineqx_params(data = ...)</code> to wrap a data.frame with
+the canonical columns (<code>group</code>, <code>pi</code>,
+<code>mu0</code>, <code>sigma0</code>, <code>beta</code>,
+<code>lambda</code>) into an <code>ineqx_params</code> object, then pass
+it to <code>ineqx(..., params = ..., se = "none")</code>. This is the
+right path when you have estimates from a model that doesn’t fit the
+GAMLSS template — for example a 2SLS specification, or coefficients
+copied out of a published table. See <code><a href="../reference/ineqx_params.html">?ineqx_params</a></code> for the
+schema and the <a href="tutorial.html">Tutorial</a> for a
+walk-through.</p>
+</div>
+<div class="section level3">
+<h3 id="whats-the-difference-between-type-treat-params-and-type-outcome-params">What’s the difference between <code>type = "treat.params"</code> and
+<code>type = "outcome.params"</code>?<a class="anchor" aria-label="anchor" href="#whats-the-difference-between-type-treat-params-and-type-outcome-params"></a>
+</h3>
+<p>Both plot model-implied parameters as a function of group (and time,
+if longitudinal). The difference is which parameters:</p>
+<ul>
+<li>
+<strong><code>treat.params</code></strong> plots
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+— the causal effects of treatment on the group mean and log-SD. One
+panel for each.</li>
+<li>
+<strong><code>outcome.params</code></strong> plots
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>β</mi></mrow><annotation encoding="application/x-tex">\mu(0), \mu(1) = \mu(0) + \beta</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><msup><mi>e</mi><mi>λ</mi></msup></mrow><annotation encoding="application/x-tex">\sigma(0),
+\sigma(1) = \sigma(0) e^{\lambda}</annotation></semantics></math> — the
+<em>predicted levels</em> under control and treatment for each group.
+Useful for showing the underlying potential outcomes that drive the
+decomposition.</li>
+</ul>
+<p>Both accept <code>ci = TRUE</code> (delta method or bootstrap,
+whichever is available on the fitted object) and
+<code>style = "line"</code>/<code>"point"</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="my-cis-look-invisible-what-should-i-check">My CIs look invisible — what should I check?<a class="anchor" aria-label="anchor" href="#my-cis-look-invisible-what-should-i-check"></a>
+</h3>
+<p>A few common causes:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Lowercase <code>ci</code></strong>. The plot argument is
+<code>ci = TRUE</code>, not <code>CI = TRUE</code>. R is case-sensitive
+and <code>CI</code> silently lands in <code>...</code>, so the plot uses
+the default (<code>ci = FALSE</code>).</li>
+<li>
+<strong>Vertical scale</strong>. If the y-axis spans 0–3 and the SEs
+are ~0.05, the bands are real but only a few percent of the panel — they
+get easily missed in a small figure. Try <code>style = "point"</code> to
+render error <em>bars</em> instead of ribbons; bars are usually more
+salient at small SEs.</li>
+<li>
+<strong><code>se</code> was set to <code>"none"</code></strong>. If
+<code><a href="../reference/ineqx.html">ineqx()</a></code> was called with <code>se = "none"</code> or
+<code>se = FALSE</code>, no SEs are stored and <code>ci = TRUE</code>
+falls through silently (or warns, depending on plot type).</li>
+<li>
+<strong>Bootstrap with tiny <code>B</code></strong>. With
+<code>B = 10</code>, percentile bands are dominated by noise — they may
+straddle zero everywhere. Bump to <code>B ≥ 500</code>.</li>
+</ol>
+</div>
+<div class="section level3">
+<h3 id="i-get-an-error-about-vcov-not-being-available-whats-wrong">I get an error about <code>vcov</code> not being available — what’s
+wrong?<a class="anchor" aria-label="anchor" href="#i-get-an-error-about-vcov-not-being-available-whats-wrong"></a>
+</h3>
+<p>The delta-method SE path needs the GAMLSS coefficient
+variance-covariance matrix, which <code><a href="../reference/ineqx.html">ineqx()</a></code> only stores when
+both (a) <code>se = "delta"</code> was used <em>and</em> (b) the model
+was fitted via the integrated path (i.e., not blended with user-supplied
+params). Two fixes:</p>
+<ul>
+<li>If you used <code>se = "none"</code> or fitted via blending: re-run
+with <code>se = boot_config(B = 500)</code>. The wibe / treat.params /
+outcome.params plots will fall back to bootstrap percentile CIs
+automatically.</li>
+<li>If you used <code>se = "delta"</code> but the model failed to
+converge or the vcov block is singular: simplify the formulas
+(<code>formula_mu</code> / <code>formula_sigma</code>) or drop
+sparsely-populated cells. A degenerate vcov usually points at a
+collinearity issue in the design matrix rather than a problem with
+<code>ineqx</code>.</li>
+</ul>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

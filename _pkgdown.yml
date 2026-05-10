@@ -44,14 +44,44 @@ navbar:
       href: https://github.com/benrosche/ineqx/
 
 reference:
-  - title: "Functions"
+  - title: "Main entry points"
+    desc: "Unified function for descriptive and causal variance decomposition."
+    contents:
+      - ineqx
+      - ineqx_params
+  - title: "Standard errors"
+    desc: "Bootstrap configuration; delta-method SEs are computed automatically inside ineqx()."
+    contents:
+      - boot_config
+  - title: "Comparing scenarios"
+    contents:
+      - compare
+  - title: "Plotting & theme"
+    contents:
+      - starts_with("plot.")
+      - theme_ineqx
+  - title: "Print & summary"
+    contents:
+      - starts_with("print.")
+      - starts_with("summary.")
+  - title: "Datasets"
+    contents:
+      - cps_sample
+      - incdat
+  - title: "Shiny demo"
+    contents:
+      - runShinyExample
+  - title: internal
     contents:
       - matches(".*")
 
 articles:
-  - title: "Articles"
+  - title: "Get started"
+    contents:
+      - installation
+      - tutorial
+  - title: "Reference"
     contents:
       - model
-      - installation
       - examples
       - faq

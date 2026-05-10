@@ -1,20 +1,10 @@
-# runShinyExample
+# Run Shiny example app
 
-Run to view shiny app demonstrating the ineqx package.
+Launches an interactive Shiny application demonstrating the variance
+decomposition.
 
 ## Usage
 
 ``` r
 runShinyExample()
-```
-
-## Author
-
-Benjamin Rosche \<benjamin.rosche@gmail.com\>
-
-## Examples
-
-``` r
-runShinyExample()
-#> Error in library(shinydashboard): there is no package called 'shinydashboard'
 ```

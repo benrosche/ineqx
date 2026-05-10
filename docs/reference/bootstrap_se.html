@@ -19,7 +19,7 @@ replicates. Percentile confidence intervals are also computed."><!-- Global site
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,13 +68,12 @@ replicates. Percentile confidence intervals are also computed.</p>
 <span>  ref <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ystat <span class="op">=</span> <span class="st">"Var"</span>,</span>
 <span>  order <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"behavioral"</span>, <span class="st">"compositional"</span>, <span class="st">"pretreatment"</span><span class="op">)</span>,</span>
-<span>  B <span class="op">=</span> <span class="fl">200L</span>,</span>
-<span>  family <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  B <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  gamlss_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  blend_params <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -87,11 +86,11 @@ replicates. Percentile confidence intervals are also computed.</p>
 
 
 <dt id="arg-formula-mu">formula_mu<a class="anchor" aria-label="anchor" href="#arg-formula-mu"></a></dt>
-<dd><p>Formula for the mean (mu) equation</p></dd>
+<dd><p>Two-sided formula for the mean (mu) equation</p></dd>
 
 
 <dt id="arg-formula-sigma">formula_sigma<a class="anchor" aria-label="anchor" href="#arg-formula-sigma"></a></dt>
-<dd><p>Formula for the log-SD (sigma) equation</p></dd>
+<dd><p>One-sided formula for the log-SD (sigma) equation</p></dd>
 
 
 <dt id="arg-treat">treat<a class="anchor" aria-label="anchor" href="#arg-treat"></a></dt>
@@ -123,11 +122,7 @@ replicates. Percentile confidence intervals are also computed.</p>
 
 
 <dt id="arg-b">B<a class="anchor" aria-label="anchor" href="#arg-b"></a></dt>
-<dd><p>Integer, number of bootstrap replicates. Default 200.</p></dd>
-
-
-<dt id="arg-family">family<a class="anchor" aria-label="anchor" href="#arg-family"></a></dt>
-<dd><p>A gamlss.family object. NULL uses normal distribution.</p></dd>
+<dd><p>Integer, number of bootstrap replicates. Default 100.</p></dd>
 
 
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
@@ -144,10 +139,6 @@ replicates. Percentile confidence intervals are also computed.</p>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical, print progress. Default TRUE.</p></dd>
-
-
-<dt id="arg-gamlss-args">gamlss_args<a class="anchor" aria-label="anchor" href="#arg-gamlss-args"></a></dt>
-<dd><p>Named list of additional arguments for gamlss().</p></dd>
 
 </dl></div>
     <div class="section level2">

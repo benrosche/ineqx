@@ -1,20 +1,50 @@
 # Package index
 
-## Functions
+## Main entry points
 
-- [`calcAME()`](https://benrosche.github.io/ineqx/reference/calcAME.md)
-  : Calculate AME
+Unified function for descriptive and causal variance decomposition.
+
+- [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md) :
+  Variance decomposition
+- [`ineqx_params()`](https://benrosche.github.io/ineqx/reference/ineqx_params.md)
+  : Create an ineqx_params object
+
+## Standard errors
+
+Bootstrap configuration; delta-method SEs are computed automatically
+inside ineqx().
+
+- [`boot_config()`](https://benrosche.github.io/ineqx/reference/boot_config.md)
+  : Create a bootstrap configuration
+
+## Comparing scenarios
+
+- [`compare()`](https://benrosche.github.io/ineqx/reference/compare.md)
+  : Compare multiple ineqx results
+
+## Plotting & theme
+
+- [`plot(`*`<ineqx_causal_cross>`*`)`](https://benrosche.github.io/ineqx/reference/plot.ineqx_causal_cross.md)
+  : Plot cross-sectional causal decomposition
+- [`plot(`*`<ineqx_causal_longit>`*`)`](https://benrosche.github.io/ineqx/reference/plot.ineqx_causal_longit.md)
+  : Plot longitudinal causal decomposition
+- [`plot(`*`<ineqx_compare>`*`)`](https://benrosche.github.io/ineqx/reference/plot.ineqx_compare.md)
+  : Plot comparison of ineqx results
+- [`plot(`*`<ineqx_desc>`*`)`](https://benrosche.github.io/ineqx/reference/plot.ineqx_desc.md)
+  : Plot descriptive variance decomposition
+- [`theme_ineqx`](https://benrosche.github.io/ineqx/reference/theme_ineqx.md)
+  : ineqx ggplot2 theme
+
+## Print & summary
+
+## Datasets
+
 - [`cps_sample`](https://benrosche.github.io/ineqx/reference/cps_sample.md)
-  : CPS sample
+  : CPS sample data
 - [`incdat`](https://benrosche.github.io/ineqx/reference/incdat.md) :
   Income data
-- [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md) :
-  Descriptive and causal variance decompositions
-- [`plot(`*`<ineqx>`*`)`](https://benrosche.github.io/ineqx/reference/plot.ineqx.md)
-  : plot function
+
+## Shiny demo
+
 - [`runShinyExample()`](https://benrosche.github.io/ineqx/reference/runShinyExample.md)
-  : runShinyExample
-- [`theme_ineqx`](https://benrosche.github.io/ineqx/reference/theme_ineqx.md)
-  : theme_ineqx
-- [`wibe()`](https://benrosche.github.io/ineqx/reference/wibe.md) :
-  Descriptive within/between decomposition
+  : Run Shiny example app

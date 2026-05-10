@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,24 +76,29 @@
 <li>Install devtools if necessary:
 <code>install.packages("devtools")</code>
 </li>
-<li>Install ineqx:
+<li>Install ineqx from GitHub:
 <code>devtools::install_github("benrosche/ineqx")</code>
 </li>
 </ol>
+<p>The current release is <strong>v0.4.0</strong>. See <a href="https://github.com/benrosche/ineqx/blob/master/NEWS.md" class="external-link">NEWS.md</a>
+for the changelog (v0.4.0 introduced the unified <code><a href="../reference/ineqx.html">ineqx()</a></code>
+entry point and is a breaking change relative to v0.3.x).</p>
 </div>
 <div class="section level3">
 <h3 id="notes">Notes:<a class="anchor" aria-label="anchor" href="#notes"></a>
 </h3>
 <ul>
-<li>The library is still in development. Several features are not yet
-working. Please contact me if you have any questions or need support
-with implementation.</li>
-<li>In some cases, dependencies must be installed or are updated before
+<li>
+<code>ineqx</code> requires <code>gamlss</code> for the causal
+estimation path. If GAMLSS is not yet installed, R will prompt for it on
+first use.</li>
+<li>In some cases, dependencies must be installed or updated before
 <code>ineqx</code> can be installed.</li>
 <li>If you get <code>Error: (converted from warning) ...</code>, you can
 set
 <code>Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")</code>
 </li>
+<li>For questions or feature requests, please open an issue at <a href="https://github.com/benrosche/ineqx/issues" class="external-link">github.com/benrosche/ineqx/issues</a>.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

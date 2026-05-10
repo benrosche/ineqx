@@ -1,6 +1,7 @@
-# theme_ineqx
+# ineqx ggplot2 theme
 
-ggplot theme used for the plotting
+A custom ggplot2 theme for consistent styling of ineqx plots. Use as
+`+ theme_ineqx` in ggplot2 pipelines.
 
 ## Usage
 
@@ -10,15 +11,15 @@ theme_ineqx
 
 ## Format
 
-An object of class `theme` (inherits from `gg`) of length 93.
-
-## Author
-
-Benjamin Rosche \<benjamin.rosche@gmail.com\>
+An object of class `theme` (inherits from
+[`ggplot2::theme`](https://ggplot2.tidyverse.org/reference/theme.html),
+`gg`, `S7_object`) of length 144.
 
 ## Examples
 
 ``` r
-theme_ineqx()
-#> Error in theme_ineqx(): could not find function "theme_ineqx"
+library(ggplot2)
+#> Warning: package 'ggplot2' was built under R version 4.5.2
+ggplot(mtcars, aes(wt, mpg)) + geom_point() + theme_ineqx
+
 ```

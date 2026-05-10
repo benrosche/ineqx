@@ -1,0 +1,19 @@
+citHeader("To cite the ineqx package, please use the methodology paper. The package itself can be cited as the second entry below.")
+
+bibentry(
+  bibtype = "Unpublished",
+  author  = person("Benjamin", "Rosche"),
+  title   = "Treatment effects on within-group and between-group inequality",
+  year    = "2026",
+  note    = "Working paper",
+  url     = "https://osf.io/preprints/socarxiv/f53kz/"
+)
+
+bibentry(
+  bibtype = "Manual",
+  title   = "ineqx: Descriptive and Causal Variance Decomposition",
+  author  = person("Benjamin", "Rosche"),
+  year    = format(Sys.Date(), "%Y"),
+  note    = sprintf("R package version %s", utils::packageVersion("ineqx")),
+  url     = "https://benrosche.github.io/ineqx/"
+)
