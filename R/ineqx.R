@@ -341,6 +341,10 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
       vcov = FALSE
     )
 
+    # Free the fitted gamlss — bootstrap (if any) refits per replicate
+    rm(model)
+    gc(verbose = FALSE)
+
     # Blend user params with model params
     params <- .blend_causal_params(user_params, model_params, ref)
 
@@ -408,6 +412,10 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
       ystat = ystat,
       vcov = extract_vcov
     )
+
+    # Free the fitted gamlss — bootstrap (if any) refits per replicate
+    rm(model)
+    gc(verbose = FALSE)
   }
 
   # -------------------------------------------------------------------- #

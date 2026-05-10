@@ -117,6 +117,16 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
   B <- as.integer(B)
   if (B < 2) stop("'B' must be at least 2")
 
+  # Slim `data` to only the columns the bootstrap actually needs. On Windows
+  # PSOCK clusters every worker receives a full copy, so dropping unused
+  # columns up-front cuts memory by a constant factor of ncores.
+  needed <- unique(c(
+    all.vars(formula_mu), all.vars(formula_sigma),
+    treat, group, time, post
+  ))
+  needed <- intersect(needed, names(data))
+  if (length(needed)) data <- data[, needed, drop = FALSE]
+
   # Determine type
   is_longit <- !is.null(time)
   type <- if (is_longit) "longit" else "cross"
@@ -320,6 +330,10 @@ print.ineqx_boot <- function(x, ...) {
     time = time, post = post,
     ystat = ystat, vcov = FALSE, verbose = FALSE
   )
+
+  # Free the fitted gamlss and resampled data — decomposition only needs params
+  rm(model, boot_data)
+  gc(verbose = FALSE)
 
   # Blend with user params if provided
   if (!is.null(blend_params)) {
