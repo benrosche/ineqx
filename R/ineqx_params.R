@@ -53,6 +53,13 @@
 #'   named list of matrices for longitudinal data).
 #'   For model mode: logical, whether to extract the vcov via numerical
 #'   Jacobian (default: TRUE). Set to FALSE for faster computation without SEs.
+#' @param na.action A function that handles NAs in \code{data}. Only used in
+#'   model mode. Applied to the subset of \code{data} containing the variables
+#'   referenced by the model's mu/sigma formulas plus \code{treat}, \code{group},
+#'   \code{time}, and \code{post}. Defaults to \code{\link[stats]{na.omit}},
+#'   matching the integrated \code{\link{ineqx}()} path. Pass \code{na.fail} to
+#'   error on NAs, or \code{na.pass} to keep them (and let \code{predict()}
+#'   propagate them).
 #'
 #' @return An object of class \code{"ineqx_desc_params"} (descriptive mode) or
 #'   \code{"ineqx_params"} (causal mode)
@@ -102,8 +109,18 @@
 #' @export
 ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
                           time = NULL, post = NULL,
-                          ystat = "Var", vcov = NULL, verbose = TRUE) {
+                          ystat = "Var", vcov = NULL,
+                          na.action = stats::na.omit,
+                          verbose = TRUE) {
 
+  if (identical(ystat, "VL")) {
+    stop("ystat = 'VL' is not supported in ineqx_params(). To compute V_L, ",
+         "fit your model on log(y) and call ineqx_params(..., ystat = 'Var'). ",
+         "Note: because V_L measures dispersion in log earnings rather than ",
+         "in earnings themselves, its decomposition can diverge from ",
+         "income-scale changes in inequality (see Rosche 2026).",
+         call. = FALSE)
+  }
   ystat <- match.arg(ystat, c("Var", "CV2"))
 
   if (!is.null(model)) {
@@ -114,7 +131,8 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
       model = model, data = data,
       treat = treat, group = group,
       time = time, post = post,
-      ystat = ystat, vcov = vcov
+      ystat = ystat, vcov = vcov,
+      na.action = na.action
     )
   } else {
     # -------------------------------------------------------------------- #
@@ -244,7 +262,9 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # ---------------------------------------------------------------------------- #
 
 .ineqx_params_from_model <- function(model, data, treat, group,
-                                      time, post, ystat, vcov, verbose = TRUE) {
+                                      time, post, ystat, vcov,
+                                      na.action = stats::na.omit,
+                                      verbose = TRUE) {
 
   if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Package 'gamlss' is required when model is provided. ",
@@ -259,6 +279,23 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   if (!group %in% names(data)) stop("'", group, "' not found in data")
   if (!is.null(time) && !time %in% names(data)) stop("'", time, "' not found in data")
   if (!is.null(post) && !post %in% names(data)) stop("'", post, "' not found in data")
+
+  # Apply na.action to model-relevant columns. Mirrors the integrated ineqx()
+  # path's .complete_model_data() so the manual two-step entry point
+  # (fit_ineqx_model() + ineqx_params(model = ...)) handles NAs identically.
+  vars <- unique(c(
+    all.vars(formula(model, what = "mu")),
+    all.vars(formula(model, what = "sigma")),
+    treat, group, time, post
+  ))
+  vars <- intersect(vars, names(data))
+  n_before <- nrow(data)
+  data <- na.action(data[, vars, drop = FALSE])
+  n_after <- nrow(data)
+  if (verbose && n_after < n_before) {
+    message("  N = ", n_after, " (", n_before - n_after,
+            " rows omitted by na.action).")
+  }
 
   # vcov defaults to TRUE for model path
   if (is.null(vcov)) vcov <- TRUE

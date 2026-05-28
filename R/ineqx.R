@@ -41,9 +41,14 @@
 #'
 #' @param y Character, name of the outcome variable in \code{data}.
 #' @param ystat Character, one of \code{"Var"} (default), \code{"CV2"}, or
-#'   \code{"VL"} (variance of log; descriptive only). \code{"VL"} is implemented
-#'   by log-transforming \code{y} and running the standard \code{"Var"}
-#'   decomposition; output is labelled as \code{"VL"}.
+#'   \code{"VL"} (variance of log). \code{"VL"} is supported for descriptive
+#'   decomposition and for integrated causal estimation (when \code{treat},
+#'   \code{formula_mu}, and \code{formula_sigma} are supplied with raw
+#'   \code{y}/\code{data}). It is implemented by log-transforming \code{y}
+#'   and running the standard \code{"Var"} decomposition; output is labelled
+#'   as \code{"VL"}. \code{"VL"} is not supported when \code{params} is
+#'   supplied; in that case, fit your model on \code{log(y)} yourself and
+#'   pass \code{ystat = "Var"}.
 #' @param treat Character, name of the treatment variable in \code{data}.
 #'   Coded 0/1. If NULL, a descriptive decomposition is performed.
 #' @param post Character, pre/post indicator for DiD designs. NULL for
@@ -155,17 +160,25 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
   ystat <- match.arg(ystat, c("Var", "CV2", "VL"))
 
   # -------------------------------------------------------------------- #
-  # VL: descriptive variance of log(y). Implemented by log-transforming y
-  # and running the standard Var decomposition; output is labelled "VL".
+  # VL: variance of log(y). Implemented by log-transforming y and running
+  # the standard Var decomposition; output is labelled "VL". Supported for
+  # descriptive decomposition and integrated causal estimation; not supported
+  # when 'params' is supplied (we cannot know or transform the scale on
+  # which externally estimated parameters were produced).
   # -------------------------------------------------------------------- #
   ystat_label <- ystat
   if (ystat == "VL") {
-    if (!is.null(treat)) {
-      stop("ystat = 'VL' is supported for descriptive decomposition only ",
-           "(set treat = NULL).")
-    }
     if (!is.null(params)) {
-      stop("ystat = 'VL' requires raw data and is incompatible with 'params'.")
+      stop("ystat = 'VL' is not supported when 'params' is supplied: ",
+           "ineqx() cannot determine or transform the scale on which the ",
+           "parameters were estimated. To compute V_L with externally ",
+           "estimated parameters, fit your model on log(y) and call ",
+           "ineqx(..., ystat = 'Var') -- the result will be V_L by ",
+           "construction. Note: because V_L measures dispersion in log ",
+           "earnings rather than in earnings themselves, its decomposition ",
+           "can diverge from income-scale changes in inequality ",
+           "(see Rosche 2026).",
+           call. = FALSE)
     }
     if (is.null(y)) {
       stop("ystat = 'VL' requires 'y' so it can be log-transformed.")
@@ -507,6 +520,9 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
   # can compute parameter-level CIs even when decomposition SEs used bootstrap
   # (params_for_decomp may have had vcov stripped to suppress delta-method SEs)
   result$params <- params
+
+  # Relabel ystat for VL: internals ran on Var of log(y); surface "VL" to callers.
+  result$ystat <- ystat_label
 
   message("Finished.\n")
   result
