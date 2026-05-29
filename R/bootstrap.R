@@ -21,6 +21,15 @@
 #'
 #' @return An object of class \code{"ineqx_boot_config"}
 #'
+#' @section Two-stage workflow:
+#' For one decomposition, one bootstrap, the single-stage flow via
+#' \code{ineqx(..., se = boot_config(...))} or \code{\link{bootstrap_se}()}
+#' is the right choice. If you instead want bootstrap SEs for several
+#' decomposition views (e.g. different \code{ystat}, different \code{ref})
+#' of the same GAMLSS fit, use the two-stage flow:
+#' \code{\link{bootstrap_params}()} caches the resampled params once, then
+#' \code{\link{decompose_boot_params}()} produces SEs per view cheaply.
+#'
 #' @examples
 #' \dontrun{
 #' # Bootstrap SEs with 500 replicates
@@ -310,20 +319,76 @@ print.ineqx_boot <- function(x, ...) {
 .boot_one_replicate <- function(data, formula_mu, formula_sigma,
                                  treat, group, time, post,
                                  ref, ystat, order, resample_ids,
-                                 blend_params = NULL) {
+                                 weights = NULL,
+                                 blend_params = NULL,
+                                 return_params = FALSE) {
+
+  params <- .boot_fit_params(
+    data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
+    treat = treat, group = group, time = time, post = post,
+    ystat = ystat, resample_ids = resample_ids,
+    weights = weights,
+    blend_params = blend_params, ref = ref
+  )
+
+  # `bootstrap_params()` caches the resampled params object so downstream
+  # decompositions can run at arbitrary (ystat, ref) without re-fitting
+  # GAMLSS. The classic `bootstrap_se()` path falls through to the
+  # decomposition step below.
+  if (return_params) return(params)
+
+  .params_to_boot_estimates(params = params, ref = ref, order = order)
+}
+
+
+# ---------------------------------------------------------------------------- #
+# Internal: Resample + fit GAMLSS + extract params
+#
+# Shared by .boot_one_replicate() (classic bootstrap_se path) and
+# bootstrap_params() (split-step path that caches the params per replicate).
+# ---------------------------------------------------------------------------- #
+
+.boot_fit_params <- function(data, formula_mu, formula_sigma,
+                              treat, group, time, post,
+                              ystat, resample_ids,
+                              weights = NULL,
+                              blend_params = NULL, ref = NULL) {
 
   # Resample
   boot_data <- data[resample_ids, , drop = FALSE]
 
-  # Fit GAMLSS
-  model <- gamlss::gamlss(
-    formula = formula_mu,
-    sigma.formula = formula_sigma,
-    data = boot_data,
-    trace = FALSE
-  )
+  # Fit GAMLSS. Mirrors fit_ineqx_model()'s weights handling: when weights is
+  # a character name we copy the column into a known local slot `.ineqx_w`
+  # both as a data column (for predict()) and as a local symbol (for gamlss's
+  # match.call() resolution).
+  if (!is.null(weights)) {
+    if (is.character(weights)) {
+      if (!weights %in% names(boot_data)) {
+        stop("Weight variable '", weights, "' not found in data")
+      }
+      boot_data$.ineqx_w <- boot_data[[weights]]
+    } else {
+      # Numeric vector aligned with the original data; subset by resample_ids
+      boot_data$.ineqx_w <- weights[resample_ids]
+    }
+    .ineqx_w <- boot_data$.ineqx_w  # nolint
+    model <- gamlss::gamlss(
+      formula = formula_mu,
+      sigma.formula = formula_sigma,
+      weights = .ineqx_w,
+      data = boot_data,
+      trace = FALSE
+    )
+  } else {
+    model <- gamlss::gamlss(
+      formula = formula_mu,
+      sigma.formula = formula_sigma,
+      data = boot_data,
+      trace = FALSE
+    )
+  }
 
-  # Extract parameters (no vcov needed)
+  # Extract parameters (no vcov needed for the bootstrap path)
   params <- ineqx_params(
     model = model, data = boot_data,
     treat = treat, group = group,
@@ -339,6 +404,21 @@ print.ineqx_boot <- function(x, ...) {
   if (!is.null(blend_params)) {
     params <- .blend_causal_params(blend_params, params, ref)
   }
+
+  params
+}
+
+
+# ---------------------------------------------------------------------------- #
+# Internal: Flatten a (bootstrapped) params object into a named estimate
+# vector for SE aggregation.
+#
+# Pulled out of the original .boot_one_replicate() so that bootstrap_params()
+# can cache the params and decompose_boot_params() can produce the same flat
+# vector across many (ystat, ref) variants without re-fitting GAMLSS.
+# ---------------------------------------------------------------------------- #
+
+.params_to_boot_estimates <- function(params, ref, order) {
 
   # Helper: append pre-period anchor estimates if available (DiD models)
   .append_did_param <- function(acc, pdata_row, suffix) {
@@ -504,7 +584,9 @@ print.ineqx_boot <- function(x, ...) {
                             treat, group, time, post,
                             ref, ystat, order,
                             boot_indices, ncores,
-                            blend_params = NULL) {
+                            weights = NULL,
+                            blend_params = NULL,
+                            return_params = FALSE) {
 
   if (!requireNamespace("parallel", quietly = TRUE)) {
     stop("Package 'parallel' is required for parallel bootstrap")
@@ -518,7 +600,7 @@ print.ineqx_boot <- function(x, ...) {
   parallel::clusterExport(cl, c(
     "data", "formula_mu", "formula_sigma", "treat", "group",
     "time", "post", "ref", "ystat", "order",
-    "blend_params"
+    "weights", "blend_params", "return_params"
   ), envir = environment())
 
   parallel::clusterEvalQ(cl, {
@@ -534,7 +616,9 @@ print.ineqx_boot <- function(x, ...) {
         treat = treat, group = group, time = time,
         post = post, ref = ref, ystat = ystat,
         order = order, resample_ids = ids,
-        blend_params = blend_params
+        weights = weights,
+        blend_params = blend_params,
+        return_params = return_params
       ),
       error = function(e) NULL
     )
@@ -577,4 +661,297 @@ print.ineqx_boot <- function(x, ...) {
     }
     se_list
   }
+}
+
+
+# ============================================================================ #
+# Two-stage bootstrap: cache resampled params, decompose on demand
+# ============================================================================ #
+
+#' Bootstrap resampled parameter objects (without decomposition)
+#'
+#' Stage 1 of a two-stage bootstrap. Runs B replicates of
+#' \code{(resample -> fit GAMLSS -> ineqx_params)} and returns the resampled
+#' \code{ineqx_params} objects together with the original (unresampled) fit
+#' and the resampling indices used. The standard errors come later, from
+#' \code{\link{decompose_boot_params}}.
+#'
+#' Use this when you want to compute bootstrap SEs for several decomposition
+#' views of the same GAMLSS fit (e.g. different \code{ystat}, different
+#' \code{ref}) without paying the GAMLSS fit cost B times per view. The
+#' expensive work (GAMLSS fit + counterfactual prediction) runs once per
+#' replicate here; the cheap part (variance decomposition) runs as many times
+#' as you want via \code{\link{decompose_boot_params}}.
+#'
+#' For the simple "one decomposition, one bootstrap" case, prefer the
+#' integrated \code{\link{bootstrap_se}} which wraps this two-stage flow.
+#'
+#' @inheritParams bootstrap_se
+#'
+#' @return An object of class \code{"ineqx_boot_params"} with elements:
+#' \describe{
+#'   \item{params_list}{List of B (possibly < B if some replicates failed)
+#'     \code{ineqx_params} objects from resampled GAMLSS fits.}
+#'   \item{boot_indices}{List of B integer vectors of row indices used for
+#'     resampling. Same RNG-derived indices as \code{bootstrap_se()} would
+#'     have produced with the same seed.}
+#'   \item{B}{Requested replicates.}
+#'   \item{B_successful}{Replicates that produced a usable params object.}
+#'   \item{B_failed}{Replicates that errored out.}
+#'   \item{type}{\code{"cross"} or \code{"longit"}.}
+#'   \item{seed}{The random seed used.}
+#'   \item{ystat}{The \code{ystat} the params were extracted at; informational
+#'     only — \code{decompose_boot_params()} can override per call.}
+#' }
+#'
+#' @seealso \code{\link{decompose_boot_params}} to consume this object;
+#'   \code{\link{bootstrap_se}} for the single-stage shortcut.
+#'
+#' @examples
+#' \dontrun{
+#' # Two-stage workflow: one boot, many decompositions
+#' bp <- bootstrap_params(
+#'   data = mydata,
+#'   formula_mu    = y ~ treat * group * time + age,
+#'   formula_sigma =   ~ treat * group * time + age,
+#'   treat = "treat", group = "group", time = "time",
+#'   ystat = "Var", B = 500, seed = 42, parallel = TRUE
+#' )
+#'
+#' se_var_1980 <- decompose_boot_params(bp, ref = 1980, ystat = "Var")
+#' se_cv2_1980 <- decompose_boot_params(bp, ref = 1980, ystat = "CV2")
+#' se_var_2000 <- decompose_boot_params(bp, ref = 2000, ystat = "Var")
+#' }
+#'
+#' @export
+bootstrap_params <- function(data, formula_mu, formula_sigma,
+                              treat, group,
+                              time = NULL, post = NULL,
+                              ystat = "Var",
+                              weights = NULL,
+                              B = 100L,
+                              parallel = FALSE, ncores = NULL,
+                              seed = NULL, verbose = TRUE) {
+
+  if (!requireNamespace("gamlss", quietly = TRUE)) {
+    stop("Package 'gamlss' is required for bootstrap_params(). ",
+         "Install it with install.packages('gamlss')")
+  }
+
+  ystat <- match.arg(ystat, c("Var", "CV2"))
+  B <- as.integer(B)
+  if (B < 2) stop("'B' must be at least 2")
+
+  # Slim `data` to only the columns the bootstrap actually needs. Keep the
+  # weights column when weights is supplied as a name so the bootstrap can
+  # resolve it from the slimmed data.
+  needed <- unique(c(
+    all.vars(formula_mu), all.vars(formula_sigma),
+    treat, group, time, post,
+    if (is.character(weights)) weights else NULL
+  ))
+  needed <- intersect(needed, names(data))
+  if (length(needed)) data <- data[, needed, drop = FALSE]
+
+  is_longit <- !is.null(time)
+  type <- if (is_longit) "longit" else "cross"
+
+  if (is.null(time)) {
+    data$.time <- 1L
+    time_var <- ".time"
+  } else {
+    time_var <- time
+  }
+
+  boot_indices <- .generate_boot_indices(data, time_var, B, seed)
+
+  # Original (unresampled) params — useful for downstream point estimates.
+  orig_params <- .boot_fit_params(
+    data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
+    treat = treat, group = group, time = time, post = post,
+    ystat = ystat, resample_ids = seq_len(nrow(data)),
+    weights = weights
+  )
+
+  # Replicate params
+  if (parallel) {
+    rep_params <- .boot_parallel(
+      data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
+      treat = treat, group = group, time = time, post = post,
+      ref = NULL, ystat = ystat, order = NULL,
+      boot_indices = boot_indices, ncores = ncores,
+      weights = weights,
+      blend_params = NULL,
+      return_params = TRUE
+    )
+  } else {
+    rep_params <- vector("list", B)
+    bar_width <- 30L
+    report_at <- unique(c(round(seq(0, B, length.out = 11L)), B))
+    for (b in seq_len(B)) {
+      rep_params[[b]] <- tryCatch(
+        .boot_one_replicate(
+          data = data,
+          formula_mu = formula_mu, formula_sigma = formula_sigma,
+          treat = treat, group = group, time = time, post = post,
+          ref = NULL, ystat = ystat, order = NULL,
+          resample_ids = boot_indices[[b]],
+          weights = weights,
+          return_params = TRUE
+        ),
+        error = function(e) NULL
+      )
+      if (verbose && b %in% report_at) {
+        filled <- round(bar_width * b / B)
+        bar <- paste0(strrep("=", filled), strrep(" ", bar_width - filled))
+        message(sprintf("  Bootstrap params [%s] %d/%d", bar, b, B))
+      }
+    }
+  }
+
+  successful <- !vapply(rep_params, is.null, logical(1))
+  B_successful <- sum(successful)
+  B_failed <- B - B_successful
+
+  if (B_failed > 0 && B_failed / B > 0.2) {
+    warning(B_failed, " of ", B,
+            " bootstrap replicates failed during params extraction (",
+            round(100 * B_failed / B), "%). ",
+            "Consider checking model specification or increasing sample size.",
+            call. = FALSE)
+  }
+  min_required <- min(B, 20)
+  if (B_successful < min_required) {
+    stop("Only ", B_successful, " of ", B,
+         " bootstrap replicates produced a usable params object. ",
+         "Cannot proceed.")
+  }
+
+  structure(
+    list(
+      params_list  = rep_params[successful],
+      orig_params  = orig_params,
+      boot_indices = boot_indices,
+      B            = B,
+      B_successful = B_successful,
+      B_failed     = B_failed,
+      type         = type,
+      seed         = seed,
+      ystat        = ystat
+    ),
+    class = "ineqx_boot_params"
+  )
+}
+
+
+#' Aggregate bootstrap SEs from cached params
+#'
+#' Stage 2 of the two-stage bootstrap. Takes the cached \code{ineqx_params}
+#' replicates produced by \code{\link{bootstrap_params}}, runs the variance
+#' decomposition on each at the requested \code{(ystat, ref)}, and returns an
+#' \code{ineqx_boot} object with standard errors and percentile CIs.
+#'
+#' Because the GAMLSS fits are already cached in the input, this call only
+#' pays the cost of B variance-decomposition evaluations — orders of magnitude
+#' cheaper than a fresh \code{bootstrap_se()} run.
+#'
+#' \code{ystat} can override the value the params were originally extracted
+#' at: the per-replicate \code{params$ystat} is set to the requested value
+#' before decomposition. This works because the bootstrapped params object's
+#' parametric columns (\code{mu0}, \code{sigma0}, \code{beta}, \code{lambda})
+#' are scale-agnostic; \code{ystat} only selects which decomposition formula
+#' to apply on top.
+#'
+#' @param boot_params An object returned by \code{\link{bootstrap_params}}.
+#' @param ref Numeric, reference time period (longitudinal) or \code{NULL}
+#'   (cross-section).
+#' @param order Character vector of length 3, decomposition ordering for the
+#'   longitudinal decomposition. Default \code{c("behavioral",
+#'   "compositional", "pretreatment")}. Ignored for cross-sectional fits.
+#' @param ystat Character, \code{"Var"} or \code{"CV2"}. Default: the
+#'   \code{ystat} stored on \code{boot_params}.
+#'
+#' @return An object of class \code{"ineqx_boot"} matching
+#'   \code{\link{bootstrap_se}}'s return shape.
+#'
+#' @seealso \code{\link{bootstrap_params}}, \code{\link{bootstrap_se}}.
+#'
+#' @export
+decompose_boot_params <- function(boot_params,
+                                   ref = NULL,
+                                   order = c("behavioral",
+                                             "compositional",
+                                             "pretreatment"),
+                                   ystat = NULL) {
+
+  if (!inherits(boot_params, "ineqx_boot_params")) {
+    stop("'boot_params' must be an ineqx_boot_params object ",
+         "(returned by bootstrap_params()).")
+  }
+
+  if (is.null(ystat)) ystat <- boot_params$ystat
+  ystat <- match.arg(ystat, c("Var", "CV2"))
+
+  # Decompose the original (unresampled) params for the point estimates row
+  orig <- boot_params$orig_params
+  orig$ystat <- ystat
+  orig_estimates <- .params_to_boot_estimates(orig, ref = ref, order = order)
+
+  # Decompose each replicate
+  results <- lapply(boot_params$params_list, function(p) {
+    if (is.null(p)) return(NULL)
+    p$ystat <- ystat
+    tryCatch(
+      .params_to_boot_estimates(p, ref = ref, order = order),
+      error = function(e) NULL
+    )
+  })
+
+  successful <- !vapply(results, is.null, logical(1))
+  B_successful <- sum(successful)
+  B_failed <- length(results) - B_successful
+
+  good_results <- results[successful]
+  replicates <- do.call(rbind, good_results)
+  colnames(replicates) <- names(good_results[[1]])
+
+  boot_sds <- apply(replicates, 2, stats::sd)
+  boot_ci_lower <- apply(replicates, 2, stats::quantile, probs = 0.025)
+  boot_ci_upper <- apply(replicates, 2, stats::quantile, probs = 0.975)
+
+  se_formatted <- .format_boot_se(boot_sds, boot_params$type, orig_estimates)
+
+  ci_formatted <- lapply(names(boot_sds), function(nm) {
+    c(lower = unname(boot_ci_lower[nm]), upper = unname(boot_ci_upper[nm]))
+  })
+  names(ci_formatted) <- names(boot_sds)
+
+  structure(
+    list(
+      se = se_formatted,
+      replicates = replicates,
+      ci = ci_formatted,
+      B = boot_params$B,
+      B_successful = B_successful,
+      B_failed = boot_params$B_failed + B_failed,
+      type = boot_params$type,
+      point_estimates = orig_estimates,
+      seed = boot_params$seed
+    ),
+    class = "ineqx_boot"
+  )
+}
+
+
+#' @export
+print.ineqx_boot_params <- function(x, ...) {
+  cat("Bootstrapped ineqx_params (stage 1 of two-stage bootstrap)\n")
+  cat("  Replicates:", x$B_successful, "of", x$B,
+      if (x$B_failed > 0) paste0("(", x$B_failed, " failed)") else "",
+      "\n")
+  cat("  Type:", x$type, "\n")
+  cat("  ystat (params extracted at):", x$ystat, "\n")
+  if (!is.null(x$seed)) cat("  Seed:", x$seed, "\n")
+  cat("\nUse decompose_boot_params() to derive SEs at any (ystat, ref).\n")
+  invisible(x)
 }

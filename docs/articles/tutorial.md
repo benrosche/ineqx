@@ -25,7 +25,6 @@ contains panel data on individuals across multiple years, three groups
 
 devtools::load_all()
 #> ℹ Loading ineqx
-#> Warning: package 'testthat' was built under R version 4.5.2
 
 data("incdat")
 str(incdat)
@@ -517,12 +516,12 @@ print(result_longit)
 #> 
 #>   time 2:
 #>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
-#>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
+#>     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
 #>     Pre-treatment inequality (delta_pre):                9.3804  (SE = 10.4581)
-#>       Means:                                             0.0000
+#>       Means:                                            -0.0000
 #>       Variances:                                         9.3804
 #>     Total:                                               9.3804  (SE = 11.0102)
 #> 
@@ -538,8 +537,8 @@ print(result_longit)
 #>     Total:                                              19.2373  (SE = 11.4967)
 #> 
 #>   time 4:
-#>     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)
-#>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
+#>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
+#>     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -549,8 +548,8 @@ print(result_longit)
 #>     Total:                                              21.7732  (SE = 11.6250)
 #> 
 #>   time 5:
-#>     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)
-#>     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)
+#>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
+#>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -598,6 +597,8 @@ available: `"het_b"`, `"cov_b"`, `"het_w"`, `"cov_w"`):
 ``` r
 
 plot(result_longit, type = "wibe")
+#> Ignoring unknown labels:
+#> • fill : ""
 ```
 
 ![](tutorial_files/figure-html/causal-wibe-1.png)
@@ -636,12 +637,12 @@ print(result_shapley)
 #> 
 #>   time 2:
 #>     Effects on means (delta_beta):                       0.0000
-#>     Effects on SDs (delta_lambda):                       0.0000
+#>     Effects on SDs (delta_lambda):                      -0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
 #>     Pre-treatment inequality (delta_pre):                9.3804
-#>       Means:                                             0.0000
+#>       Means:                                            -0.0000
 #>       Variances:                                         9.3804
 #>     Total:                                               9.3804
 #> 
@@ -657,8 +658,8 @@ print(result_shapley)
 #>     Total:                                              19.2373
 #> 
 #>   time 4:
-#>     Effects on means (delta_beta):                      -0.0000
-#>     Effects on SDs (delta_lambda):                       0.0000
+#>     Effects on means (delta_beta):                       0.0000
+#>     Effects on SDs (delta_lambda):                      -0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -668,8 +669,8 @@ print(result_shapley)
 #>     Total:                                              21.7732
 #> 
 #>   time 5:
-#>     Effects on means (delta_beta):                      -0.0000
-#>     Effects on SDs (delta_lambda):                      -0.0000
+#>     Effects on means (delta_beta):                       0.0000
+#>     Effects on SDs (delta_lambda):                       0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -1005,10 +1006,6 @@ yourself and pass it to
 ``` r
 
 library(gamlss)
-#> Warning: package 'gamlss' was built under R version 4.5.2
-#> Warning: package 'gamlss.data' was built under R version 4.5.2
-#> Warning: package 'gamlss.dist' was built under R version 4.5.2
-#> Warning: package 'nlme' was built under R version 4.5.2
 
 # Fit your own GAMLSS
 my_model <- gamlss(

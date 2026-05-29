@@ -13,6 +13,7 @@ ineqx_params(
   post = NULL,
   ystat = "Var",
   vcov = NULL,
+  na.action = stats::na.omit,
   verbose = TRUE
 )
 }
@@ -49,6 +50,14 @@ Only used in model mode. NULL for simple difference estimator.}
 named list of matrices for longitudinal data).
 For model mode: logical, whether to extract the vcov via numerical
 Jacobian (default: TRUE). Set to FALSE for faster computation without SEs.}
+
+\item{na.action}{A function that handles NAs in \code{data}. Only used in
+model mode. Applied to the subset of \code{data} containing the variables
+referenced by the model's mu/sigma formulas plus \code{treat}, \code{group},
+\code{time}, and \code{post}. Defaults to \code{\link[stats]{na.omit}},
+matching the integrated \code{\link{ineqx}()} path. Pass \code{na.fail} to
+error on NAs, or \code{na.pass} to keep them (and let \code{predict()}
+propagate them).}
 }
 \value{
 An object of class \code{"ineqx_desc_params"} (descriptive mode) or
@@ -120,6 +129,27 @@ params <- ineqx_params(
   treat = "x", group = "SES",
   ystat = "Var", vcov = TRUE
 )
+
+# Stepwise DiD: pass `post`, the indicator for the post-treatment
+# observation in a paired pre/post panel. ineqx_params() then runs the
+# 4-prediction DiD extraction (parallel-trends adjusted) instead of the
+# 2-prediction simple-difference extraction.
+did_params <- ineqx_params(
+  model = my_did_gamlss, data = panel_data,
+  treat = "treat", group = "edu", time = "year5",
+  post = "post01", ystat = "Var", vcov = TRUE
+)
+
+# V_L (variance of log earnings) via the split-step workflow:
+log_model  <- fit_ineqx_model(
+  formula_mu    = y ~ treat * group * time,
+  formula_sigma =   ~ treat * group * time,
+  data = mydata, transform = "log"
+)
+log_params <- ineqx_params(model = log_model, data = mydata,
+                           treat = "treat", group = "group", time = "time",
+                           ystat = "Var", vcov = TRUE)
+fit_vl <- ineqx(params = log_params, ystat = "VL", ref = 1980)
 }
 
 }

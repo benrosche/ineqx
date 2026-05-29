@@ -32,6 +32,17 @@ Groups bootstrap settings into a single object that can be passed to
 the \code{ci} argument. All model arguments (data, formulas, etc.) are
 inherited from the \code{ineqx()} call automatically.
 }
+\section{Two-stage workflow}{
+
+For one decomposition, one bootstrap, the single-stage flow via
+\code{ineqx(..., se = boot_config(...))} or \code{\link{bootstrap_se}()}
+is the right choice. If you instead want bootstrap SEs for several
+decomposition views (e.g. different \code{ystat}, different \code{ref})
+of the same GAMLSS fit, use the two-stage flow:
+\code{\link{bootstrap_params}()} caches the resampled params once, then
+\code{\link{decompose_boot_params}()} produces SEs per view cheaply.
+}
+
 \examples{
 \dontrun{
 # Bootstrap SEs with 500 replicates

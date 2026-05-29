@@ -23,9 +23,27 @@
 #'   \code{data}, or a numeric vector of weights
 #' @param family A \code{gamlss.family} object specifying the distribution.
 #'   Default: \code{gamlss.dist::NO()} (normal distribution).
+#' @param na.action A function that handles NAs in \code{data}. Applied to the
+#'   subset of \code{data} containing the variables referenced by
+#'   \code{formula_mu}, \code{formula_sigma}, and \code{weights} before fitting.
+#'   Defaults to \code{\link[stats]{na.omit}}, matching \code{\link{ineqx_params}}
+#'   and the integrated \code{\link{ineqx}()} path so the split-step workflow
+#'   keeps both steps on identical rows. Pass \code{na.fail} to error on NAs.
+#' @param transform Either \code{"identity"} (default) or \code{"log"}.
+#'   When \code{"log"}, the response column on the LHS of \code{formula_mu}
+#'   is log-transformed in a local copy of \code{data} before fitting, and
+#'   the returned model is tagged with \code{attr(model, "ineqx_transform")
+#'   = "log"}. Downstream \code{\link{ineqx_params}} and \code{\link{ineqx}}
+#'   read this tag, which is what lets the split-step workflow compute
+#'   \eqn{V_L} (variance of log earnings) via \code{ystat = "VL"}. Requires
+#'   the LHS of \code{formula_mu} to be a simple variable name (e.g.,
+#'   \code{y}, not \code{log(y)} or \code{I(y + 1)}) and that column to be
+#'   strictly positive.
 #' @param ... Additional arguments passed to \code{gamlss::gamlss()}
 #'
-#' @return A fitted \code{gamlss} object
+#' @return A fitted \code{gamlss} object. When \code{transform = "log"}, the
+#'   object carries \code{attr(., "ineqx_transform") = "log"} so downstream
+#'   functions know the fit lives on the log scale.
 #'
 #' @details
 #' The GAMLSS framework models both the conditional mean and conditional
@@ -40,28 +58,46 @@
 #' For the DiD estimator, add pre/post interactions:
 #' \deqn{\mu_{ij} = \alpha_j + \beta_{D,j} D_i + \beta_P P_i + \beta_{DP,j} D_i P_i + Z_i \gamma}
 #'
-#' @seealso \code{\link{ineqx_params}} for extracting decomposition parameters
-#'   from the fitted model
+#' @section Split-step workflow:
+#' \code{fit_ineqx_model()} is the entry point to the split-step workflow,
+#' where the GAMLSS fit is cached once and many decompositions (varying
+#' \code{ystat} and \code{ref}) are derived cheaply on top:
+#' \preformatted{
+#' model  <- fit_ineqx_model(y ~ treat * group * time + controls,
+#'                                ~ treat * group * time + controls,
+#'                            data = d)
+#' params <- ineqx_params(model = model, data = d,
+#'                        treat = "treat", group = "group", time = "time",
+#'                        ystat = "Var", vcov = TRUE)
+#' fit_var <- ineqx(params = params, ystat = "Var", ref = 1980)
+#' fit_cv2 <- ineqx(params = params, ystat = "CV2", ref = 1980)
+#' }
+#' For the stepwise DiD, pass \code{post = "post01"} (or whatever your
+#' pre/post column is) to \code{ineqx_params()}. For \eqn{V_L}, fit with
+#' \code{transform = "log"} and pass \code{ystat = "VL"} to \code{ineqx()}.
 #'
-#' @keywords internal
+#' @seealso \code{\link{ineqx_params}} for extracting decomposition parameters
+#'   from the fitted model; \code{\link{ineqx}} for running the decomposition.
+#'
+#' @export
 fit_ineqx_model <- function(formula_mu, formula_sigma, data,
-                             weights = NULL, family = NULL, ...) {
+                             weights = NULL, family = NULL,
+                             transform = c("identity", "log"),
+                             na.action = stats::na.omit, ...) {
 
   if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Package 'gamlss' is required for fit_ineqx_model(). ",
          "Install it with install.packages('gamlss')")
   }
 
-  # Default family
-  if (is.null(family)) {
-    family <- gamlss.dist::NO()
-  }
+  transform <- match.arg(transform)
 
-  # Handle weights — add to data frame under a known column name so that
-  # gamlss can resolve it. gamlss uses match.call() + model.frame() which
-  # evaluates the weights expression. By putting weights in the data frame
-  # as `.ineqx_w` and passing `weights = .ineqx_w` to gamlss, the symbol
-  # `.ineqx_w` is resolved from the data frame by model.frame().
+  # ------------------------------------------------------------------ #
+  # Materialize weights into the data as `.ineqx_w` BEFORE applying
+  # na.action, so that row-dropping stays aligned when a numeric weight
+  # vector is supplied (the vector becomes a column and is subset with the
+  # rest of the data).
+  # ------------------------------------------------------------------ #
   if (!is.null(weights)) {
     if (is.character(weights)) {
       if (!weights %in% names(data)) {
@@ -69,9 +105,64 @@ fit_ineqx_model <- function(formula_mu, formula_sigma, data,
       }
       data$.ineqx_w <- data[[weights]]
     } else {
+      if (length(weights) != nrow(data)) {
+        stop("Numeric 'weights' must have length nrow(data) (",
+             length(weights), " != ", nrow(data), ").")
+      }
       data$.ineqx_w <- weights
     }
   }
+
+  # ------------------------------------------------------------------ #
+  # Apply na.action to model-relevant columns. Mirrors ineqx_params() so
+  # the two split-step entry points handle NAs identically and gamlss does
+  # not error on incomplete rows.
+  # ------------------------------------------------------------------ #
+  vars <- unique(c(all.vars(formula_mu), all.vars(formula_sigma)))
+  if (!is.null(weights)) vars <- c(vars, ".ineqx_w")
+  vars <- intersect(vars, names(data))
+  data <- na.action(data[, vars, drop = FALSE])
+
+  # ------------------------------------------------------------------ #
+  # transform = "log": log-transform the LHS column of formula_mu in a
+  # local copy of data. Mirrors the auto-log path inside ineqx() for the
+  # integrated VL workflow (see ineqx.R:170-201), so downstream
+  # ineqx_params() + ineqx(params, ystat = "VL") yields identical numbers
+  # to the integrated ineqx(y, data, ystat = "VL") call.
+  # ------------------------------------------------------------------ #
+  if (transform == "log") {
+    if (length(formula_mu) < 3L) {
+      stop("transform = 'log' requires a two-sided formula_mu with a ",
+           "response on the LHS (e.g. y ~ treat * group + controls).")
+    }
+    lhs <- formula_mu[[2L]]
+    if (!is.name(lhs)) {
+      stop("transform = 'log' requires the LHS of formula_mu to be a ",
+           "simple variable name (e.g. y), not an expression like ",
+           "log(y) or I(y + 1). Got: ", deparse(lhs))
+    }
+    y_var <- as.character(lhs)
+    if (!y_var %in% names(data)) {
+      stop("transform = 'log': response variable '", y_var,
+           "' not found in data.")
+    }
+    yvals <- data[[y_var]]
+    bad <- !is.na(yvals) & yvals <= 0
+    if (any(bad)) {
+      stop("transform = 'log' requires strictly positive '", y_var,
+           "'; found ", sum(bad), " non-positive value(s).")
+    }
+    data[[y_var]] <- log(yvals)
+  }
+
+  # Default family
+  if (is.null(family)) {
+    family <- gamlss.dist::NO()
+  }
+
+  # Weights were materialized into `data$.ineqx_w` above (before na.action).
+  # gamlss resolves the `.ineqx_w` symbol from the data frame via
+  # match.call() + model.frame().
 
   # Fit the model
   if (is.null(weights)) {
@@ -97,5 +188,9 @@ fit_ineqx_model <- function(formula_mu, formula_sigma, data,
     )
   }
 
+  # Tag the model with the scale on which the response was modeled, so
+  # that ineqx_params() can propagate this to params and ineqx() knows
+  # whether ystat = "VL" is valid for a params-supplied call.
+  attr(model, "ineqx_transform") <- transform
   model
 }

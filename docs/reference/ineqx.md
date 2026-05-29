@@ -37,9 +37,13 @@ ineqx(
 - ystat:
 
   Character, one of `"Var"` (default), `"CV2"`, or `"VL"` (variance of
-  log; descriptive only). `"VL"` is implemented by log-transforming `y`
-  and running the standard `"Var"` decomposition; output is labelled as
-  `"VL"`.
+  log). `"VL"` is supported for descriptive decomposition and for
+  integrated causal estimation (when `treat`, `formula_mu`, and
+  `formula_sigma` are supplied with raw `y`/`data`). It is implemented
+  by log-transforming `y` and running the standard `"Var"`
+  decomposition; output is labelled as `"VL"`. `"VL"` is not supported
+  when `params` is supplied; in that case, fit your model on `log(y)`
+  yourself and pass `ystat = "Var"`.
 
 - treat:
 
@@ -329,7 +333,19 @@ ineqx("inc", group = "group", data = incdat, params = params, se = "none")
 #> Inequality measure: Var 
 #> 
 #> Treatment effect on outcome variance:
-#> Error in x$se$se_ineq_control: $ operator is invalid for atomic vectors
+#>     Var[Y | T = 0]:                      162500.0000
+#>     Var[Y | T = 1]:                      142900.2187
+#>     Total effect (tau_T):                -19599.7813
+#>       Between-group (tau_B):             10400.0000
+#>       Within-group (tau_W):              -29999.7813
+#> 
+#> Between-group sub-components:
+#>     Var_pi(beta):                          400.0000
+#>     2*Cov_pi(mu0, beta):                 10000.0000
+#> 
+#> Within-group sub-components:
+#>     mean(sigma0^2) * mean(f):            -25547.4600
+#>     Cov_pi(sigma0^2, f):                 -4452.3212
 
 if (FALSE) { # \dontrun{
 # Causal: integrated estimation

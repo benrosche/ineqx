@@ -29,14 +29,14 @@ decomposition."><!-- Global site tag (gtag.js) - Google Analytics --><script asy
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html"><span class="fa fa-home"></span></a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fa-home"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/model.html">Model structure</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/installation.html">Package installation</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Package functions</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/examples.html">Examples</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="../news/index.html">news</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/faq.html">faq</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul></div>
 
 
@@ -66,6 +66,8 @@ decomposition.</p>
 <span>  <span class="va">data</span>,</span>
 <span>  weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  family <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"identity"</span>, <span class="st">"log"</span><span class="op">)</span>,</span>
+<span>  na.action <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -98,13 +100,37 @@ decomposition.</p>
 Default: <code><a href="https://rdrr.io/pkg/gamlss.dist/man/NO.html" class="external-link">gamlss.dist::NO()</a></code> (normal distribution).</p></dd>
 
 
+<dt id="arg-transform">transform<a class="anchor" aria-label="anchor" href="#arg-transform"></a></dt>
+<dd><p>Either <code>"identity"</code> (default) or <code>"log"</code>.
+When <code>"log"</code>, the response column on the LHS of <code>formula_mu</code>
+is log-transformed in a local copy of <code>data</code> before fitting, and
+the returned model is tagged with <code>attr(model, "ineqx_transform")
+= "log"</code>. Downstream <code><a href="ineqx_params.html">ineqx_params</a></code> and <code><a href="ineqx.html">ineqx</a></code>
+read this tag, which is what lets the split-step workflow compute
+\(V_L\) (variance of log earnings) via <code>ystat = "VL"</code>. Requires
+the LHS of <code>formula_mu</code> to be a simple variable name (e.g.,
+<code>y</code>, not <code>log(y)</code> or <code>I(y + 1)</code>) and that column to be
+strictly positive.</p></dd>
+
+
+<dt id="arg-na-action">na.action<a class="anchor" aria-label="anchor" href="#arg-na-action"></a></dt>
+<dd><p>A function that handles NAs in <code>data</code>. Applied to the
+subset of <code>data</code> containing the variables referenced by
+<code>formula_mu</code>, <code>formula_sigma</code>, and <code>weights</code> before fitting.
+Defaults to <code><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></code>, matching <code><a href="ineqx_params.html">ineqx_params</a></code>
+and the integrated <code><a href="ineqx.html">ineqx()</a></code> path so the split-step workflow
+keeps both steps on identical rows. Pass <code>na.fail</code> to error on NAs.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to <code><a href="https://rdrr.io/pkg/gamlss/man/gamlss.html" class="external-link">gamlss::gamlss()</a></code></p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A fitted <code>gamlss</code> object</p>
+    <p>A fitted <code>gamlss</code> object. When <code>transform = "log"</code>, the
+  object carries <code>attr(., "ineqx_transform") = "log"</code> so downstream
+  functions know the fit lives on the log scale.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -123,9 +149,27 @@ $$\log(\sigma_{ij}) = \alpha_j^{(\sigma)} + \lambda_{D,j} D_i + Z_i \gamma^{(\si
 $$\mu_{ij} = \alpha_j + \beta_{D,j} D_i + \beta_P P_i + \beta_{DP,j} D_i P_i + Z_i \gamma$$</p>
     </div>
     <div class="section level2">
+    <h2 id="split-step-workflow">Split-step workflow<a class="anchor" aria-label="anchor" href="#split-step-workflow"></a></h2>
+
+
+<p><code>fit_ineqx_model()</code> is the entry point to the split-step workflow,
+where the GAMLSS fit is cached once and many decompositions (varying
+<code>ystat</code> and <code>ref</code>) are derived cheaply on top:</p><div class="sourceCode"><pre><code><span></span>
+<span><span class="va">model</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ineqx_model.html">fit_ineqx_model</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">treat</span> <span class="op">*</span> <span class="va">group</span> <span class="op">*</span> <span class="va">time</span> <span class="op">+</span> <span class="va">controls</span>,</span>
+<span>                               <span class="op">~</span> <span class="va">treat</span> <span class="op">*</span> <span class="va">group</span> <span class="op">*</span> <span class="va">time</span> <span class="op">+</span> <span class="va">controls</span>,</span>
+<span>                           data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx_params.html">ineqx_params</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">model</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
+<span>                       treat <span class="op">=</span> <span class="st">"treat"</span>, group <span class="op">=</span> <span class="st">"group"</span>, time <span class="op">=</span> <span class="st">"time"</span>,</span>
+<span>                       ystat <span class="op">=</span> <span class="st">"Var"</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">fit_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">params</span>, ystat <span class="op">=</span> <span class="st">"Var"</span>, ref <span class="op">=</span> <span class="fl">1980</span><span class="op">)</span></span>
+<span><span class="va">fit_cv2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">params</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>, ref <span class="op">=</span> <span class="fl">1980</span><span class="op">)</span></span></code></pre></div><p>For the stepwise DiD, pass <code>post = "post01"</code> (or whatever your
+pre/post column is) to <code><a href="ineqx_params.html">ineqx_params()</a></code>. For \(V_L\), fit with
+<code>transform = "log"</code> and pass <code>ystat = "VL"</code> to <code><a href="ineqx.html">ineqx()</a></code>.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="ineqx_params.html">ineqx_params</a></code> for extracting decomposition parameters
-  from the fitted model</p></div>
+  from the fitted model; <code><a href="ineqx.html">ineqx</a></code> for running the decomposition.</p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

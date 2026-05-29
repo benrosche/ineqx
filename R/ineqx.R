@@ -160,44 +160,59 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
   ystat <- match.arg(ystat, c("Var", "CV2", "VL"))
 
   # -------------------------------------------------------------------- #
-  # VL: variance of log(y). Implemented by log-transforming y and running
-  # the standard Var decomposition; output is labelled "VL". Supported for
-  # descriptive decomposition and integrated causal estimation; not supported
-  # when 'params' is supplied (we cannot know or transform the scale on
-  # which externally estimated parameters were produced).
+  # VL: variance of log(y). Implemented by running the standard Var
+  # decomposition on a log-scale fit; output is labelled "VL".
+  #
+  # Two code paths produce VL:
+  #   1. Integrated path (y + data supplied): we log-transform data[[y]]
+  #      here and proceed with ystat = "Var" internals.
+  #   2. Split path (params supplied): the params object must come from a
+  #      fit on log(y) -- detected via params$transform == "log", which is
+  #      set by fit_ineqx_model(transform = "log") and propagated through
+  #      ineqx_params(). In that case the parameters already live on the
+  #      log scale, so we just switch ystat to "Var" and relabel on output.
   # -------------------------------------------------------------------- #
   ystat_label <- ystat
   if (ystat == "VL") {
     if (!is.null(params)) {
-      stop("ystat = 'VL' is not supported when 'params' is supplied: ",
-           "ineqx() cannot determine or transform the scale on which the ",
-           "parameters were estimated. To compute V_L with externally ",
-           "estimated parameters, fit your model on log(y) and call ",
-           "ineqx(..., ystat = 'Var') -- the result will be V_L by ",
-           "construction. Note: because V_L measures dispersion in log ",
-           "earnings rather than in earnings themselves, its decomposition ",
-           "can diverge from income-scale changes in inequality ",
-           "(see Rosche 2026).",
-           call. = FALSE)
+      params_transform <- params$transform %||% "identity"
+      if (!identical(params_transform, "log")) {
+        stop("ystat = 'VL' with params requires a params object built from ",
+             "a log(y) fit. The supplied params has transform = '",
+             params_transform, "'. To compute V_L with the split-step ",
+             "workflow, fit with fit_ineqx_model(..., transform = 'log'), ",
+             "extract params via ineqx_params(model = ...), then call ",
+             "ineqx(params = ..., ystat = 'VL'). Note: because V_L ",
+             "measures dispersion in log earnings rather than in earnings ",
+             "themselves, its decomposition can diverge from income-scale ",
+             "changes in inequality (see Rosche 2026).",
+             call. = FALSE)
+      }
+      warning("Because V_L measures dispersion in log earnings rather than in ",
+              "earnings themselves, its decomposition can diverge from ",
+              "income-scale changes in inequality (see Rosche 2026).",
+              call. = FALSE)
+      ystat <- "Var"   # params already on log scale; run internals as Var
+    } else {
+      if (is.null(y)) {
+        stop("ystat = 'VL' requires 'y' so it can be log-transformed.")
+      }
+      if (missing(data) || is.null(data) || !y %in% names(data)) {
+        stop("ystat = 'VL' requires 'data' containing column '", y, "'.")
+      }
+      yvals <- data[[y]]
+      bad <- !is.na(yvals) & yvals <= 0
+      if (any(bad)) {
+        stop("ystat = 'VL' requires strictly positive '", y, "'; found ",
+             sum(bad), " non-positive value(s).")
+      }
+      warning("Because V_L measures dispersion in log earnings rather than in ",
+              "earnings themselves, its decomposition can diverge from ",
+              "income-scale changes in inequality (see Rosche 2026).",
+              call. = FALSE)
+      data[[y]] <- log(yvals)
+      ystat <- "Var"   # run internals on Var of log(y)
     }
-    if (is.null(y)) {
-      stop("ystat = 'VL' requires 'y' so it can be log-transformed.")
-    }
-    if (missing(data) || is.null(data) || !y %in% names(data)) {
-      stop("ystat = 'VL' requires 'data' containing column '", y, "'.")
-    }
-    yvals <- data[[y]]
-    bad <- !is.na(yvals) & yvals <= 0
-    if (any(bad)) {
-      stop("ystat = 'VL' requires strictly positive '", y, "'; found ",
-           sum(bad), " non-positive value(s).")
-    }
-    warning("Because V_L measures dispersion in log earnings rather than in ",
-            "earnings themselves, its decomposition can diverge from ",
-            "income-scale changes in inequality (see Rosche 2026).",
-            call. = FALSE)
-    data[[y]] <- log(yvals)
-    ystat <- "Var"   # run internals on Var of log(y)
   }
 
   # -------------------------------------------------------------------- #

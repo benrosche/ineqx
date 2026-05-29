@@ -16,6 +16,10 @@ inside ineqx().
 
 - [`boot_config()`](https://benrosche.github.io/ineqx/reference/boot_config.md)
   : Create a bootstrap configuration
+- [`bootstrap_params()`](https://benrosche.github.io/ineqx/reference/bootstrap_params.md)
+  : Bootstrap resampled parameter objects (without decomposition)
+- [`decompose_boot_params()`](https://benrosche.github.io/ineqx/reference/decompose_boot_params.md)
+  : Aggregate bootstrap SEs from cached params
 
 ## Comparing scenarios
 

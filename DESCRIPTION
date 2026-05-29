@@ -27,7 +27,7 @@ Suggests:
     shiny,
     shinydashboard,
     shinyWidgets
-URL: http://benrosche.com/projects/ineqx/
+URL: https://benrosche.github.io/ineqx/, http://benrosche.com/projects/ineqx/
 BugReports: https://github.com/benrosche/ineqx/issues
 RoxygenNote: 7.3.3
 VignetteBuilder: knitr

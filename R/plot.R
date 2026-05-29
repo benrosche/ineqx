@@ -1100,7 +1100,7 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
     ggplot2::labs(x = "Time",
                   y = paste0("Treatment effect on ", x$ystat),
                   title = "Treatment Effect on Inequality Over Time",
-                  color = "", linetype = "") +
+                  color = "", linetype = "", fill = "") +
     ggplot2::scale_color_manual(values = color_vals) +
     ggplot2::scale_linetype_manual(values = lty_vals) +
     ggplot2::guides(linetype = guide_lty) +

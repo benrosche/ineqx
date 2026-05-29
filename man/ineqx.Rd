@@ -26,9 +26,14 @@ ineqx(
 \item{y}{Character, name of the outcome variable in \code{data}.}
 
 \item{ystat}{Character, one of \code{"Var"} (default), \code{"CV2"}, or
-\code{"VL"} (variance of log; descriptive only). \code{"VL"} is implemented
-by log-transforming \code{y} and running the standard \code{"Var"}
-decomposition; output is labelled as \code{"VL"}.}
+\code{"VL"} (variance of log). \code{"VL"} is supported for descriptive
+decomposition and for integrated causal estimation (when \code{treat},
+\code{formula_mu}, and \code{formula_sigma} are supplied with raw
+\code{y}/\code{data}). It is implemented by log-transforming \code{y}
+and running the standard \code{"Var"} decomposition; output is labelled
+as \code{"VL"}. \code{"VL"} is not supported when \code{params} is
+supplied; in that case, fit your model on \code{log(y)} yourself and
+pass \code{ystat = "Var"}.}
 
 \item{treat}{Character, name of the treatment variable in \code{data}.
 Coded 0/1. If NULL, a descriptive decomposition is performed.}
