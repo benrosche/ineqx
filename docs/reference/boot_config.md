@@ -45,6 +45,19 @@ boot_config(
 
 An object of class `"ineqx_boot_config"`
 
+## Two-stage workflow
+
+For one decomposition, one bootstrap, the single-stage flow via
+`ineqx(..., se = boot_config(...))` or
+[`bootstrap_se()`](https://benrosche.github.io/ineqx/reference/bootstrap_se.md)
+is the right choice. If you instead want bootstrap SEs for several
+decomposition views (e.g. different `ystat`, different `ref`) of the
+same GAMLSS fit, use the two-stage flow:
+[`bootstrap_params()`](https://benrosche.github.io/ineqx/reference/bootstrap_params.md)
+caches the resampled params once, then
+[`decompose_boot_params()`](https://benrosche.github.io/ineqx/reference/decompose_boot_params.md)
+produces SEs per view cheaply.
+
 ## Examples
 
 ``` r

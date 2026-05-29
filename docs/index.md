@@ -1,4 +1,4 @@
-![](reference/figures/ineqx-hexagon.jpg)
+![ineqx package logo](reference/figures/ineqx-hexagon.jpg)
 
 ## ineqx: Descriptive and causal variance decompositions
 

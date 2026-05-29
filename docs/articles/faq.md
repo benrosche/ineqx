@@ -1,7 +1,5 @@
 # FAQ
 
-    #> Warning: package 'ineqx' was built under R version 4.5.2
-
 ### Var, CV², or VL — which inequality measure should I use?
 
 [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md)

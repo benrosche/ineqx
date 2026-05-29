@@ -10,6 +10,8 @@ fit_ineqx_model(
   data,
   weights = NULL,
   family = NULL,
+  transform = c("identity", "log"),
+  na.action = stats::na.omit,
   ...
 )
 }
@@ -28,10 +30,30 @@ fit_ineqx_model(
 \item{family}{A \code{gamlss.family} object specifying the distribution.
 Default: \code{gamlss.dist::NO()} (normal distribution).}
 
+\item{transform}{Either \code{"identity"} (default) or \code{"log"}.
+When \code{"log"}, the response column on the LHS of \code{formula_mu}
+is log-transformed in a local copy of \code{data} before fitting, and
+the returned model is tagged with \code{attr(model, "ineqx_transform")
+= "log"}. Downstream \code{\link{ineqx_params}} and \code{\link{ineqx}}
+read this tag, which is what lets the split-step workflow compute
+\eqn{V_L} (variance of log earnings) via \code{ystat = "VL"}. Requires
+the LHS of \code{formula_mu} to be a simple variable name (e.g.,
+\code{y}, not \code{log(y)} or \code{I(y + 1)}) and that column to be
+strictly positive.}
+
+\item{na.action}{A function that handles NAs in \code{data}. Applied to the
+subset of \code{data} containing the variables referenced by
+\code{formula_mu}, \code{formula_sigma}, and \code{weights} before fitting.
+Defaults to \code{\link[stats]{na.omit}}, matching \code{\link{ineqx_params}}
+and the integrated \code{\link{ineqx}()} path so the split-step workflow
+keeps both steps on identical rows. Pass \code{na.fail} to error on NAs.}
+
 \item{...}{Additional arguments passed to \code{gamlss::gamlss()}}
 }
 \value{
-A fitted \code{gamlss} object
+A fitted \code{gamlss} object. When \code{transform = "log"}, the
+  object carries \code{attr(., "ineqx_transform") = "log"} so downstream
+  functions know the fit lives on the log scale.
 }
 \description{
 A convenience wrapper around \code{gamlss::gamlss()} for users who want
@@ -58,8 +80,27 @@ For the simple difference estimator, the model is:
 For the DiD estimator, add pre/post interactions:
 \deqn{\mu_{ij} = \alpha_j + \beta_{D,j} D_i + \beta_P P_i + \beta_{DP,j} D_i P_i + Z_i \gamma}
 }
+\section{Split-step workflow}{
+
+\code{fit_ineqx_model()} is the entry point to the split-step workflow,
+where the GAMLSS fit is cached once and many decompositions (varying
+\code{ystat} and \code{ref}) are derived cheaply on top:
+\preformatted{
+model  <- fit_ineqx_model(y ~ treat * group * time + controls,
+                               ~ treat * group * time + controls,
+                           data = d)
+params <- ineqx_params(model = model, data = d,
+                       treat = "treat", group = "group", time = "time",
+                       ystat = "Var", vcov = TRUE)
+fit_var <- ineqx(params = params, ystat = "Var", ref = 1980)
+fit_cv2 <- ineqx(params = params, ystat = "CV2", ref = 1980)
+}
+For the stepwise DiD, pass \code{post = "post01"} (or whatever your
+pre/post column is) to \code{ineqx_params()}. For \eqn{V_L}, fit with
+\code{transform = "log"} and pass \code{ystat = "VL"} to \code{ineqx()}.
+}
+
 \seealso{
 \code{\link{ineqx_params}} for extracting decomposition parameters
-  from the fitted model
+  from the fitted model; \code{\link{ineqx}} for running the decomposition.
 }
-\keyword{internal}

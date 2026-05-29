@@ -11,4 +11,6 @@
 - [Model
   structure](https://benrosche.github.io/ineqx/articles/model.md):
 - [Examples](https://benrosche.github.io/ineqx/articles/examples.md):
+- [Split-step workflow: fit once, decompose
+  many](https://benrosche.github.io/ineqx/articles/split-step-workflow.md):
 - [FAQ](https://benrosche.github.io/ineqx/articles/faq.md):

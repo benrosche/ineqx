@@ -5,14 +5,15 @@
 <url><loc>https://benrosche.github.io/ineqx/articles/index.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/articles/installation.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/articles/model.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/articles/split-step-workflow.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/articles/tutorial.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/authors.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/index.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/news/index.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/attach_boot_se.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/bootstrap_params.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/bootstrap_se.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/boot_config.html</loc></url>
-<url><loc>https://benrosche.github.io/ineqx/reference/calcAME.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/causal_decompose_cross.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/causal_decompose_longit.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/causal_shapley.html</loc></url>
@@ -27,6 +28,7 @@
 <url><loc>https://benrosche.github.io/ineqx/reference/CV2T_pi.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/CV2W_n.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/CV2W_pi.html</loc></url>
+<url><loc>https://benrosche.github.io/ineqx/reference/decompose_boot_params.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/delta_method_desc_se.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/delta_method_se.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/dot-all_permutations.html</loc></url>
@@ -77,6 +79,5 @@
 <url><loc>https://benrosche.github.io/ineqx/reference/VarT_pi.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/VarW_n.html</loc></url>
 <url><loc>https://benrosche.github.io/ineqx/reference/VarW_pi.html</loc></url>
-<url><loc>https://benrosche.github.io/ineqx/reference/wibe.html</loc></url>
 </urlset>
 

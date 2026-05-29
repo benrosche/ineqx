@@ -104,6 +104,27 @@
 #'   treat = "x", group = "SES",
 #'   ystat = "Var", vcov = TRUE
 #' )
+#'
+#' # Stepwise DiD: pass `post`, the indicator for the post-treatment
+#' # observation in a paired pre/post panel. ineqx_params() then runs the
+#' # 4-prediction DiD extraction (parallel-trends adjusted) instead of the
+#' # 2-prediction simple-difference extraction.
+#' did_params <- ineqx_params(
+#'   model = my_did_gamlss, data = panel_data,
+#'   treat = "treat", group = "edu", time = "year5",
+#'   post = "post01", ystat = "Var", vcov = TRUE
+#' )
+#'
+#' # V_L (variance of log earnings) via the split-step workflow:
+#' log_model  <- fit_ineqx_model(
+#'   formula_mu    = y ~ treat * group * time,
+#'   formula_sigma =   ~ treat * group * time,
+#'   data = mydata, transform = "log"
+#' )
+#' log_params <- ineqx_params(model = log_model, data = mydata,
+#'                            treat = "treat", group = "group", time = "time",
+#'                            ystat = "Var", vcov = TRUE)
+#' fit_vl <- ineqx(params = log_params, ystat = "VL", ref = 1980)
 #' }
 #'
 #' @export
@@ -114,11 +135,16 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
                           verbose = TRUE) {
 
   if (identical(ystat, "VL")) {
-    stop("ystat = 'VL' is not supported in ineqx_params(). To compute V_L, ",
-         "fit your model on log(y) and call ineqx_params(..., ystat = 'Var'). ",
-         "Note: because V_L measures dispersion in log earnings rather than ",
-         "in earnings themselves, its decomposition can diverge from ",
-         "income-scale changes in inequality (see Rosche 2026).",
+    stop("ystat = 'VL' is not supported in ineqx_params(). To compute V_L ",
+         "with the split-step workflow, fit your model with ",
+         "fit_ineqx_model(..., transform = 'log'), then call ",
+         "ineqx_params(model = ..., ystat = 'Var') and pass the result to ",
+         "ineqx(params = ..., ystat = 'VL'). The transform tag is ",
+         "propagated automatically so ineqx() recognises the params as ",
+         "living on the log scale. Note: because V_L measures dispersion ",
+         "in log earnings rather than in earnings themselves, its ",
+         "decomposition can diverge from income-scale changes in ",
+         "inequality (see Rosche 2026).",
          call. = FALSE)
   }
   ystat <- match.arg(ystat, c("Var", "CV2"))
@@ -499,6 +525,12 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   obj <- .ineqx_params_manual(data = out_df, ystat = ystat, vcov = vcov_mat)
   obj$is_did <- is_did
   obj$post   <- if (is_did) post else NULL
+  # Propagate the response-scale tag set by fit_ineqx_model(). "log" tells
+  # downstream ineqx(params, ystat = "VL") that it can treat this fit as a
+  # variance of log(y) decomposition; "identity" or NULL means VL is not
+  # available through the split-step path.
+  obj$transform <- attr(model, "ineqx_transform")
+  if (is.null(obj$transform)) obj$transform <- "identity"
   obj
 }
 

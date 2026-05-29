@@ -27,6 +27,7 @@ navbar:
   left:
     - icon: fa-home
       href: index.html
+      aria-label: Home
     - text: "Model structure"
       href: articles/model.html
     - text: "Package installation"
@@ -42,6 +43,7 @@ navbar:
       href: articles/faq.html
     - icon: fab fa-github
       href: https://github.com/benrosche/ineqx/
+      aria-label: GitHub
 
 reference:
   - title: "Main entry points"
@@ -53,6 +55,8 @@ reference:
     desc: "Bootstrap configuration; delta-method SEs are computed automatically inside ineqx()."
     contents:
       - boot_config
+      - bootstrap_params
+      - decompose_boot_params
   - title: "Comparing scenarios"
     contents:
       - compare
@@ -84,4 +88,5 @@ articles:
     contents:
       - model
       - examples
+      - split-step-workflow
       - faq

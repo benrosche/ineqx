@@ -27,14 +27,14 @@ inherited from the ineqx() call automatically."><!-- Global site tag (gtag.js) -
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html"><span class="fa fa-home"></span></a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fa-home"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/model.html">Model structure</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/installation.html">Package installation</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Package functions</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/examples.html">Examples</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="../news/index.html">news</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/faq.html">faq</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul></div>
 
 
@@ -93,6 +93,18 @@ inherited from the <code><a href="ineqx.html">ineqx()</a></code> call automatica
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"ineqx_boot_config"</code></p>
+    </div>
+    <div class="section level2">
+    <h2 id="two-stage-workflow">Two-stage workflow<a class="anchor" aria-label="anchor" href="#two-stage-workflow"></a></h2>
+
+
+<p>For one decomposition, one bootstrap, the single-stage flow via
+<code>ineqx(..., se = boot_config(...))</code> or <code><a href="bootstrap_se.html">bootstrap_se()</a></code>
+is the right choice. If you instead want bootstrap SEs for several
+decomposition views (e.g. different <code>ystat</code>, different <code>ref</code>)
+of the same GAMLSS fit, use the two-stage flow:
+<code><a href="bootstrap_params.html">bootstrap_params()</a></code> caches the resampled params once, then
+<code><a href="decompose_boot_params.html">decompose_boot_params()</a></code> produces SEs per view cheaply.</p>
     </div>
 
     <div class="section level2">

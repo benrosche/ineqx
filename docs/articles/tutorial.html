@@ -37,7 +37,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../index.html"><span class="fa fa-home"></span></a></li>
+<li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fa-home"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/model.html">Model structure</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/installation.html">Package installation</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Package functions</a></li>
@@ -46,7 +46,7 @@
 <ul class="navbar-nav">
 <li class="nav-item"><a class="nav-link" href="../news/index.html">news</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/faq.html">faq</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul>
 </div>
 
@@ -111,7 +111,6 @@ indicator (<code>x</code>).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/load_all.html" class="external-link">load_all</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">ineqx</span></span></span>
-<span><span class="co">#&gt; Warning: package 'testthat' was built under R version 4.5.2</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"incdat"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">incdat</span><span class="op">)</span></span>
@@ -572,12 +571,12 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2:</span></span>
 <span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
 <span><span class="co">#&gt;     Pre-treatment inequality (delta_pre):                9.3804  (SE = 10.4581)</span></span>
-<span><span class="co">#&gt;       Means:                                             0.0000</span></span>
+<span><span class="co">#&gt;       Means:                                            -0.0000</span></span>
 <span><span class="co">#&gt;       Variances:                                         9.3804</span></span>
 <span><span class="co">#&gt;     Total:                                               9.3804  (SE = 11.0102)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -593,8 +592,8 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt;     Total:                                              19.2373  (SE = 11.4967)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 4:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -604,8 +603,8 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt;     Total:                                              21.7732  (SE = 11.6250)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 5:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -650,7 +649,9 @@ at each time point, rather than changes from the reference. The
 <code>"het_b"</code>, <code>"cov_b"</code>, <code>"het_w"</code>,
 <code>"cov_w"</code>):</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result_longit</span>, type <span class="op">=</span> <span class="st">"wibe"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result_longit</span>, type <span class="op">=</span> <span class="st">"wibe"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Ignoring unknown labels:</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> <span style="color: #00BB00;">fill</span> : <span style="color: #0000BB;">""</span></span></span></code></pre></div>
 <p><img src="tutorial_files/figure-html/causal-wibe-1.png" class="r-plt" alt="" width="80%" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
@@ -686,12 +687,12 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2:</span></span>
 <span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
 <span><span class="co">#&gt;     Pre-treatment inequality (delta_pre):                9.3804</span></span>
-<span><span class="co">#&gt;       Means:                                             0.0000</span></span>
+<span><span class="co">#&gt;       Means:                                            -0.0000</span></span>
 <span><span class="co">#&gt;       Variances:                                         9.3804</span></span>
 <span><span class="co">#&gt;     Total:                                               9.3804</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -707,8 +708,8 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="co">#&gt;     Total:                                              19.2373</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 4:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -718,8 +719,8 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="co">#&gt;     Total:                                              21.7732</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 5:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -1012,10 +1013,6 @@ different distributions, random effects, custom controls), fit a
 <code><a href="../reference/ineqx_params.html">ineqx_params()</a></code>:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.gamlss.com/" class="external-link">gamlss</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: package 'gamlss' was built under R version 4.5.2</span></span>
-<span><span class="co">#&gt; Warning: package 'gamlss.data' was built under R version 4.5.2</span></span>
-<span><span class="co">#&gt; Warning: package 'gamlss.dist' was built under R version 4.5.2</span></span>
-<span><span class="co">#&gt; Warning: package 'nlme' was built under R version 4.5.2</span></span>
 <span></span>
 <span><span class="co"># Fit your own GAMLSS</span></span>
 <span><span class="va">my_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/gamlss/man/gamlss.html" class="external-link">gamlss</a></span><span class="op">(</span></span>

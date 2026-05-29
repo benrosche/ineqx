@@ -29,14 +29,14 @@ treatment effect on inequality is performed."><!-- Global site tag (gtag.js) - G
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html"><span class="fa fa-home"></span></a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html" aria-label="Home"><span class="fa fa-home"></span></a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/model.html">Model structure</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/installation.html">Package installation</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Package functions</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/examples.html">Examples</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="../news/index.html">news</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/faq.html">faq</a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/benrosche/ineqx/" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul></div>
 
 
@@ -89,9 +89,14 @@ treatment effect on inequality is performed.</p>
 
 <dt id="arg-ystat">ystat<a class="anchor" aria-label="anchor" href="#arg-ystat"></a></dt>
 <dd><p>Character, one of <code>"Var"</code> (default), <code>"CV2"</code>, or
-<code>"VL"</code> (variance of log; descriptive only). <code>"VL"</code> is implemented
-by log-transforming <code>y</code> and running the standard <code>"Var"</code>
-decomposition; output is labelled as <code>"VL"</code>.</p></dd>
+<code>"VL"</code> (variance of log). <code>"VL"</code> is supported for descriptive
+decomposition and for integrated causal estimation (when <code>treat</code>,
+<code>formula_mu</code>, and <code>formula_sigma</code> are supplied with raw
+<code>y</code>/<code>data</code>). It is implemented by log-transforming <code>y</code>
+and running the standard <code>"Var"</code> decomposition; output is labelled
+as <code>"VL"</code>. <code>"VL"</code> is not supported when <code>params</code> is
+supplied; in that case, fit your model on <code>log(y)</code> yourself and
+pass <code>ystat = "Var"</code>.</p></dd>
 
 
 <dt id="arg-treat">treat<a class="anchor" aria-label="anchor" href="#arg-treat"></a></dt>
@@ -366,7 +371,19 @@ non-default family.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Inequality measure: Var </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Treatment effect on outcome variance:</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in x$se$se_ineq_control:</span> $ operator is invalid for atomic vectors</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Var[Y | T = 0]:                      162500.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Var[Y | T = 1]:                      142900.2187</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Total effect (tau_T):                -19599.7813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Between-group (tau_B):             10400.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Within-group (tau_W):              -29999.7813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Between-group sub-components:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Var_pi(beta):                          400.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     2*Cov_pi(mu0, beta):                 10000.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Within-group sub-components:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mean(sigma0^2) * mean(f):            -25547.4600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Cov_pi(sigma0^2, f):                 -4452.3212</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># Causal: integrated estimation</span></span></span>
