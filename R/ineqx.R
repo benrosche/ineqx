@@ -517,6 +517,7 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
       ncores = boot$ncores,
       seed = boot$seed,
       verbose = boot$verbose,
+      cl_type = boot$cl_type,
       blend_params = user_params
     )
 
