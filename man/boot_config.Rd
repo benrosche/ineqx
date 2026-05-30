@@ -9,7 +9,8 @@ boot_config(
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  cl_type = NULL
 )
 }
 \arguments{
@@ -22,6 +23,13 @@ boot_config(
 \item{seed}{Integer, random seed for reproducibility. Default NULL.}
 
 \item{verbose}{Logical, print progress messages. Default TRUE.}
+
+\item{cl_type}{Character, parallel cluster type: \code{"fork"} (Unix/macOS;
+workers share memory copy-on-write, so the data is not duplicated per core --
+faster and far lighter on memory for large data) or \code{"psock"}
+(Windows-compatible; each worker gets its own data copy). Default
+\code{NULL} selects \code{"fork"} off Windows and \code{"psock"} on Windows;
+requesting \code{"fork"} on Windows warns and falls back to PSOCK.}
 }
 \value{
 An object of class \code{"ineqx_boot_config"}

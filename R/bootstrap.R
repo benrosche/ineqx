@@ -18,6 +18,12 @@
 #' @param ncores Integer, number of cores for parallel. Default: all but one.
 #' @param seed Integer, random seed for reproducibility. Default NULL.
 #' @param verbose Logical, print progress messages. Default TRUE.
+#' @param cl_type Character, parallel cluster type: \code{"fork"} (Unix/macOS;
+#'   workers share memory copy-on-write, so the data is not duplicated per core --
+#'   faster and far lighter on memory for large data) or \code{"psock"}
+#'   (Windows-compatible; each worker gets its own data copy). Default
+#'   \code{NULL} selects \code{"fork"} off Windows and \code{"psock"} on Windows;
+#'   requesting \code{"fork"} on Windows warns and falls back to PSOCK.
 #'
 #' @return An object of class \code{"ineqx_boot_config"}
 #'
@@ -45,7 +51,7 @@
 #'
 #' @export
 boot_config <- function(B = 100L, parallel = FALSE, ncores = NULL,
-                         seed = NULL, verbose = TRUE) {
+                         seed = NULL, verbose = TRUE, cl_type = NULL) {
 
   if (B < 2) stop("'B' must be at least 2")
 
@@ -55,7 +61,8 @@ boot_config <- function(B = 100L, parallel = FALSE, ncores = NULL,
       parallel = parallel,
       ncores = ncores,
       seed = seed,
-      verbose = verbose
+      verbose = verbose,
+      cl_type = cl_type
     ),
     class = "ineqx_boot_config"
   )
@@ -91,6 +98,9 @@ boot_config <- function(B = 100L, parallel = FALSE, ncores = NULL,
 #' @param ncores Integer, number of cores. Default: all but one.
 #' @param seed Integer, random seed. Default NULL.
 #' @param verbose Logical, print progress. Default TRUE.
+#' @param cl_type Character, parallel cluster type, \code{"fork"} or
+#'   \code{"psock"}. Default \code{NULL} auto-selects (fork off Windows, psock on
+#'   Windows). See \code{\link{boot_config}} for details.
 #'
 #' @return An object of class \code{"ineqx_boot"} containing:
 #' \describe{
@@ -115,6 +125,7 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
                           B = 100L,
                           parallel = FALSE, ncores = NULL,
                           seed = NULL, verbose = TRUE,
+                          cl_type = NULL,
                           blend_params = NULL) {
 
   if (!requireNamespace("gamlss", quietly = TRUE)) {
@@ -171,7 +182,7 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
       treat = treat, group = group, time = time, post = post,
       ref = ref, ystat = ystat, order = order,
       boot_indices = boot_indices, ncores = ncores,
-      blend_params = blend_params
+      blend_params = blend_params, cl_type = cl_type
     )
   } else {
     results <- vector("list", B)
@@ -577,6 +588,31 @@ print.ineqx_boot <- function(x, ...) {
 
 
 # ---------------------------------------------------------------------------- #
+# Internal: resolve parallel cluster type
+# ---------------------------------------------------------------------------- #
+
+# NULL/"auto" -> platform default: PSOCK on Windows (fork unavailable), FORK
+# elsewhere. FORK workers share the parent's memory copy-on-write, so the data
+# is not duplicated per core; PSOCK workers are fresh sessions that each receive
+# a full copy. An explicit "fork" on Windows warns and falls back to PSOCK so
+# cross-platform scripts stay portable.
+.resolve_cl_type <- function(cl_type = NULL) {
+  if (is.null(cl_type)) cl_type <- "auto"
+  cl_type <- match.arg(cl_type, c("auto", "fork", "psock"))
+  is_windows <- .Platform$OS.type == "windows"
+  if (cl_type == "auto") {
+    return(if (is_windows) "psock" else "fork")
+  }
+  if (cl_type == "fork" && is_windows) {
+    warning("cl_type = 'fork' is not available on Windows; ",
+            "falling back to 'psock'.", call. = FALSE)
+    return("psock")
+  }
+  cl_type
+}
+
+
+# ---------------------------------------------------------------------------- #
 # Internal: Parallel bootstrap execution
 # ---------------------------------------------------------------------------- #
 
@@ -586,29 +622,21 @@ print.ineqx_boot <- function(x, ...) {
                             boot_indices, ncores,
                             weights = NULL,
                             blend_params = NULL,
-                            return_params = FALSE) {
+                            return_params = FALSE,
+                            cl_type = NULL) {
 
   if (!requireNamespace("parallel", quietly = TRUE)) {
     stop("Package 'parallel' is required for parallel bootstrap")
   }
   if (is.null(ncores)) ncores <- max(1L, parallel::detectCores() - 1L)
 
-  cl <- parallel::makeCluster(ncores)
-  on.exit(parallel::stopCluster(cl), add = TRUE)
+  cl_type <- .resolve_cl_type(cl_type)
 
-  # Export data and settings to workers
-  parallel::clusterExport(cl, c(
-    "data", "formula_mu", "formula_sigma", "treat", "group",
-    "time", "post", "ref", "ystat", "order",
-    "weights", "blend_params", "return_params"
-  ), envir = environment())
-
-  parallel::clusterEvalQ(cl, {
-    requireNamespace("ineqx", quietly = TRUE)
-    requireNamespace("gamlss", quietly = TRUE)
-  })
-
-  parallel::parLapply(cl, boot_indices, function(ids) {
+  # One replicate; tryCatch so a single failed fit becomes NULL (tallied as a
+  # failure downstream) rather than aborting the whole run. `data` and the other
+  # settings are resolved from the enclosing scope -- inherited via copy-on-write
+  # under FORK, or sent via clusterExport under PSOCK.
+  run_one <- function(ids) {
     tryCatch(
       ineqx:::.boot_one_replicate(
         data = data, formula_mu = formula_mu,
@@ -622,7 +650,34 @@ print.ineqx_boot <- function(x, ...) {
       ),
       error = function(e) NULL
     )
+  }
+
+  if (cl_type == "fork") {
+    # FORK: children inherit `data` and loaded packages via copy-on-write, so
+    # there is no per-worker data copy. mclapply also isolates worker crashes
+    # (e.g. an OOM-killed child) as a try-error for that element instead of
+    # tearing down the whole pool, so coerce those to NULL to match run_one.
+    res <- parallel::mclapply(boot_indices, run_one, mc.cores = ncores)
+    return(lapply(res, function(x) if (inherits(x, "try-error")) NULL else x))
+  }
+
+  # PSOCK: workers are fresh R sessions, so data/settings must be exported and
+  # packages reloaded on each. Used on Windows (no fork) or when requested.
+  cl <- parallel::makeCluster(ncores)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+
+  parallel::clusterExport(cl, c(
+    "data", "formula_mu", "formula_sigma", "treat", "group",
+    "time", "post", "ref", "ystat", "order",
+    "weights", "blend_params", "return_params"
+  ), envir = environment())
+
+  parallel::clusterEvalQ(cl, {
+    requireNamespace("ineqx", quietly = TRUE)
+    requireNamespace("gamlss", quietly = TRUE)
   })
+
+  parallel::parLapply(cl, boot_indices, run_one)
 }
 
 
@@ -731,7 +786,8 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
                               weights = NULL,
                               B = 100L,
                               parallel = FALSE, ncores = NULL,
-                              seed = NULL, verbose = TRUE) {
+                              seed = NULL, verbose = TRUE,
+                              cl_type = NULL) {
 
   if (!requireNamespace("gamlss", quietly = TRUE)) {
     stop("Package 'gamlss' is required for bootstrap_params(). ",
@@ -782,7 +838,8 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
       boot_indices = boot_indices, ncores = ncores,
       weights = weights,
       blend_params = NULL,
-      return_params = TRUE
+      return_params = TRUE,
+      cl_type = cl_type
     )
   } else {
     rep_params <- vector("list", B)

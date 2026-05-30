@@ -20,6 +20,7 @@ bootstrap_se(
   ncores = NULL,
   seed = NULL,
   verbose = TRUE,
+  cl_type = NULL,
   blend_params = NULL
 )
 }
@@ -53,6 +54,10 @@ bootstrap_se(
 \item{seed}{Integer, random seed. Default NULL.}
 
 \item{verbose}{Logical, print progress. Default TRUE.}
+
+\item{cl_type}{Character, parallel cluster type, \code{"fork"} or
+\code{"psock"}. Default \code{NULL} auto-selects (fork off Windows, psock on
+Windows). See \code{\link{boot_config}} for details.}
 }
 \value{
 An object of class \code{"ineqx_boot"} containing:
