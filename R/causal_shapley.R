@@ -174,6 +174,7 @@ causal_shapley <- function(params, ref = NULL) {
   # Cross-sectional SEs and Wald tests are ordering-invariant — take from first ordering
   cross_se <- all_orderings[[1]]$cross_se
   lambda_tests <- all_orderings[[1]]$lambda_tests
+  beta_tests <- all_orderings[[1]]$beta_tests
 
   structure(
     list(
@@ -181,6 +182,7 @@ causal_shapley <- function(params, ref = NULL) {
       se = shapley_se,
       cross_se = cross_se,
       lambda_tests = lambda_tests,
+      beta_tests = beta_tests,
       order = "shapley",
       ystat = params$ystat,
       ref = ref,

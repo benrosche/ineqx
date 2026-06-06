@@ -198,7 +198,7 @@ NULL
 #' @return A ggplot2 object
 #' @export
 plot.ineqx_desc <- function(x, type = "decomp", stats = NULL,
-                            ci = FALSE, style = "line", ...) {
+                            ci = FALSE, style = "line", share = FALSE, ...) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required for plotting")
@@ -206,7 +206,7 @@ plot.ineqx_desc <- function(x, type = "decomp", stats = NULL,
   style <- match.arg(style, c("line", "point"))
 
   if (type == "wibe") {
-    .plot_desc_wibe(x, ci = ci, style = style)
+    .plot_desc_wibe(x, ci = ci, style = style, share = share)
   } else if (type == "decomp") {
     if (is.null(x$deltas)) {
       stop("Decomposition not available. Set 'ref' in ineqx() to compute deltas.")
@@ -227,11 +227,16 @@ plot.ineqx_desc <- function(x, type = "decomp", stats = NULL,
 }
 
 #' @keywords internal
-.plot_desc_wibe <- function(x, ci = FALSE, style = "line") {
+.plot_desc_wibe <- function(x, ci = FALSE, style = "line", share = FALSE) {
   totals <- x$totals
   if (!"time" %in% names(totals)) {
     stop("Time variable required for plotting")
   }
+
+  # Share-of-total composition: Within/Total and Between/Total over time. The
+  # decomposition is additive (Total = Within + Between for Var/CV2/VL) with a
+  # positive total, so geom_col(position="fill") normalizes cleanly to 100%.
+  if (isTRUE(share)) return(.plot_desc_wibe_share(x))
 
   if (x$ystat %in% c("Var", "VL")) {
     plot_df <- data.frame(
@@ -324,6 +329,35 @@ plot.ineqx_desc <- function(x, type = "decomp", stats = NULL,
   p + ggplot2::labs(x = "Time", y = x$ystat,
                     title = "Within/Between Decomposition") +
     ggplot2::scale_color_manual(values = colors) +
+    theme_ineqx
+}
+
+# Share-of-total (%) composition of the descriptive within/between decomposition.
+.plot_desc_wibe_share <- function(x) {
+  totals <- x$totals
+  if (!"time" %in% names(totals)) stop("Time variable required for plotting")
+  if (x$ystat %in% c("Var", "VL")) {
+    W <- totals$VarW; B <- totals$VarB
+  } else {
+    W <- totals$CV2W; B <- totals$CV2B
+  }
+  plot_df <- data.frame(
+    time = rep(totals$time, 2),
+    Component = factor(rep(c("Within", "Between"), each = nrow(totals)),
+                       levels = c("Between", "Within")),
+    value = c(W, B),
+    stringsAsFactors = FALSE
+  )
+  plot_df$time <- .time_to_factor(plot_df$time)
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$time, y = .data$value,
+                                        fill = .data$Component)) +
+    ggplot2::geom_col(position = "fill", width = 0.8) +
+    ggplot2::scale_y_continuous(labels = .pct_labels) +
+    ggplot2::scale_fill_manual(values = c("Within" = "#008b94",
+                                          "Between" = "#e85d00")) +
+    ggplot2::labs(x = "Time", y = "Share of total",
+                  title = "Within/Between composition",
+                  subtitle = paste0(x$ystat, ": shares of total inequality")) +
     theme_ineqx
 }
 
@@ -523,6 +557,8 @@ plot.ineqx_causal_cross <- function(x, type = "wibe", ci = FALSE,
     .plot_causal_cross_dist(x, show = "treat", trim = trim)
   } else if (type == "treat.params") {
     .plot_causal_cross_treat(x, ci = ci_params)
+  } else if (type == "effect.prop") {
+    .plot_causal_cross_effect_prop(x, ci = ci_params)
   } else if (type == "outcome") {
     .plot_causal_cross_dist(x, show = "outcome", trim = trim)
   } else if (type == "outcome.params") {
@@ -534,7 +570,7 @@ plot.ineqx_causal_cross <- function(x, type = "wibe", ci = FALSE,
   } else {
     stop("Unknown plot type '", type,
          "'. Use 'wibe', 'wibe.group', 'treat', 'treat.params', ",
-         "'outcome', or 'outcome.params'.")
+         "'effect.prop', 'outcome', or 'outcome.params'.")
   }
 }
 
@@ -657,6 +693,8 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
     return(.plot_causal_longit_dist(x, time = time, show = "treat", trim = trim))
   } else if (type == "treat.params") {
     return(.plot_causal_longit_treat(x, ci = ci_params, style = style))
+  } else if (type == "effect.prop") {
+    return(.plot_causal_longit_effect_prop(x, ci = ci_params, style = style))
   } else if (type == "outcome") {
     return(.plot_causal_longit_dist(x, time = time, show = "outcome", trim = trim))
   } else if (type == "outcome.params") {
@@ -670,7 +708,7 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
   } else {
     stop("Unknown plot type '", type,
          "'. Use 'decomp', 'wibe', 'shapley', 'treat', ",
-         "'treat.params', 'outcome', 'outcome.params', or 'pretrends'.")
+         "'treat.params', 'effect.prop', 'outcome', 'outcome.params', or 'pretrends'.")
   }
 }
 
@@ -2224,6 +2262,172 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
     p <- p + ggplot2::labs(fill = "Group")
   }
   p
+}
+
+
+# ---------------------------------------------------------------------------- #
+# type = "effect.prop": proportional treatment effect on the mean, by group,
+# over time. rho_g = beta_g / mu0_g on an identity fit (% of baseline), or
+# exp(beta_g) - 1 on a log fit (geometric-mean % effect). Overlapping lines
+# across groups indicate a proportional (group-invariant) effect.
+# ---------------------------------------------------------------------------- #
+.effect_prop_value <- function(beta, mu0, scale) {
+  if (identical(scale, "log")) exp(beta) - 1 else beta / mu0
+}
+.effect_prop_grad <- function(beta, mu0, scale) {
+  # d rho / d beta, for delta-method SE = |grad| * SE(beta)
+  if (identical(scale, "log")) exp(beta) else 1 / mu0
+}
+.pct_labels <- function(v) paste0(formatC(100 * v, format = "f", digits = 0), "%")
+
+.plot_causal_longit_effect_prop <- function(x, ci = FALSE, style = "line") {
+  use_ci <- .resolve_ci_params(ci)
+  pdata  <- x$params$data
+  scale  <- if (!is.null(x$params$transform)) x$params$transform else "identity"
+
+  value <- .effect_prop_value(pdata$beta, pdata$mu0, scale)
+  grad  <- .effect_prop_grad(pdata$beta, pdata$mu0, scale)
+
+  plot_df <- data.frame(
+    time  = pdata$time,
+    group = pdata$group,
+    value = value,
+    stringsAsFactors = FALSE
+  )
+
+  has_boot <- !is.null(x$boot) && !is.null(x$boot$replicates)
+  if (use_ci && is.null(x$params$vcov) && !has_boot) {
+    warning("CIs requested but no vcov available in params. ",
+            "Use se = 'delta' or se = boot_config() in ineqx() to enable parameter CIs.",
+            call. = FALSE)
+  }
+  if (use_ci && !is.null(x$params$vcov)) {
+    # Delta method: SE(rho) = |d rho / d beta| * SE(beta); beta is the first
+    # J-block of the per-time vcov.
+    J <- x$params$n_groups
+    se_beta <- numeric(nrow(pdata))
+    for (t in sort(unique(pdata$time))) {
+      t_key <- as.character(t)
+      V <- if (is.list(x$params$vcov)) x$params$vcov[[t_key]] else x$params$vcov
+      if (!is.null(V)) {
+        idx <- pdata$time == t
+        se_beta[idx] <- sqrt(diag(V)[1:J])
+      }
+    }
+    se_rho <- abs(grad) * se_beta
+    plot_df$ymin <- value - 1.96 * se_rho
+    plot_df$ymax <- value + 1.96 * se_rho
+  } else if (use_ci && is.null(x$params$vcov) && has_boot) {
+    # Bootstrap: recompute rho per replicate from beta_<g>_<t> (and mu0_<g>_<t>).
+    reps  <- x$boot$replicates
+    ci_lo <- rep(NA_real_, nrow(pdata))
+    ci_hi <- rep(NA_real_, nrow(pdata))
+    for (i in seq_len(nrow(pdata))) {
+      g <- pdata$group[i]; t <- pdata$time[i]
+      col_b <- paste0("beta_", g, "_", t)
+      col_m <- paste0("mu0_",  g, "_", t)
+      if (col_b %in% colnames(reps)) {
+        b   <- reps[, col_b]
+        mu0 <- if (col_m %in% colnames(reps)) reps[, col_m] else pdata$mu0[i]
+        rho_rep <- .effect_prop_value(b, mu0, scale)
+        ci_lo[i] <- stats::quantile(rho_rep, 0.025, names = FALSE)
+        ci_hi[i] <- stats::quantile(rho_rep, 0.975, names = FALSE)
+      }
+    }
+    plot_df$ymin <- ci_lo
+    plot_df$ymax <- ci_hi
+  }
+
+  plot_df$group <- factor(plot_df$group)
+  plot_df$time  <- .time_to_factor(plot_df$time)
+
+  p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$time, y = .data$value,
+                                             color = .data$group,
+                                             group = .data$group))
+  has_ci <- use_ci && "ymin" %in% names(plot_df)
+  if (style == "point") {
+    pos <- .dodge_pos(plot_df$time)
+    if (has_ci) {
+      p <- p + ggplot2::geom_errorbar(
+        ggplot2::aes(ymin = .data$ymin, ymax = .data$ymax),
+        width = pos$width * 0.4, position = pos$pos)
+    }
+    p <- p + ggplot2::geom_point(position = pos$pos)
+  } else {
+    if (has_ci) {
+      p <- p + ggplot2::geom_ribbon(
+        ggplot2::aes(ymin = .data$ymin, ymax = .data$ymax, fill = .data$group),
+        alpha = 0.15, color = NA)
+    }
+    p <- p + ggplot2::geom_line() + ggplot2::geom_point()
+  }
+
+  p <- p +
+    ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+    ggplot2::scale_y_continuous(labels = .pct_labels) +
+    ggplot2::labs(x = "Time", y = "Proportional effect on the mean",
+                  color = "Group",
+                  title = "Proportional treatment effect by group",
+                  subtitle = "Overlapping lines = proportional (group-invariant) effect") +
+    theme_ineqx
+  if (has_ci && style == "line") p <- p + ggplot2::labs(fill = "Group")
+  p
+}
+
+# Cross-sectional analogue: proportional effect by group (points, no time).
+.plot_causal_cross_effect_prop <- function(x, ci = FALSE) {
+  use_ci <- .resolve_ci_params(ci)
+  bg     <- x$by_group
+  scale  <- if (!is.null(x$params$transform)) x$params$transform else "identity"
+  value  <- .effect_prop_value(bg$beta, bg$mu0, scale)
+  grad   <- .effect_prop_grad(bg$beta, bg$mu0, scale)
+
+  plot_df <- data.frame(group = factor(bg$group), value = value,
+                        stringsAsFactors = FALSE)
+
+  has_boot <- !is.null(x$boot) && !is.null(x$boot$replicates)
+  if (use_ci && is.null(x$params$vcov) && !has_boot) {
+    warning("CIs requested but no vcov available in params. ",
+            "Use se = 'delta' or se = boot_config() in ineqx() to enable parameter CIs.",
+            call. = FALSE)
+  }
+  if (use_ci && !is.null(x$params$vcov)) {
+    V <- x$params$vcov
+    J <- x$params$n_groups
+    se_rho <- abs(grad) * sqrt(diag(V)[1:J])
+    plot_df$ymin <- value - 1.96 * se_rho
+    plot_df$ymax <- value + 1.96 * se_rho
+  } else if (use_ci && is.null(x$params$vcov) && has_boot) {
+    reps  <- x$boot$replicates
+    ci_lo <- rep(NA_real_, nrow(bg)); ci_hi <- rep(NA_real_, nrow(bg))
+    for (i in seq_len(nrow(bg))) {
+      g <- bg$group[i]
+      col_b <- paste0("beta_", g); col_m <- paste0("mu0_", g)
+      if (col_b %in% colnames(reps)) {
+        b   <- reps[, col_b]
+        mu0 <- if (col_m %in% colnames(reps)) reps[, col_m] else bg$mu0[i]
+        rr  <- .effect_prop_value(b, mu0, scale)
+        ci_lo[i] <- stats::quantile(rr, 0.025, names = FALSE)
+        ci_hi[i] <- stats::quantile(rr, 0.975, names = FALSE)
+      }
+    }
+    plot_df$ymin <- ci_lo; plot_df$ymax <- ci_hi
+  }
+
+  p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$group, y = .data$value,
+                                             color = .data$group))
+  if ("ymin" %in% names(plot_df)) {
+    p <- p + ggplot2::geom_errorbar(
+      ggplot2::aes(ymin = .data$ymin, ymax = .data$ymax), width = 0.2)
+  }
+  p + ggplot2::geom_point(size = 3) +
+    ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+    ggplot2::scale_y_continuous(labels = .pct_labels) +
+    ggplot2::labs(x = "Group", y = "Proportional effect on the mean",
+                  color = "Group",
+                  title = "Proportional treatment effect by group",
+                  subtitle = "Equal heights = proportional (group-invariant) effect") +
+    theme_ineqx
 }
 
 

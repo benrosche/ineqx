@@ -520,7 +520,10 @@ earnings inequality among women, and how has that effect changed?
 We restrict the sample to women of childbearing age and fit a
 difference-in- differences model (treatment = `mother`, post-period =
 `byear`) with education-by-decade interactions for both the mean and
-log-SD of earnings. GAMLSS does the heavy lifting internally.
+log-SD of earnings. GAMLSS does the heavy lifting internally. For
+`ystat = "CV2"`, keep the outcome in levels and use `post` for the DiD
+contrast; applying `CV2` to first-differenced outcomes is not
+recommended.
 
 ``` r
 

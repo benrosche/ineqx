@@ -106,7 +106,12 @@ Coded 0/1. If NULL, a descriptive decomposition is performed.</p></dd>
 
 <dt id="arg-post">post<a class="anchor" aria-label="anchor" href="#arg-post"></a></dt>
 <dd><p>Character, pre/post indicator for DiD designs. NULL for
-simple difference estimator. Only used in integrated estimation mode.</p></dd>
+simple difference estimator. Only used in integrated estimation mode.
+For <code>ystat = "CV2"</code>, keep <code>y</code> on the outcome's level scale
+and use <code>post</code> for the DiD contrast; applying <code>"CV2"</code> to
+first-differenced outcomes is not recommended because it targets
+relative dispersion in changes and can be unstable when mean changes
+are near zero.</p></dd>
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>

@@ -324,6 +324,8 @@ print(result)
 #>       Within-group (tau_W):                124.0382  (SE = 5.7317)
 #>       -> Wald test H0: lambda = 0: chi2(3) = 7364.6732, p < 0.0001
 #>          Significant: evidence of treatment effect heterogeneity
+#>       -> Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 231.0151, p < 0.0001
+#>          Significant: effect on the mean differs across groups
 #> 
 #> Between-group sub-components:
 #>     Var_pi(beta):                           17.6956  (SE = 2.7254)
@@ -498,17 +500,17 @@ print(result_longit)
 #> Treatment effect on variance by time:
 #> (tau_B = Var(beta) + 2Cov(mu,beta);  tau_W = E(sigma^2)*E(f) + Cov(sigma^2,f);  tau_T = tau_B + tau_W)
 #> 
-#>  time  Var(beta)  2Cov(mu,beta)      tau_B E(sigma2)*E(f)  Cov(sigma2,f)      tau_W      tau_T   lambda=0 
-#>     1    15.5392        -0.1934    15.3459       104.1931        -1.4450   102.7481   118.0939     <0.001 
-#>    SE   (2.4384)       (0.3789)   (2.3962)       (9.4268)       (6.0948)   (7.0774)   (7.4720)            
-#>     2    15.5392        -0.1934    15.3459       113.7054        -1.5770   112.1285   127.4743     <0.001 
-#>    SE   (2.4384)       (0.3789)   (2.3962)      (10.2875)       (6.6513)   (7.7235)   (8.0867)            
-#>     3    15.5392        -0.1934    15.3459       123.7010        -1.7156   121.9854   137.3313     <0.001 
-#>    SE   (2.4384)       (0.3789)   (2.3962)      (11.1918)       (7.2360)   (8.4024)   (8.7374)            
-#>     4    15.5392        -0.1934    15.3459       126.2725        -1.7512   124.5213   139.8671     <0.001 
-#>    SE   (2.4384)       (0.3789)   (2.3962)      (11.4245)       (7.3864)   (8.5771)   (8.9055)            
-#>     5    15.5392        -0.1934    15.3459       138.8845        -1.9262   136.9583   152.3042     <0.001 
-#>    SE   (2.4384)       (0.3789)   (2.3962)      (12.5655)       (8.1241)   (9.4338)   (9.7334)            
+#>  time  Var(beta)  2Cov(mu,beta)      tau_B E(sigma2)*E(f)  Cov(sigma2,f)      tau_W      tau_T   lambda=0   beta=hom 
+#>     1    15.5392        -0.1934    15.3459       104.1931        -1.4450   102.7481   118.0939     <0.001     <0.001 
+#>    SE   (2.4384)       (0.3789)   (2.3962)       (9.4268)       (6.0948)   (7.0774)   (7.4720)                       
+#>     2    15.5392        -0.1934    15.3459       113.7054        -1.5770   112.1285   127.4743     <0.001     <0.001 
+#>    SE   (2.4384)       (0.3789)   (2.3962)      (10.2875)       (6.6513)   (7.7235)   (8.0867)                       
+#>     3    15.5392        -0.1934    15.3459       123.7010        -1.7156   121.9854   137.3313     <0.001     <0.001 
+#>    SE   (2.4384)       (0.3789)   (2.3962)      (11.1918)       (7.2360)   (8.4024)   (8.7374)                       
+#>     4    15.5392        -0.1934    15.3459       126.2725        -1.7512   124.5213   139.8671     <0.001     <0.001 
+#>    SE   (2.4384)       (0.3789)   (2.3962)      (11.4245)       (7.3864)   (8.5771)   (8.9055)                       
+#>     5    15.5392        -0.1934    15.3459       138.8845        -1.9262   136.9583   152.3042     <0.001     <0.001 
+#>    SE   (2.4384)       (0.3789)   (2.3962)      (12.5655)       (8.1241)   (9.4338)   (9.7334)                       
 #> 
 #> Decomposition of changes in group-specific treatment effects on variance relative to ref = 1:
 #> 
@@ -1053,6 +1055,8 @@ ineqx(y="inc", group = "group", params = params_ext, data = incdat)
 #>       Within-group (tau_W):                 26.1662  (SE = 2.4138)
 #>       -> Wald test H0: lambda = 0: chi2(3) = 501.2301, p < 0.0001
 #>          Significant: evidence of treatment effect heterogeneity
+#>       -> Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 4.3117, p = 0.1158
+#>          Not significant: no evidence the mean effect differs across groups
 #> 
 #> Between-group sub-components:
 #>     Var_pi(beta):                            0.0412  (SE = 0.0397)

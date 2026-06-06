@@ -41,7 +41,10 @@ Used in both manual mode (if \code{data} contains a \code{time} column)
 and model mode.}
 
 \item{post}{Character, name of the pre/post indicator for DiD designs.
-Only used in model mode. NULL for simple difference estimator.}
+Only used in model mode. NULL for simple difference estimator. For
+\code{ystat = "CV2"}, keep the outcome in levels and use \code{post}
+to construct the DiD contrast; applying \code{"CV2"} to first
+differences is not recommended.}
 
 \item{ystat}{Character, either \code{"Var"} (variance) or \code{"CV2"}
 (squared coefficient of variation). Default: \code{"Var"}.}

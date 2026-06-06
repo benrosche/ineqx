@@ -397,6 +397,8 @@ or expand dispersion within groups?</li>
 <span><span class="co">#&gt;       Within-group (tau_W):                124.0382  (SE = 5.7317)</span></span>
 <span><span class="co">#&gt;       -&gt; Wald test H0: lambda = 0: chi2(3) = 7364.6732, p &lt; 0.0001</span></span>
 <span><span class="co">#&gt;          Significant: evidence of treatment effect heterogeneity</span></span>
+<span><span class="co">#&gt;       -&gt; Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 231.0151, p &lt; 0.0001</span></span>
+<span><span class="co">#&gt;          Significant: effect on the mean differs across groups</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Between-group sub-components:</span></span>
 <span><span class="co">#&gt;     Var_pi(beta):                           17.6956  (SE = 2.7254)</span></span>
@@ -553,17 +555,17 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt; Treatment effect on variance by time:</span></span>
 <span><span class="co">#&gt; (tau_B = Var(beta) + 2Cov(mu,beta);  tau_W = E(sigma^2)*E(f) + Cov(sigma^2,f);  tau_T = tau_B + tau_W)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  time  Var(beta)  2Cov(mu,beta)      tau_B E(sigma2)*E(f)  Cov(sigma2,f)      tau_W      tau_T   lambda=0 </span></span>
-<span><span class="co">#&gt;     1    15.5392        -0.1934    15.3459       104.1931        -1.4450   102.7481   118.0939     &lt;0.001 </span></span>
-<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)       (9.4268)       (6.0948)   (7.0774)   (7.4720)            </span></span>
-<span><span class="co">#&gt;     2    15.5392        -0.1934    15.3459       113.7054        -1.5770   112.1285   127.4743     &lt;0.001 </span></span>
-<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (10.2875)       (6.6513)   (7.7235)   (8.0867)            </span></span>
-<span><span class="co">#&gt;     3    15.5392        -0.1934    15.3459       123.7010        -1.7156   121.9854   137.3313     &lt;0.001 </span></span>
-<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (11.1918)       (7.2360)   (8.4024)   (8.7374)            </span></span>
-<span><span class="co">#&gt;     4    15.5392        -0.1934    15.3459       126.2725        -1.7512   124.5213   139.8671     &lt;0.001 </span></span>
-<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (11.4245)       (7.3864)   (8.5771)   (8.9055)            </span></span>
-<span><span class="co">#&gt;     5    15.5392        -0.1934    15.3459       138.8845        -1.9262   136.9583   152.3042     &lt;0.001 </span></span>
-<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (12.5655)       (8.1241)   (9.4338)   (9.7334)            </span></span>
+<span><span class="co">#&gt;  time  Var(beta)  2Cov(mu,beta)      tau_B E(sigma2)*E(f)  Cov(sigma2,f)      tau_W      tau_T   lambda=0   beta=hom </span></span>
+<span><span class="co">#&gt;     1    15.5392        -0.1934    15.3459       104.1931        -1.4450   102.7481   118.0939     &lt;0.001     &lt;0.001 </span></span>
+<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)       (9.4268)       (6.0948)   (7.0774)   (7.4720)                       </span></span>
+<span><span class="co">#&gt;     2    15.5392        -0.1934    15.3459       113.7054        -1.5770   112.1285   127.4743     &lt;0.001     &lt;0.001 </span></span>
+<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (10.2875)       (6.6513)   (7.7235)   (8.0867)                       </span></span>
+<span><span class="co">#&gt;     3    15.5392        -0.1934    15.3459       123.7010        -1.7156   121.9854   137.3313     &lt;0.001     &lt;0.001 </span></span>
+<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (11.1918)       (7.2360)   (8.4024)   (8.7374)                       </span></span>
+<span><span class="co">#&gt;     4    15.5392        -0.1934    15.3459       126.2725        -1.7512   124.5213   139.8671     &lt;0.001     &lt;0.001 </span></span>
+<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (11.4245)       (7.3864)   (8.5771)   (8.9055)                       </span></span>
+<span><span class="co">#&gt;     5    15.5392        -0.1934    15.3459       138.8845        -1.9262   136.9583   152.3042     &lt;0.001     &lt;0.001 </span></span>
+<span><span class="co">#&gt;    SE   (2.4384)       (0.3789)   (2.3962)      (12.5655)       (8.1241)   (9.4338)   (9.7334)                       </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Decomposition of changes in group-specific treatment effects on variance relative to ref = 1:</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -1060,6 +1062,8 @@ different distributions, random effects, custom controls), fit a
 <span><span class="co">#&gt;       Within-group (tau_W):                 26.1662  (SE = 2.4138)</span></span>
 <span><span class="co">#&gt;       -&gt; Wald test H0: lambda = 0: chi2(3) = 501.2301, p &lt; 0.0001</span></span>
 <span><span class="co">#&gt;          Significant: evidence of treatment effect heterogeneity</span></span>
+<span><span class="co">#&gt;       -&gt; Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 4.3117, p = 0.1158</span></span>
+<span><span class="co">#&gt;          Not significant: no evidence the mean effect differs across groups</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Between-group sub-components:</span></span>
 <span><span class="co">#&gt;     Var_pi(beta):                            0.0412  (SE = 0.0397)</span></span>

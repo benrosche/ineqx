@@ -53,6 +53,11 @@
 #'   Coded 0/1. If NULL, a descriptive decomposition is performed.
 #' @param post Character, pre/post indicator for DiD designs. NULL for
 #'   simple difference estimator. Only used in integrated estimation mode.
+#'   For \code{ystat = "CV2"}, keep \code{y} on the outcome's level scale
+#'   and use \code{post} for the DiD contrast; applying \code{"CV2"} to
+#'   first-differenced outcomes is not recommended because it targets
+#'   relative dispersion in changes and can be unstable when mean changes
+#'   are near zero.
 #' @param group Character, name of the grouping variable in \code{data}.
 #' @param time Character, name of the time variable in \code{data}. If NULL,
 #'   a single cross-section is assumed.

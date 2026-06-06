@@ -57,7 +57,10 @@ ineqx_params(
 - post:
 
   Character, name of the pre/post indicator for DiD designs. Only used
-  in model mode. NULL for simple difference estimator.
+  in model mode. NULL for simple difference estimator. For
+  `ystat = "CV2"`, keep the outcome in levels and use `post` to
+  construct the DiD contrast; applying `"CV2"` to first differences is
+  not recommended.
 
 - ystat:
 

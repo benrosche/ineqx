@@ -92,6 +92,11 @@ the parallel-trends identity to recover \eqn{\mu_0}. The downstream call to
 `ineqx(params = ...)` then runs the same DiD decomposition the integrated
 `ineqx(post = ..., ...)` call would produce.
 
+If you plan to decompose `CV2`, keep the modeled outcome in levels. Applying
+`CV2` to first-differenced outcomes is not recommended: it targets relative
+dispersion in changes, not relative inequality in the outcome level, and can
+be unstable when mean changes are near zero.
+
 ```{r did, eval = FALSE}
 did_model <- fit_ineqx_model(
   formula_mu    = y ~ mother * post * SES * year + age + race + married,
