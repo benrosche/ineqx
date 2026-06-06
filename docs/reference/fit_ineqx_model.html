@@ -167,6 +167,17 @@ pre/post column is) to <code><a href="ineqx_params.html">ineqx_params()</a></cod
 <code>transform = "log"</code> and pass <code>ystat = "VL"</code> to <code><a href="ineqx.html">ineqx()</a></code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="single-level-grouping-variables">Single-level grouping variables<a class="anchor" aria-label="anchor" href="#single-level-grouping-variables"></a></h2>
+
+
+<p>A factor or character predictor with only one observed level cannot enter a
+model formula (<code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix()</a></code> errors with "contrasts can be applied
+only to factors with 2 or more levels"). Any such term is automatically
+dropped before fitting, with a message, since the between-group component it
+would identify is zero by construction. The rest of the model is estimated
+normally and the decomposition returns <code>VarB = 0</code> (within equals total).</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="ineqx_params.html">ineqx_params</a></code> for extracting decomposition parameters
   from the fitted model; <code><a href="ineqx.html">ineqx</a></code> for running the decomposition.</p></div>

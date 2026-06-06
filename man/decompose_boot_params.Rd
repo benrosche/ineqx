@@ -21,8 +21,10 @@ decompose_boot_params(
 longitudinal decomposition. Default \code{c("behavioral",
 "compositional", "pretreatment")}. Ignored for cross-sectional fits.}
 
-\item{ystat}{Character, \code{"Var"} or \code{"CV2"}. Default: the
-\code{ystat} stored on \code{boot_params}.}
+\item{ystat}{Character, \code{"Var"}, \code{"CV2"}, or \code{"VL"}. Default:
+the \code{ystat} stored on \code{boot_params}. \code{"VL"} requires
+\code{boot_params} from a log(y) fit (\code{transform = "log"}); it runs
+the \code{"Var"} decomposition on the log-scale params, which equals V_L.}
 }
 \value{
 An object of class \code{"ineqx_boot"} matching

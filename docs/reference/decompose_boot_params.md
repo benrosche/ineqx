@@ -39,8 +39,10 @@ decompose_boot_params(
 
 - ystat:
 
-  Character, `"Var"` or `"CV2"`. Default: the `ystat` stored on
-  `boot_params`.
+  Character, `"Var"`, `"CV2"`, or `"VL"`. Default: the `ystat` stored on
+  `boot_params`. `"VL"` requires `boot_params` from a log(y) fit
+  (`transform = "log"`); it runs the `"Var"` decomposition on the
+  log-scale params, which equals V_L.
 
 ## Value
 

@@ -25,6 +25,7 @@ bootstrap_se(
   ncores = NULL,
   seed = NULL,
   verbose = TRUE,
+  cl_type = NULL,
   blend_params = NULL
 )
 ```
@@ -90,6 +91,13 @@ bootstrap_se(
 - verbose:
 
   Logical, print progress. Default TRUE.
+
+- cl_type:
+
+  Character, parallel cluster type, `"fork"` or `"psock"`. Default
+  `NULL` auto-selects (fork off Windows, psock on Windows). See
+  [`boot_config`](https://benrosche.github.io/ineqx/reference/boot_config.md)
+  for details.
 
 ## Value
 

@@ -74,7 +74,8 @@ and the resampling indices used. The standard errors come later, from
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  cl_type <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -132,6 +133,12 @@ and the resampling indices used. The standard errors come later, from
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical, print progress. Default TRUE.</p></dd>
+
+
+<dt id="arg-cl-type">cl_type<a class="anchor" aria-label="anchor" href="#arg-cl-type"></a></dt>
+<dd><p>Character, parallel cluster type, <code>"fork"</code> or
+<code>"psock"</code>. Default <code>NULL</code> auto-selects (fork off Windows, psock on
+Windows). See <code><a href="boot_config.html">boot_config</a></code> for details.</p></dd>
 
 </dl></div>
     <div class="section level2">

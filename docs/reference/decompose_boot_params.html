@@ -85,8 +85,10 @@ longitudinal decomposition. Default <code>c("behavioral",
 
 
 <dt id="arg-ystat">ystat<a class="anchor" aria-label="anchor" href="#arg-ystat"></a></dt>
-<dd><p>Character, <code>"Var"</code> or <code>"CV2"</code>. Default: the
-<code>ystat</code> stored on <code>boot_params</code>.</p></dd>
+<dd><p>Character, <code>"Var"</code>, <code>"CV2"</code>, or <code>"VL"</code>. Default:
+the <code>ystat</code> stored on <code>boot_params</code>. <code>"VL"</code> requires
+<code>boot_params</code> from a log(y) fit (<code>transform = "log"</code>); it runs
+the <code>"Var"</code> decomposition on the log-scale params, which equals V_L.</p></dd>
 
 </dl></div>
     <div class="section level2">
