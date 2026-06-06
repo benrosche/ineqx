@@ -42,6 +42,11 @@ Default: \code{c("V")}.}
 \item{style}{Character: \code{"line"} (default) for connected lines with
 ribbon CIs, or \code{"point"} for points with error bar CIs.}
 
+\item{share}{Logical. For \code{type = "wibe"}, show Within/Between as shares
+of total inequality (\%) over time instead of in level units. The
+decomposition is additive with a positive total, so shares are stable.
+Default \code{FALSE}.}
+
 \item{...}{Additional arguments (currently unused)}
 }
 \value{

@@ -24,6 +24,9 @@
   \item{\code{"treat"}}{Predicted treatment effect distributions by group.}
   \item{\code{"treat.params"}}{Treatment effect parameters (beta, lambda)
     by group (bar chart).}
+  \item{\code{"effect.prop"}}{Proportional treatment effect on the mean by
+    group (points): \code{beta_g / mu0_g} (identity) or \code{exp(beta_g)-1}
+    (log). Equal heights indicate a proportional (group-invariant) effect.}
   \item{\code{"outcome"}}{Predicted outcome distributions (control vs
     treated) by group.}
   \item{\code{"outcome.params"}}{Predicted means and SDs under control vs
@@ -62,6 +65,10 @@ dodged classic layout.}
 \item{trim}{Numeric between 0 and 1. For distribution plots
 (\code{"treat"}, \code{"outcome"}): quantile at which to trim tails.
 Default \code{0.995} (trims 0.5\% from each tail).}
+
+\item{share}{Logical. For \code{type = "wibe"}, show the Between/Within split
+as shares of the total effect (\%) rather than absolute units. Errors if the
+total effect is \eqn{\approx 0} (shares undefined). Default \code{FALSE}.}
 
 \item{...}{Additional arguments (currently unused)}
 }
