@@ -72,6 +72,11 @@ ineqx("earnweekf", ystat = "CV2",
       data = subset(cps_sample, age >= 18 & age <= 49 & earnweekf > 0))
 ```
 
+For DiD designs with `ystat = "CV2"`, keep `y` in levels and use `post`
+for the DiD contrast; applying `CV2` to first-differenced outcomes is
+not recommended because it targets relative dispersion in changes and
+can be unstable when mean changes are near zero.
+
 See the [Model
 structure](https://benrosche.github.io/ineqx/articles/model.md) page for
 the math, the

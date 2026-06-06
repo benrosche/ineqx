@@ -104,6 +104,23 @@ print.ineqx_causal_cross <- function(x, ...) {
     }
   }
 
+  # Wald test for beta homogeneity (effect on the mean equal across groups).
+  # Null is scale-dependent: identity -> constant absolute effect; log ->
+  # constant proportional (geometric-mean) effect.
+  if (!is.null(x$beta_test)) {
+    bt <- x$beta_test
+    null_lab <- if (identical(bt$scale, "log")) "constant proportional effect"
+                else "constant absolute effect"
+    p_fmt <- if (bt$p_value < 0.0001) "p < 0.0001" else sprintf("p = %.4f", bt$p_value)
+    cat(sprintf("      -> Wald test H0: beta homogeneous (%s): chi2(%d) = %.4f, %s\n",
+                null_lab, bt$df, bt$statistic, p_fmt))
+    if (bt$p_value < 0.05) {
+      cat("         Significant: effect on the mean differs across groups\n")
+    } else {
+      cat("         Not significant: no evidence the mean effect differs across groups\n")
+    }
+  }
+
   comps <- x$components
   se_sub <- if (!is.null(se)) se$se_sub else NULL
   if (x$ystat == "Var") {
@@ -168,7 +185,8 @@ print.ineqx_causal_longit <- function(x, ...) {
   cat("(tau_B = Var(beta) + 2Cov(mu,beta);  tau_W = E(sigma^2)*E(f) + Cov(sigma^2,f);  tau_T = tau_B + tau_W)\n\n")
   .build_longit_subcomponents(comps_results, x$ref,
                                cross_se = x$cross_se,
-                               lambda_tests = x$lambda_tests)
+                               lambda_tests = x$lambda_tests,
+                               beta_tests = x$beta_tests)
 
   # --- Table 2: Per-time blocks ---
   # NB: x[["se"]] avoids partial matching to x$se_method
@@ -293,7 +311,7 @@ summary.ineqx_causal_longit <- function(object, ...) {
 #' Build and print cross-sectional sub-component table from longitudinal results
 #' @keywords internal
 .build_longit_subcomponents <- function(results, ref, cross_se = NULL,
-                                         lambda_tests = NULL) {
+                                         lambda_tests = NULL, beta_tests = NULL) {
   times <- names(results)
   first_result <- results[[1]]
 
@@ -313,12 +331,14 @@ summary.ineqx_causal_longit <- function(object, ...) {
   w <- 10  # width for numeric columns
   has_se <- !is.null(cross_se)
   has_wald <- !is.null(lambda_tests)
+  has_beta <- !is.null(beta_tests)
 
   # Header
   hdr <- sprintf(" %4s %*s %*s %*s %*s %*s %*s %*s",
                   "time", w, "Var(beta)", w + 4, "2Cov(mu,beta)", w, "tau_B",
                   w + 4, "E(sigma2)*E(f)", w + 4, "Cov(sigma2,f)", w, "tau_W", w, "tau_T")
   if (has_wald) hdr <- paste0(hdr, sprintf(" %*s", w, "lambda=0"))
+  if (has_beta) hdr <- paste0(hdr, sprintf(" %*s", w, "beta=hom"))
   cat(hdr, "\n")
 
   for (t in all_times) {
@@ -355,6 +375,15 @@ summary.ineqx_causal_longit <- function(object, ...) {
         val_line <- paste0(val_line, sprintf(" %*s", w, ""))
       }
     }
+    if (has_beta) {
+      bt <- beta_tests[[tc]]
+      if (!is.null(bt)) {
+        p_fmt <- if (bt$p_value < 0.001) "<0.001" else formatC(bt$p_value, format = "f", digits = 4)
+        val_line <- paste0(val_line, sprintf(" %*s", w, p_fmt))
+      } else {
+        val_line <- paste0(val_line, sprintf(" %*s", w, ""))
+      }
+    }
     cat(val_line, "\n")
 
     # SE row (if available)
@@ -380,6 +409,7 @@ summary.ineqx_causal_longit <- function(object, ...) {
                          w + 4, se_strs[4], w + 4, se_strs[5],
                          w, se_strs[6], w, se_strs[7])
       if (has_wald) se_line <- paste0(se_line, sprintf(" %*s", w, ""))
+      if (has_beta) se_line <- paste0(se_line, sprintf(" %*s", w, ""))
       cat(se_line, "\n")
     }
   }

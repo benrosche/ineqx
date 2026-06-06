@@ -39,7 +39,12 @@ pass \code{ystat = "Var"}.}
 Coded 0/1. If NULL, a descriptive decomposition is performed.}
 
 \item{post}{Character, pre/post indicator for DiD designs. NULL for
-simple difference estimator. Only used in integrated estimation mode.}
+simple difference estimator. Only used in integrated estimation mode.
+For \code{ystat = "CV2"}, keep \code{y} on the outcome's level scale
+and use \code{post} for the DiD contrast; applying \code{"CV2"} to
+first-differenced outcomes is not recommended because it targets
+relative dispersion in changes and can be unstable when mean changes
+are near zero.}
 
 \item{group}{Character, name of the grouping variable in \code{data}.}
 

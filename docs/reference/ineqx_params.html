@@ -109,7 +109,10 @@ and model mode.</p></dd>
 
 <dt id="arg-post">post<a class="anchor" aria-label="anchor" href="#arg-post"></a></dt>
 <dd><p>Character, name of the pre/post indicator for DiD designs.
-Only used in model mode. NULL for simple difference estimator.</p></dd>
+Only used in model mode. NULL for simple difference estimator. For
+<code>ystat = "CV2"</code>, keep the outcome in levels and use <code>post</code>
+to construct the DiD contrast; applying <code>"CV2"</code> to first
+differences is not recommended.</p></dd>
 
 
 <dt id="arg-ystat">ystat<a class="anchor" aria-label="anchor" href="#arg-ystat"></a></dt>

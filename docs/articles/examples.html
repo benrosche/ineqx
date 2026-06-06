@@ -580,7 +580,9 @@ changed?</p>
 difference-in- differences model (treatment = <code>mother</code>,
 post-period = <code>byear</code>) with education-by-decade interactions
 for both the mean and log-SD of earnings. GAMLSS does the heavy lifting
-internally.</p>
+internally. For <code>ystat = "CV2"</code>, keep the outcome in levels
+and use <code>post</code> for the DiD contrast; applying
+<code>CV2</code> to first-differenced outcomes is not recommended.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">cps_sample</span>,</span>
 <span>             <span class="va">age</span> <span class="op">&gt;=</span> <span class="fl">18</span> <span class="op">&amp;</span> <span class="va">age</span> <span class="op">&lt;=</span> <span class="fl">49</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">earnweekf</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">earnweekf</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>

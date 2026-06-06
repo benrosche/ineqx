@@ -53,7 +53,11 @@ ineqx(
 - post:
 
   Character, pre/post indicator for DiD designs. NULL for simple
-  difference estimator. Only used in integrated estimation mode.
+  difference estimator. Only used in integrated estimation mode. For
+  `ystat = "CV2"`, keep `y` on the outcome's level scale and use `post`
+  for the DiD contrast; applying `"CV2"` to first-differenced outcomes
+  is not recommended because it targets relative dispersion in changes
+  and can be unstable when mean changes are near zero.
 
 - group:
 

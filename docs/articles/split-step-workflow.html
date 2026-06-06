@@ -151,6 +151,11 @@ per row instead of two, applying the parallel-trends identity to recover
 . The downstream call to <code>ineqx(params = ...)</code> then runs the
 same DiD decomposition the integrated
 <code>ineqx(post = ..., ...)</code> call would produce.</p>
+<p>If you plan to decompose <code>CV2</code>, keep the modeled outcome
+in levels. Applying <code>CV2</code> to first-differenced outcomes is
+not recommended: it targets relative dispersion in changes, not relative
+inequality in the outcome level, and can be unstable when mean changes
+are near zero.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">did_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ineqx_model.html">fit_ineqx_model</a></span><span class="op">(</span></span>
 <span>  formula_mu    <span class="op">=</span> <span class="va">y</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span>,</span>

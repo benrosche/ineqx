@@ -92,6 +92,7 @@ causal_decompose_cross <- function(params, ref = NULL) {
   # Compute delta method SEs if vcov is available
   se_list <- NULL
   lambda_test <- NULL
+  beta_test <- NULL
   if (!is.null(params$vcov)) {
     se_list <- delta_method_se(params, type = "cross", ref = ref)
 
@@ -105,6 +106,23 @@ causal_decompose_cross <- function(params, ref = NULL) {
       W_stat <- as.numeric(t(lambda_j) %*% solve(V_lambda) %*% lambda_j)
       p_value <- pchisq(W_stat, df = J, lower.tail = FALSE)
       list(statistic = W_stat, df = J, p_value = p_value)
+    }, error = function(e) NULL)
+
+    # Joint Wald test: H0: beta_j homogeneous across groups (mean effect equal).
+    # Scale-aware -- identity fit tests a constant ABSOLUTE effect; log fit tests
+    # a constant PROPORTIONAL (geometric-mean) effect. beta occupies the first J
+    # slots of the parameter vector (beta, mu0, lambda, log sigma0).
+    beta_scale <- if (!is.null(params$transform)) params$transform else "identity"
+    beta_test <- tryCatch({
+      if (J < 2L) NULL else {
+        V_beta <- V[1:J, 1:J, drop = FALSE]
+        Cmat   <- cbind(-1, diag(J - 1L))      # (J-1) x J: beta_g - beta_1
+        Cb     <- as.numeric(Cmat %*% beta_j)
+        W_stat <- as.numeric(t(Cb) %*% solve(Cmat %*% V_beta %*% t(Cmat)) %*% Cb)
+        list(statistic = W_stat, df = J - 1L,
+             p_value = pchisq(W_stat, df = J - 1L, lower.tail = FALSE),
+             scale = beta_scale)
+      }
     }, error = function(e) NULL)
   }
 
@@ -128,6 +146,7 @@ causal_decompose_cross <- function(params, ref = NULL) {
       ineq_treated = ineq_treated,
       se = se_list,
       lambda_test = lambda_test,
+      beta_test = beta_test,
       components = comps,
       by_group = by_group,
       ystat = ystat,
@@ -292,12 +311,15 @@ causal_decompose_longit <- function(params,
   se_list <- NULL
   cross_se <- NULL
   lambda_tests <- NULL
+  beta_tests <- NULL
   if (!is.null(params$vcov)) {
     se_list <- delta_method_se(params, type = "longit", order = order, ref = ref)
+    beta_scale <- if (!is.null(params$transform)) params$transform else "identity"
 
     # Per-time cross-sectional SEs and Wald tests
     cross_se <- list()
     lambda_tests <- list()
+    beta_tests <- list()
     for (t in params$times) {
       t_char <- as.character(t)
       cross_se[[t_char]] <- .delta_method_cross(params, ref = t)
@@ -313,6 +335,19 @@ causal_decompose_longit <- function(params,
         p_value <- pchisq(W_stat, df = J, lower.tail = FALSE)
         list(statistic = W_stat, df = J, p_value = p_value)
       }, error = function(e) NULL)
+
+      # Wald test for beta homogeneous across groups at this time (scale-aware)
+      beta_tests[[t_char]] <- tryCatch({
+        if (J < 2L) NULL else {
+          V_beta <- V[1:J, 1:J, drop = FALSE]
+          Cmat   <- cbind(-1, diag(J - 1L))
+          Cb     <- as.numeric(Cmat %*% dt$beta)
+          W_stat <- as.numeric(t(Cb) %*% solve(Cmat %*% V_beta %*% t(Cmat)) %*% Cb)
+          list(statistic = W_stat, df = J - 1L,
+               p_value = pchisq(W_stat, df = J - 1L, lower.tail = FALSE),
+               scale = beta_scale)
+        }
+      }, error = function(e) NULL)
     }
   }
 
@@ -322,6 +357,7 @@ causal_decompose_longit <- function(params,
       se = se_list,
       cross_se = cross_se,
       lambda_tests = lambda_tests,
+      beta_tests = beta_tests,
       order = order,
       ystat = ystat,
       ref = ref,
