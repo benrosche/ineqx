@@ -62,7 +62,8 @@ inherited from the <code><a href="ineqx.html">ineqx()</a></code> call automatica
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  cl_type <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,6 +89,15 @@ inherited from the <code><a href="ineqx.html">ineqx()</a></code> call automatica
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical, print progress messages. Default TRUE.</p></dd>
+
+
+<dt id="arg-cl-type">cl_type<a class="anchor" aria-label="anchor" href="#arg-cl-type"></a></dt>
+<dd><p>Character, parallel cluster type: <code>"fork"</code> (Unix/macOS;
+workers share memory copy-on-write, so the data is not duplicated per core –
+faster and far lighter on memory for large data) or <code>"psock"</code>
+(Windows-compatible; each worker gets its own data copy). Default
+<code>NULL</code> selects <code>"fork"</code> off Windows and <code>"psock"</code> on Windows;
+requesting <code>"fork"</code> on Windows warns and falls back to PSOCK.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -76,6 +76,14 @@
 #' pre/post column is) to \code{ineqx_params()}. For \eqn{V_L}, fit with
 #' \code{transform = "log"} and pass \code{ystat = "VL"} to \code{ineqx()}.
 #'
+#' @section Single-level grouping variables:
+#' A factor or character predictor with only one observed level cannot enter a
+#' model formula (\code{model.matrix()} errors with "contrasts can be applied
+#' only to factors with 2 or more levels"). Any such term is automatically
+#' dropped before fitting, with a message, since the between-group component it
+#' would identify is zero by construction. The rest of the model is estimated
+#' normally and the decomposition returns \code{VarB = 0} (within equals total).
+#'
 #' @seealso \code{\link{ineqx_params}} for extracting decomposition parameters
 #'   from the fitted model; \code{\link{ineqx}} for running the decomposition.
 #'
@@ -122,6 +130,25 @@ fit_ineqx_model <- function(formula_mu, formula_sigma, data,
   if (!is.null(weights)) vars <- c(vars, ".ineqx_w")
   vars <- intersect(vars, names(data))
   data <- na.action(data[, vars, drop = FALSE])
+
+  # ------------------------------------------------------------------ #
+  # Drop terms built on single-level factor/character variables. A
+  # one-level factor cannot enter the model (model.matrix() errors with
+  # "contrasts can be applied only to factors with 2 or more levels") and
+  # the between-group component it would identify is zero by construction,
+  # so we strip those terms and let the rest of the model estimate.
+  # ------------------------------------------------------------------ #
+  drop_mu    <- .drop_constant_factor_terms(formula_mu, data)
+  drop_sigma <- .drop_constant_factor_terms(formula_sigma, data)
+  formula_mu    <- drop_mu$formula
+  formula_sigma <- drop_sigma$formula
+  dropped_vars  <- unique(c(drop_mu$dropped, drop_sigma$dropped))
+  if (length(dropped_vars) > 0L) {
+    message("The grouping variable ('", paste(dropped_vars, collapse = "', '"),
+            "') has only one level. The between-group component is therefore ",
+            "zero by construction, and the group-level term will be dropped ",
+            "from the model.")
+  }
 
   # ------------------------------------------------------------------ #
   # transform = "log": log-transform the LHS column of formula_mu in a
@@ -193,4 +220,53 @@ fit_ineqx_model <- function(formula_mu, formula_sigma, data,
   # whether ystat = "VL" is valid for a params-supplied call.
   attr(model, "ineqx_transform") <- transform
   model
+}
+
+
+# ---------------------------------------------------------------------------- #
+# Internal: Drop formula terms built on single-level factor/character variables
+#
+# A factor/character/logical variable with only one observed level cannot enter
+# a model formula -- model.matrix() errors with "contrasts can be applied only
+# to factors with 2 or more levels". Such a term also carries no information
+# (the between-group component it would identify is zero by construction), so we
+# remove every term that references it and keep the remaining structure.
+# Returns list(formula, dropped) where `dropped` names the offending variables.
+# ---------------------------------------------------------------------------- #
+
+.drop_constant_factor_terms <- function(formula, data) {
+  tt <- stats::terms(formula)
+  term_labels <- attr(tt, "term.labels")
+  if (length(term_labels) == 0L) {
+    return(list(formula = formula, dropped = character(0)))
+  }
+
+  is_single <- function(col) {
+    (is.factor(col) || is.character(col) || is.logical(col)) &&
+      length(unique(col[!is.na(col)])) < 2L
+  }
+  single_vars <- names(data)[vapply(data, is_single, logical(1))]
+  if (length(single_vars) == 0L) {
+    return(list(formula = formula, dropped = character(0)))
+  }
+
+  term_vars <- lapply(term_labels, function(tl) all.vars(stats::reformulate(tl)))
+  drop_term <- vapply(term_vars, function(v) any(v %in% single_vars), logical(1))
+  if (!any(drop_term)) {
+    return(list(formula = formula, dropped = character(0)))
+  }
+
+  dropped <- intersect(unique(unlist(term_vars[drop_term])), single_vars)
+  kept    <- term_labels[!drop_term]
+
+  has_intercept <- attr(tt, "intercept") == 1L
+  resp <- if (attr(tt, "response") == 1L) deparse(formula[[2L]]) else NULL
+
+  rhs <- kept
+  if (!has_intercept) rhs <- c(rhs, "0")
+  if (length(rhs) == 0L) rhs <- if (has_intercept) "1" else "0"
+
+  new_f <- stats::reformulate(rhs, response = resp)
+  environment(new_f) <- environment(formula)
+  list(formula = new_f, dropped = dropped)
 }

@@ -23,7 +23,8 @@ bootstrap_params(
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  cl_type = NULL
 )
 ```
 
@@ -80,6 +81,13 @@ bootstrap_params(
 - verbose:
 
   Logical, print progress. Default TRUE.
+
+- cl_type:
+
+  Character, parallel cluster type, `"fork"` or `"psock"`. Default
+  `NULL` auto-selects (fork off Windows, psock on Windows). See
+  [`boot_config`](https://benrosche.github.io/ineqx/reference/boot_config.md)
+  for details.
 
 ## Value
 

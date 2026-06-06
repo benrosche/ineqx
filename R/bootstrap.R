@@ -925,8 +925,10 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
 #' @param order Character vector of length 3, decomposition ordering for the
 #'   longitudinal decomposition. Default \code{c("behavioral",
 #'   "compositional", "pretreatment")}. Ignored for cross-sectional fits.
-#' @param ystat Character, \code{"Var"} or \code{"CV2"}. Default: the
-#'   \code{ystat} stored on \code{boot_params}.
+#' @param ystat Character, \code{"Var"}, \code{"CV2"}, or \code{"VL"}. Default:
+#'   the \code{ystat} stored on \code{boot_params}. \code{"VL"} requires
+#'   \code{boot_params} from a log(y) fit (\code{transform = "log"}); it runs
+#'   the \code{"Var"} decomposition on the log-scale params, which equals V_L.
 #'
 #' @return An object of class \code{"ineqx_boot"} matching
 #'   \code{\link{bootstrap_se}}'s return shape.
@@ -947,7 +949,26 @@ decompose_boot_params <- function(boot_params,
   }
 
   if (is.null(ystat)) ystat <- boot_params$ystat
-  ystat <- match.arg(ystat, c("Var", "CV2"))
+  ystat <- match.arg(ystat, c("Var", "CV2", "VL"))
+
+  # VL is the Var decomposition run on a log-scale fit (mirrors ineqx()): the
+  # cached params must come from fit_ineqx_model(transform = "log"), in which
+  # case Var of the log-scale params IS V_L. We switch the internal ystat to
+  # "Var"; the ineqx_boot return carries no ystat field, so no relabel needed.
+  if (ystat == "VL") {
+    orig_transform <- boot_params$orig_params$transform %||% "identity"
+    if (!identical(orig_transform, "log")) {
+      stop("ystat = 'VL' requires boot_params from a log(y) fit ",
+           "(bootstrap_params() on a transform = 'log' response). The ",
+           "supplied boot_params has transform = '", orig_transform, "'.",
+           call. = FALSE)
+    }
+    warning("Because V_L measures dispersion in log earnings rather than in ",
+            "earnings themselves, its decomposition can diverge from ",
+            "income-scale changes in inequality (see Rosche 2026).",
+            call. = FALSE)
+    ystat <- "Var"   # params already on log scale; run internals as Var
+  }
 
   # Decompose the original (unresampled) params for the point estimates row
   orig <- boot_params$orig_params

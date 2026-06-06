@@ -127,6 +127,17 @@ column is) to
 For \\V_L\\, fit with `transform = "log"` and pass `ystat = "VL"` to
 [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md).
 
+## Single-level grouping variables
+
+A factor or character predictor with only one observed level cannot
+enter a model formula
+([`model.matrix()`](https://rdrr.io/r/stats/model.matrix.html) errors
+with "contrasts can be applied only to factors with 2 or more levels").
+Any such term is automatically dropped before fitting, with a message,
+since the between-group component it would identify is zero by
+construction. The rest of the model is estimated normally and the
+decomposition returns `VarB = 0` (within equals total).
+
 ## See also
 
 [`ineqx_params`](https://benrosche.github.io/ineqx/reference/ineqx_params.md)

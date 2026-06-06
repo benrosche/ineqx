@@ -15,7 +15,8 @@ boot_config(
   parallel = FALSE,
   ncores = NULL,
   seed = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  cl_type = NULL
 )
 ```
 
@@ -40,6 +41,15 @@ boot_config(
 - verbose:
 
   Logical, print progress messages. Default TRUE.
+
+- cl_type:
+
+  Character, parallel cluster type: `"fork"` (Unix/macOS; workers share
+  memory copy-on-write, so the data is not duplicated per core – faster
+  and far lighter on memory for large data) or `"psock"`
+  (Windows-compatible; each worker gets its own data copy). Default
+  `NULL` selects `"fork"` off Windows and `"psock"` on Windows;
+  requesting `"fork"` on Windows warns and falls back to PSOCK.
 
 ## Value
 

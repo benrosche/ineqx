@@ -100,6 +100,16 @@ pre/post column is) to \code{ineqx_params()}. For \eqn{V_L}, fit with
 \code{transform = "log"} and pass \code{ystat = "VL"} to \code{ineqx()}.
 }
 
+\section{Single-level grouping variables}{
+
+A factor or character predictor with only one observed level cannot enter a
+model formula (\code{model.matrix()} errors with "contrasts can be applied
+only to factors with 2 or more levels"). Any such term is automatically
+dropped before fitting, with a message, since the between-group component it
+would identify is zero by construction. The rest of the model is estimated
+normally and the decomposition returns \code{VarB = 0} (within equals total).
+}
+
 \seealso{
 \code{\link{ineqx_params}} for extracting decomposition parameters
   from the fitted model; \code{\link{ineqx}} for running the decomposition.
