@@ -4,7 +4,15 @@
 \alias{plot.ineqx_desc}
 \title{Plot descriptive variance decomposition}
 \usage{
-\method{plot}{ineqx_desc}(x, type = "decomp", stats = NULL, ci = FALSE, style = "line", ...)
+\method{plot}{ineqx_desc}(
+  x,
+  type = "decomp",
+  stats = NULL,
+  ci = FALSE,
+  style = "line",
+  share = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{An \code{ineqx_desc} object}

@@ -4,7 +4,15 @@
 \alias{plot.ineqx_causal_cross}
 \title{Plot cross-sectional causal decomposition}
 \usage{
-\method{plot}{ineqx_causal_cross}(x, type = "wibe", ci = FALSE, stats = NULL, trim = 0.995, ...)
+\method{plot}{ineqx_causal_cross}(
+  x,
+  type = "wibe",
+  ci = FALSE,
+  stats = NULL,
+  trim = 0.995,
+  share = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{An \code{ineqx_causal_cross} object}

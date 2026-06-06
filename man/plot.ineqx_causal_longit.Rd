@@ -12,6 +12,7 @@
   stats = NULL,
   time = NULL,
   trim = 0.995,
+  share = FALSE,
   ...
 )
 }
