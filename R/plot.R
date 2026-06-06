@@ -193,6 +193,10 @@ NULL
 #'   \code{boot_config()}: bootstrap CIs with custom settings.
 #' @param style Character: \code{"line"} (default) for connected lines with
 #'   ribbon CIs, or \code{"point"} for points with error bar CIs.
+#' @param share Logical. For \code{type = "wibe"}, show Within/Between as shares
+#'   of total inequality (\%) over time instead of in level units. The
+#'   decomposition is additive with a positive total, so shares are stable.
+#'   Default \code{FALSE}.
 #' @param ... Additional arguments (currently unused)
 #'
 #' @return A ggplot2 object
@@ -482,6 +486,9 @@ plot.ineqx_desc <- function(x, type = "decomp", stats = NULL,
 #'     \item{\code{"treat"}}{Predicted treatment effect distributions by group.}
 #'     \item{\code{"treat.params"}}{Treatment effect parameters (beta, lambda)
 #'       by group (bar chart).}
+#'     \item{\code{"effect.prop"}}{Proportional treatment effect on the mean by
+#'       group (points): \code{beta_g / mu0_g} (identity) or \code{exp(beta_g)-1}
+#'       (log). Equal heights indicate a proportional (group-invariant) effect.}
 #'     \item{\code{"outcome"}}{Predicted outcome distributions (control vs
 #'       treated) by group.}
 #'     \item{\code{"outcome.params"}}{Predicted means and SDs under control vs
@@ -517,12 +524,15 @@ plot.ineqx_desc <- function(x, type = "decomp", stats = NULL,
 #' @param trim Numeric between 0 and 1. For distribution plots
 #'   (\code{"treat"}, \code{"outcome"}): quantile at which to trim tails.
 #'   Default \code{0.995} (trims 0.5\% from each tail).
+#' @param share Logical. For \code{type = "wibe"}, show the Between/Within split
+#'   as shares of the total effect (\%) rather than absolute units. Errors if the
+#'   total effect is \eqn{\approx 0} (shares undefined). Default \code{FALSE}.
 #' @param ... Additional arguments (currently unused)
 #'
 #' @return A ggplot2 object
 #' @export
 plot.ineqx_causal_cross <- function(x, type = "wibe", ci = FALSE,
-                                     stats = NULL, trim = 0.995, ...) {
+                                     stats = NULL, trim = 0.995, share = FALSE, ...) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required for plotting")
@@ -533,7 +543,9 @@ plot.ineqx_causal_cross <- function(x, type = "wibe", ci = FALSE,
   show_ci   <- ci_info$method != "none" && !is.null(x[["se"]])
   ci_params <- ci_info
 
-  if (type == "wibe") {
+  if (type == "wibe" && isTRUE(share)) {
+    .plot_causal_cross_share(x)
+  } else if (type == "wibe") {
     if (is.null(stats)) stats <- "tau"
     .plot_causal_cross_bar(x, ci = show_ci, stats = stats)
   } else if (type == "wibe.group") {
@@ -592,6 +604,10 @@ plot.ineqx_causal_cross <- function(x, type = "wibe", ci = FALSE,
 #'       When \code{time = NULL}, shows pi-weighted marginals across all times.}
 #'     \item{\code{"treat.params"}}{Treatment effect parameters (beta/lambda)
 #'       over time (line chart).}
+#'     \item{\code{"effect.prop"}}{Proportional treatment effect on the mean by
+#'       group over time: \code{beta_g / mu0_g} (identity fit) or
+#'       \code{exp(beta_g) - 1} (log fit). Overlapping lines indicate a
+#'       proportional (group-invariant) effect.}
 #'     \item{\code{"outcome"}}{Predicted outcome distributions (control vs
 #'       treated). When \code{time} is specified, shows per-group distributions.
 #'       When \code{time = NULL}, shows pi-weighted marginals.}
@@ -649,13 +665,17 @@ plot.ineqx_causal_cross <- function(x, type = "wibe", ci = FALSE,
 #' @param trim Numeric between 0 and 1. For distribution plots
 #'   (\code{"treat"}, \code{"outcome"}): quantile at which to trim tails.
 #'   Default \code{0.995}.
+#' @param share Logical. For \code{type = "decomp"}, plot each component as a
+#'   share of the total effect at that time (\%) instead of in absolute units.
+#'   Periods where the total is \eqn{\approx 0} are blanked, since shares are
+#'   undefined there. Default \code{FALSE}.
 #' @param ... Additional arguments (currently unused)
 #'
 #' @return A ggplot2 object
 #' @export
 plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
                                       style = "line", stats = NULL,
-                                      time = NULL, trim = 0.995, ...) {
+                                      time = NULL, trim = 0.995, share = FALSE, ...) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required for plotting")
@@ -676,7 +696,7 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
       stats <- c("behavioral", "compositional", "pretreatment", "total")
     }
     return(.plot_causal_longit_decomp(x, stats = stats, ci = show_ci,
-                                       style = style))
+                                       style = style, share = share))
   } else if (type == "wibe") {
     return(.plot_causal_longit_wibe(x, ci = show_ci, style = style, stats = stats))
 
@@ -717,7 +737,8 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
 # ---------------------------------------------------------------------------- #
 
 #' @keywords internal
-.plot_causal_longit_decomp <- function(x, stats, ci = FALSE, style = "line") {
+.plot_causal_longit_decomp <- function(x, stats, ci = FALSE, style = "line",
+                                       share = FALSE) {
   registry <- .decomp_registry()
   invalid <- setdiff(stats, names(registry))
   if (length(invalid) > 0) {
@@ -726,6 +747,7 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
   }
 
   is_shapley <- identical(x$order, "shapley")
+  if (isTRUE(share)) ci <- FALSE  # shares are ratios; CIs not propagated here
 
   # Build data from results
   times <- as.numeric(names(x$results))
@@ -784,6 +806,21 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
     plot_df$ymax <- plot_df$value + 1.96 * plot_df$se
   }
 
+  # Share-of-total: divide each component by the total effect at that time,
+  # blanking periods where the total is ~0 (share undefined / unstable).
+  if (isTRUE(share)) {
+    total_t <- vapply(times, function(t) {
+      r <- x$results[[as.character(t)]]
+      if (!is.null(r) && !is.null(r[["Delta_total"]])) r[["Delta_total"]] else NA_real_
+    }, numeric(1))
+    eps <- 0.01 * max(abs(total_t), na.rm = TRUE)
+    if (!is.finite(eps) || eps <= 0) eps <- .Machine$double.eps
+    denom <- total_t[match(plot_df$time, times)]
+    sh <- plot_df$value / denom
+    sh[abs(denom) < eps] <- NA_real_
+    plot_df$value <- sh
+  }
+
   plot_df$time <- .time_to_factor(plot_df$time)
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$time, y = .data$value,
                                               color = .data$Component,
@@ -819,10 +856,18 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
     title <- "Longitudinal Causal Decomposition"
   }
 
-  p + ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
-    ggplot2::labs(x = "Time", y = y_label, title = title) +
+  p <- p + ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
     ggplot2::scale_color_manual(values = colors) +
     theme_ineqx
+
+  if (isTRUE(share)) {
+    p + ggplot2::scale_y_continuous(labels = .pct_labels) +
+      ggplot2::labs(x = "Time", y = "Share of total effect",
+                    title = paste0(title, " (shares)"),
+                    subtitle = "Component / total; gaps where the total ≈ 0")
+  } else {
+    p + ggplot2::labs(x = "Time", y = y_label, title = title)
+  }
 }
 
 
@@ -1213,6 +1258,34 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
 }
 
 #' @keywords internal
+# Between/Within composition (shares of the total effect) for a cross-section.
+# Guarded: if the total effect is ~0 the shares are undefined.
+.plot_causal_cross_share <- function(x) {
+  tot <- x$tau_total
+  eps <- max(abs(c(x$tau_B, x$tau_W, tot))) * 1e-6
+  if (!is.finite(tot) || abs(tot) < eps) {
+    stop("Total effect is ~0; between/within shares are undefined. ",
+         "Inspect the absolute decomposition (share = FALSE) instead.",
+         call. = FALSE)
+  }
+  plot_df <- data.frame(
+    Component = factor(c("Between", "Within"), levels = c("Between", "Within")),
+    share = c(x$tau_B / tot, x$tau_W / tot),
+    stringsAsFactors = FALSE
+  )
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = "", y = .data$share,
+                                        fill = .data$Component)) +
+    ggplot2::geom_col(width = 0.6) +
+    ggplot2::geom_hline(yintercept = c(0, 1), linetype = "dashed", color = "grey50") +
+    ggplot2::scale_y_continuous(labels = .pct_labels) +
+    ggplot2::scale_fill_manual(values = c("Within" = "#008b94",
+                                          "Between" = "#e85d00")) +
+    ggplot2::labs(x = NULL, y = "Share of total effect",
+                  title = "Between/Within composition of the total effect",
+                  subtitle = "Shares can exceed 100% / go negative when components oppose") +
+    theme_ineqx
+}
+
 .plot_causal_cross_bar <- function(x, ci = FALSE,
                                     stats = "tau") {
 
