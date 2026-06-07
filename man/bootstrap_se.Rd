@@ -14,6 +14,7 @@ bootstrap_se(
   post = NULL,
   ref = NULL,
   ystat = "Var",
+  estimand = "marginal",
   order = c("behavioral", "compositional", "pretreatment"),
   B = 100L,
   parallel = FALSE,

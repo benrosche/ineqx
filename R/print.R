@@ -63,6 +63,7 @@ print.ineqx_causal_cross <- function(x, ...) {
   pad <- 40
   cat("Cross-sectional causal variance decomposition\n")
   cat("Inequality measure:", x$ystat, "\n")
+  if (!is.null(x$params$estimand)) cat("Estimand:", x$params$estimand, "\n")
   if (!is.null(x$se_method) && x$se_method != "none") {
     cat(sprintf("SEs via %s method\n", x$se_method))
   }
@@ -168,6 +169,7 @@ print.ineqx_causal_longit <- function(x, ...) {
 
   cat("Longitudinal causal variance decomposition\n")
   cat("Inequality measure:", x$ystat, "\n")
+  if (!is.null(x$params$estimand)) cat("Estimand:", x$params$estimand, "\n")
   if (!is.null(x$se_method) && x$se_method != "none") {
     cat(sprintf("SEs via %s method\n", x$se_method))
   }

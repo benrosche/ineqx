@@ -1,5 +1,40 @@
 # Changelog
 
+## ineqx 0.5.0
+
+### Breaking changes
+
+- The causal decomposition now targets **marginal** counterfactual
+  inequality by default, rather than residual (conditional) inequality.
+  Within-group variance is computed by the law of total variance over
+  the covariate distribution of the treated within each group: the
+  average conditional residual variance *plus* the dispersion of
+  predicted conditional means across covariate profiles. Control
+  variables that adjust the counterfactual predictions therefore
+  contribute to within-group inequality. When the model contains no
+  within-group control variation, the marginal and residual results
+  coincide, so analyses without controls are unaffected.
+
+### New features
+
+- New `estimand` argument on
+  [`ineqx()`](https://benrosche.github.io/ineqx/reference/ineqx.md) and
+  [`ineqx_params()`](https://benrosche.github.io/ineqx/reference/ineqx_params.md):
+  `"marginal"` (default) or `"residual"`. The `"residual"` variant
+  reproduces the previous behavior (conditional scale parameter only,
+  omitting the predicted-mean dispersion term). The chosen estimand is
+  recorded on the params/result objects and shown by
+  [`print()`](https://rdrr.io/r/base/print.html).
+- Marginal delta-method standard errors use a numerical Jacobian of the
+  full prediction + g-computation routine (the marginal group variance
+  is nonlinear in both the mean- and scale-equation coefficients); the
+  residual variant keeps the fast analytical Jacobian. The bootstrap
+  path honors `estimand` throughout. The marginal Jacobian is evaluated
+  with incremental finite differences (each coefficient perturbation is
+  a rank-1 update of the cached predictions), making it O(N \* p) rather
+  than O(N \* p^2) – nearly as fast as the analytical path even for
+  models with large coefficient counts.
+
 ## ineqx 0.4.0
 
 ### Breaking changes

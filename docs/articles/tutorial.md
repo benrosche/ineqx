@@ -25,6 +25,7 @@ contains panel data on individuals across multiple years, three groups
 
 devtools::load_all()
 #> ℹ Loading ineqx
+#> Warning: package 'testthat' was built under R version 4.5.2
 
 data("incdat")
 str(incdat)
@@ -314,6 +315,7 @@ result <- ineqx(
 print(result)
 #> Cross-sectional causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> SEs via delta method
 #> 
 #> Treatment effect on outcome variance:
@@ -322,7 +324,7 @@ print(result)
 #>     Total effect (tau_T):                  141.4984  (SE = 6.3274)
 #>       Between-group (tau_B):                17.4602  (SE = 2.6803)
 #>       Within-group (tau_W):                124.0382  (SE = 5.7317)
-#>       -> Wald test H0: lambda = 0: chi2(3) = 7364.6732, p < 0.0001
+#>       -> Wald test H0: lambda = 0: chi2(3) = 7364.6730, p < 0.0001
 #>          Significant: evidence of treatment effect heterogeneity
 #>       -> Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 231.0151, p < 0.0001
 #>          Significant: effect on the mean differs across groups
@@ -432,6 +434,7 @@ print(params)
 #> ineqx_params object
 #>   Type: longitudinal 
 #>   Inequality measure: Var 
+#>   Estimand: marginal 
 #>   Groups (3): 1, 2, 3
 #>   Time periods (5): 1, 2, 3, 4, 5
 #> 
@@ -493,6 +496,7 @@ result_longit <- ineqx(
 print(result_longit)
 #> Longitudinal causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> SEs via delta method
 #> Reference period: 1 
 #> Ordering: behavioral -> compositional -> pretreatment 
@@ -518,18 +522,18 @@ print(result_longit)
 #> 
 #>   time 2:
 #>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
-#>     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)
+#>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
 #>     Pre-treatment inequality (delta_pre):                9.3804  (SE = 10.4581)
-#>       Means:                                            -0.0000
+#>       Means:                                             0.0000
 #>       Variances:                                         9.3804
 #>     Total:                                               9.3804  (SE = 11.0102)
 #> 
 #>   time 3:
 #>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
-#>     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)
+#>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -539,8 +543,8 @@ print(result_longit)
 #>     Total:                                              19.2373  (SE = 11.4967)
 #> 
 #>   time 4:
-#>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
-#>     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)
+#>     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)
+#>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -550,7 +554,7 @@ print(result_longit)
 #>     Total:                                              21.7732  (SE = 11.6250)
 #> 
 #>   time 5:
-#>     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)
+#>     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)
 #>     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)
 #>     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)
 #>       Between-group:                                     0.0000
@@ -620,6 +624,7 @@ result_shapley <- ineqx("inc", group = "group", ref = 1,
 print(result_shapley)
 #> Longitudinal causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> Reference period: 1 
 #> Ordering: Shapley (averaged across all 6 orderings)
 #> 
@@ -639,18 +644,18 @@ print(result_shapley)
 #> 
 #>   time 2:
 #>     Effects on means (delta_beta):                       0.0000
-#>     Effects on SDs (delta_lambda):                      -0.0000
+#>     Effects on SDs (delta_lambda):                       0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
 #>     Pre-treatment inequality (delta_pre):                9.3804
-#>       Means:                                            -0.0000
+#>       Means:                                             0.0000
 #>       Variances:                                         9.3804
 #>     Total:                                               9.3804
 #> 
 #>   time 3:
 #>     Effects on means (delta_beta):                       0.0000
-#>     Effects on SDs (delta_lambda):                      -0.0000
+#>     Effects on SDs (delta_lambda):                       0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -660,8 +665,8 @@ print(result_shapley)
 #>     Total:                                              19.2373
 #> 
 #>   time 4:
-#>     Effects on means (delta_beta):                       0.0000
-#>     Effects on SDs (delta_lambda):                      -0.0000
+#>     Effects on means (delta_beta):                      -0.0000
+#>     Effects on SDs (delta_lambda):                       0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
 #>       Within-group:                                      0.0000
@@ -671,7 +676,7 @@ print(result_shapley)
 #>     Total:                                              21.7732
 #> 
 #>   time 5:
-#>     Effects on means (delta_beta):                       0.0000
+#>     Effects on means (delta_beta):                      -0.0000
 #>     Effects on SDs (delta_lambda):                       0.0000
 #>     Distribution of treatment (delta_pi):                0.0000
 #>       Between-group:                                     0.0000
@@ -804,6 +809,7 @@ result_blend <- ineqx(
 print(result_blend)
 #> Longitudinal causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> Reference period: 0 
 #> Ordering: Shapley (averaged across all 6 orderings)
 #> 
@@ -1008,6 +1014,10 @@ yourself and pass it to
 ``` r
 
 library(gamlss)
+#> Warning: package 'gamlss' was built under R version 4.5.2
+#> Warning: package 'gamlss.data' was built under R version 4.5.2
+#> Warning: package 'gamlss.dist' was built under R version 4.5.2
+#> Warning: package 'nlme' was built under R version 4.5.2
 
 # Fit your own GAMLSS
 my_model <- gamlss(
@@ -1031,13 +1041,14 @@ print(params_ext)
 #> ineqx_params object
 #>   Type: cross_sectional 
 #>   Inequality measure: Var 
+#>   Estimand: marginal 
 #>   Groups (3): 1, 2, 3
 #> 
 #> Group-level parameters:
 #>    group     pi   mu0 sigma0   beta  lambda
-#>        1 0.4737 13.87  4.191 0.1415 -0.3171
-#>        2 0.2632 13.82  4.373 0.3946  0.2629
-#>        3 0.2632 13.84  4.230 0.6273  0.9472
+#>        1 0.4737 13.87  6.574 0.1415 -0.1771
+#>        2 0.2632 13.82  6.756 0.3946  0.1867
+#>        3 0.2632 13.84  6.613 0.6273  0.7642
 #> 
 #> vcov: 12x12
 
@@ -1045,15 +1056,16 @@ print(params_ext)
 ineqx(y="inc", group = "group", params = params_ext, data = incdat)
 #> Cross-sectional causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> SEs via delta method
 #> 
 #> Treatment effect on outcome variance:
-#>     Var[Y | T = 0]:                         18.0601  (SE = 1.2547)
-#>     Var[Y | T = 1]:                         44.2609  (SE = 2.0622)
-#>     Total effect (tau_T):                   26.2008  (SE = 2.4139)
+#>     Var[Y | T = 0]:                         43.9904  (SE = 2.2118)
+#>     Var[Y | T = 1]:                         84.9085  (SE = 3.7249)
+#>     Total effect (tau_T):                   40.9182  (SE = 3.9053)
 #>       Between-group (tau_B):                 0.0347  (SE = 0.0262)
-#>       Within-group (tau_W):                 26.1662  (SE = 2.4138)
-#>       -> Wald test H0: lambda = 0: chi2(3) = 501.2301, p < 0.0001
+#>       Within-group (tau_W):                 40.8835  (SE = 3.9052)
+#>       -> Wald test H0: lambda = 0: chi2(3) = 485.1357, p < 0.0001
 #>          Significant: evidence of treatment effect heterogeneity
 #>       -> Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 4.3117, p = 0.1158
 #>          Not significant: no evidence the mean effect differs across groups
@@ -1063,8 +1075,8 @@ ineqx(y="inc", group = "group", params = params_ext, data = incdat)
 #>     2*Cov_pi(mu0, beta):                    -0.0065  (SE = 0.0321)
 #> 
 #> Within-group sub-components:
-#>     mean(sigma0^2) * mean(f):               26.1136  (SE = 2.8073)
-#>     Cov_pi(sigma0^2, f):                     0.0526  (SE = 2.5861)
+#>     mean(sigma0^2) * mean(f):               40.8272  (SE = 3.8292)
+#>     Cov_pi(sigma0^2, f):                     0.0564  (SE = 2.5767)
 ```
 
 ### Manual parameter specification
@@ -1093,6 +1105,7 @@ ineqx(y="inc", group = "group", params = params_manual,
 #> Finished.
 #> Cross-sectional causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> 
 #> Treatment effect on outcome variance:
 #>     Var[Y | T = 0]:                      205600.0000

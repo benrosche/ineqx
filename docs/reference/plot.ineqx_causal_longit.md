@@ -14,6 +14,7 @@ plot(
   stats = NULL,
   time = NULL,
   trim = 0.995,
+  share = FALSE,
   ...
 )
 ```
@@ -47,6 +48,13 @@ plot(
   `"treat.params"`
 
   :   Treatment effect parameters (beta/lambda) over time (line chart).
+
+  `"effect.prop"`
+
+  :   Proportional treatment effect on the mean by group over time:
+      `beta_g / mu0_g` (identity fit) or `exp(beta_g) - 1` (log fit).
+      Overlapping lines indicate a proportional (group-invariant)
+      effect.
 
   `"outcome"`
 
@@ -127,6 +135,13 @@ plot(
 
   Numeric between 0 and 1. For distribution plots (`"treat"`,
   `"outcome"`): quantile at which to trim tails. Default `0.995`.
+
+- share:
+
+  Logical. For `type = "decomp"`, plot each component as a share of the
+  total effect at that time (%) instead of in absolute units. Periods
+  where the total is \\\approx 0\\ are blanked, since shares are
+  undefined there. Default `FALSE`.
 
 - ...:
 

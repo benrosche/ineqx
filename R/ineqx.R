@@ -76,6 +76,13 @@
 #'   \code{y} is prepended internally.
 #' @param formula_sigma One-sided formula for the log-SD equation (integrated
 #'   estimation mode). E.g., \code{~ treat * group + controls}.
+#' @param estimand Character, either \code{"marginal"} (default) or
+#'   \code{"residual"}. Selects whether within-group dispersion is the marginal
+#'   counterfactual variance (law of total variance over the covariate
+#'   distribution; controls contribute to within-group inequality) or the
+#'   residual/conditional scale (paper Appendix B.7). See
+#'   \code{\link{ineqx_params}}. Only used in the integrated- and
+#'   blending-estimation paths.
 #' @param params A parameter object created by \code{\link{ineqx_params}}.
 #'   Either an \code{ineqx_desc_params} (descriptive counterfactual reference)
 #'   or an \code{ineqx_params} (causal decomposition). When an
@@ -159,10 +166,12 @@
 ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
                   group = NULL, time = NULL, ref = NULL, order = "shapley",
                   formula_mu = NULL, formula_sigma = NULL,
+                  estimand = c("marginal", "residual"),
                   params = NULL, weights = NULL, se = "delta", data = NULL,
                   ...) {
 
   ystat <- match.arg(ystat, c("Var", "CV2", "VL"))
+  estimand <- match.arg(estimand)
 
   # -------------------------------------------------------------------- #
   # VL: variance of log(y). Implemented by running the standard Var
@@ -370,7 +379,7 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
       model = model, data = data,
       treat = treat, group = group,
       time = time, post = post,
-      ystat = ystat,
+      ystat = ystat, estimand = estimand,
       vcov = FALSE
     )
 
@@ -442,7 +451,7 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
       model = model, data = data,
       treat = treat, group = group,
       time = time, post = post,
-      ystat = ystat,
+      ystat = ystat, estimand = estimand,
       vcov = extract_vcov
     )
 
@@ -516,6 +525,7 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
       post = post,
       ref = ref,
       ystat = params$ystat,
+      estimand = estimand,
       order = if (use_shapley) c("behavioral", "compositional", "pretreatment") else order,
       B = boot$B,
       parallel = boot$parallel,
@@ -626,6 +636,7 @@ ineqx <- function(y = NULL, ystat = "Var", treat = NULL, post = NULL,
     list(
       data = merged_data,
       ystat = user_params$ystat,
+      estimand = model_params$estimand %||% "marginal",
       type = "longitudinal",
       vcov = merged_vcov,
       groups = sort(unique(merged_data$group)),

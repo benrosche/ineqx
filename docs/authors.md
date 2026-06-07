@@ -22,12 +22,12 @@ inequality.” Working paper, <https://osf.io/preprints/socarxiv/f53kz/>.
     }
 
 Rosche B (2026). *ineqx: Descriptive and Causal Variance Decomposition*.
-R package version 0.4.0, <https://benrosche.github.io/ineqx/>.
+R package version 0.5.0, <https://benrosche.github.io/ineqx/>.
 
     @Manual{,
       title = {ineqx: Descriptive and Causal Variance Decomposition},
       author = {Benjamin Rosche},
       year = {2026},
-      note = {R package version 0.4.0},
+      note = {R package version 0.5.0},
       url = {https://benrosche.github.io/ineqx/},
     }

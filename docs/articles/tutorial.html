@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,6 +111,7 @@ indicator (<code>x</code>).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org/reference/load_all.html" class="external-link">load_all</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Loading <span style="color: #0000BB;">ineqx</span></span></span>
+<span><span class="co">#&gt; Warning: package 'testthat' was built under R version 4.5.2</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"incdat"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">incdat</span><span class="op">)</span></span>
@@ -387,6 +388,7 @@ or expand dispersion within groups?</li>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Cross-sectional causal variance decomposition</span></span>
 <span><span class="co">#&gt; Inequality measure: Var </span></span>
+<span><span class="co">#&gt; Estimand: marginal </span></span>
 <span><span class="co">#&gt; SEs via delta method</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Treatment effect on outcome variance:</span></span>
@@ -395,7 +397,7 @@ or expand dispersion within groups?</li>
 <span><span class="co">#&gt;     Total effect (tau_T):                  141.4984  (SE = 6.3274)</span></span>
 <span><span class="co">#&gt;       Between-group (tau_B):                17.4602  (SE = 2.6803)</span></span>
 <span><span class="co">#&gt;       Within-group (tau_W):                124.0382  (SE = 5.7317)</span></span>
-<span><span class="co">#&gt;       -&gt; Wald test H0: lambda = 0: chi2(3) = 7364.6732, p &lt; 0.0001</span></span>
+<span><span class="co">#&gt;       -&gt; Wald test H0: lambda = 0: chi2(3) = 7364.6730, p &lt; 0.0001</span></span>
 <span><span class="co">#&gt;          Significant: evidence of treatment effect heterogeneity</span></span>
 <span><span class="co">#&gt;       -&gt; Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 231.0151, p &lt; 0.0001</span></span>
 <span><span class="co">#&gt;          Significant: effect on the mean differs across groups</span></span>
@@ -490,6 +492,7 @@ and pass it to <code><a href="../reference/ineqx.html">ineqx()</a></code>:</p>
 <span><span class="co">#&gt; ineqx_params object</span></span>
 <span><span class="co">#&gt;   Type: longitudinal </span></span>
 <span><span class="co">#&gt;   Inequality measure: Var </span></span>
+<span><span class="co">#&gt;   Estimand: marginal </span></span>
 <span><span class="co">#&gt;   Groups (3): 1, 2, 3</span></span>
 <span><span class="co">#&gt;   Time periods (5): 1, 2, 3, 4, 5</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -548,6 +551,7 @@ performs the longitudinal decomposition:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_longit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Longitudinal causal variance decomposition</span></span>
 <span><span class="co">#&gt; Inequality measure: Var </span></span>
+<span><span class="co">#&gt; Estimand: marginal </span></span>
 <span><span class="co">#&gt; SEs via delta method</span></span>
 <span><span class="co">#&gt; Reference period: 1 </span></span>
 <span><span class="co">#&gt; Ordering: behavioral -&gt; compositional -&gt; pretreatment </span></span>
@@ -573,18 +577,18 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2:</span></span>
 <span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
 <span><span class="co">#&gt;     Pre-treatment inequality (delta_pre):                9.3804  (SE = 10.4581)</span></span>
-<span><span class="co">#&gt;       Means:                                            -0.0000</span></span>
+<span><span class="co">#&gt;       Means:                                             0.0000</span></span>
 <span><span class="co">#&gt;       Variances:                                         9.3804</span></span>
 <span><span class="co">#&gt;     Total:                                               9.3804  (SE = 11.0102)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 3:</span></span>
 <span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -594,8 +598,8 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt;     Total:                                              19.2373  (SE = 11.4967)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 4:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000  (SE = 9.5802)</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -605,7 +609,7 @@ performs the longitudinal decomposition:</p>
 <span><span class="co">#&gt;     Total:                                              21.7732  (SE = 11.6250)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 5:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000  (SE = 3.4297)</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000  (SE = 3.4297)</span></span>
 <span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000  (SE = 9.5802)</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000  (SE = 0.0000)</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
@@ -670,6 +674,7 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_shapley</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Longitudinal causal variance decomposition</span></span>
 <span><span class="co">#&gt; Inequality measure: Var </span></span>
+<span><span class="co">#&gt; Estimand: marginal </span></span>
 <span><span class="co">#&gt; Reference period: 1 </span></span>
 <span><span class="co">#&gt; Ordering: Shapley (averaged across all 6 orderings)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -689,18 +694,18 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2:</span></span>
 <span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
 <span><span class="co">#&gt;     Pre-treatment inequality (delta_pre):                9.3804</span></span>
-<span><span class="co">#&gt;       Means:                                            -0.0000</span></span>
+<span><span class="co">#&gt;       Means:                                             0.0000</span></span>
 <span><span class="co">#&gt;       Variances:                                         9.3804</span></span>
 <span><span class="co">#&gt;     Total:                                               9.3804</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 3:</span></span>
 <span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -710,8 +715,8 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="co">#&gt;     Total:                                              19.2373</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 4:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
-<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                      -0.0000</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000</span></span>
+<span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
 <span><span class="co">#&gt;       Within-group:                                      0.0000</span></span>
@@ -721,7 +726,7 @@ average across all 6 orderings with <code>order = "shapley"</code>:</p>
 <span><span class="co">#&gt;     Total:                                              21.7732</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 5:</span></span>
-<span><span class="co">#&gt;     Effects on means (delta_beta):                       0.0000</span></span>
+<span><span class="co">#&gt;     Effects on means (delta_beta):                      -0.0000</span></span>
 <span><span class="co">#&gt;     Effects on SDs (delta_lambda):                       0.0000</span></span>
 <span><span class="co">#&gt;     Distribution of treatment (delta_pi):                0.0000</span></span>
 <span><span class="co">#&gt;       Between-group:                                     0.0000</span></span>
@@ -835,6 +840,7 @@ effect) — with data-estimated periods in between:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_blend</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Longitudinal causal variance decomposition</span></span>
 <span><span class="co">#&gt; Inequality measure: Var </span></span>
+<span><span class="co">#&gt; Estimand: marginal </span></span>
 <span><span class="co">#&gt; Reference period: 0 </span></span>
 <span><span class="co">#&gt; Ordering: Shapley (averaged across all 6 orderings)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -1015,6 +1021,10 @@ different distributions, random effects, custom controls), fit a
 <code><a href="../reference/ineqx_params.html">ineqx_params()</a></code>:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.gamlss.com/" class="external-link">gamlss</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: package 'gamlss' was built under R version 4.5.2</span></span>
+<span><span class="co">#&gt; Warning: package 'gamlss.data' was built under R version 4.5.2</span></span>
+<span><span class="co">#&gt; Warning: package 'gamlss.dist' was built under R version 4.5.2</span></span>
+<span><span class="co">#&gt; Warning: package 'nlme' was built under R version 4.5.2</span></span>
 <span></span>
 <span><span class="co"># Fit your own GAMLSS</span></span>
 <span><span class="va">my_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/gamlss/man/gamlss.html" class="external-link">gamlss</a></span><span class="op">(</span></span>
@@ -1038,13 +1048,14 @@ different distributions, random effects, custom controls), fit a
 <span><span class="co">#&gt; ineqx_params object</span></span>
 <span><span class="co">#&gt;   Type: cross_sectional </span></span>
 <span><span class="co">#&gt;   Inequality measure: Var </span></span>
+<span><span class="co">#&gt;   Estimand: marginal </span></span>
 <span><span class="co">#&gt;   Groups (3): 1, 2, 3</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Group-level parameters:</span></span>
 <span><span class="co">#&gt;    group     pi   mu0 sigma0   beta  lambda</span></span>
-<span><span class="co">#&gt;        1 0.4737 13.87  4.191 0.1415 -0.3171</span></span>
-<span><span class="co">#&gt;        2 0.2632 13.82  4.373 0.3946  0.2629</span></span>
-<span><span class="co">#&gt;        3 0.2632 13.84  4.230 0.6273  0.9472</span></span>
+<span><span class="co">#&gt;        1 0.4737 13.87  6.574 0.1415 -0.1771</span></span>
+<span><span class="co">#&gt;        2 0.2632 13.82  6.756 0.3946  0.1867</span></span>
+<span><span class="co">#&gt;        3 0.2632 13.84  6.613 0.6273  0.7642</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; vcov: 12x12</span></span>
 <span></span>
@@ -1052,15 +1063,16 @@ different distributions, random effects, custom controls), fit a
 <span><span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>y<span class="op">=</span><span class="st">"inc"</span>, group <span class="op">=</span> <span class="st">"group"</span>, params <span class="op">=</span> <span class="va">params_ext</span>, data <span class="op">=</span> <span class="va">incdat</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Cross-sectional causal variance decomposition</span></span>
 <span><span class="co">#&gt; Inequality measure: Var </span></span>
+<span><span class="co">#&gt; Estimand: marginal </span></span>
 <span><span class="co">#&gt; SEs via delta method</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Treatment effect on outcome variance:</span></span>
-<span><span class="co">#&gt;     Var[Y | T = 0]:                         18.0601  (SE = 1.2547)</span></span>
-<span><span class="co">#&gt;     Var[Y | T = 1]:                         44.2609  (SE = 2.0622)</span></span>
-<span><span class="co">#&gt;     Total effect (tau_T):                   26.2008  (SE = 2.4139)</span></span>
+<span><span class="co">#&gt;     Var[Y | T = 0]:                         43.9904  (SE = 2.2118)</span></span>
+<span><span class="co">#&gt;     Var[Y | T = 1]:                         84.9085  (SE = 3.7249)</span></span>
+<span><span class="co">#&gt;     Total effect (tau_T):                   40.9182  (SE = 3.9053)</span></span>
 <span><span class="co">#&gt;       Between-group (tau_B):                 0.0347  (SE = 0.0262)</span></span>
-<span><span class="co">#&gt;       Within-group (tau_W):                 26.1662  (SE = 2.4138)</span></span>
-<span><span class="co">#&gt;       -&gt; Wald test H0: lambda = 0: chi2(3) = 501.2301, p &lt; 0.0001</span></span>
+<span><span class="co">#&gt;       Within-group (tau_W):                 40.8835  (SE = 3.9052)</span></span>
+<span><span class="co">#&gt;       -&gt; Wald test H0: lambda = 0: chi2(3) = 485.1357, p &lt; 0.0001</span></span>
 <span><span class="co">#&gt;          Significant: evidence of treatment effect heterogeneity</span></span>
 <span><span class="co">#&gt;       -&gt; Wald test H0: beta homogeneous (constant absolute effect): chi2(2) = 4.3117, p = 0.1158</span></span>
 <span><span class="co">#&gt;          Not significant: no evidence the mean effect differs across groups</span></span>
@@ -1070,8 +1082,8 @@ different distributions, random effects, custom controls), fit a
 <span><span class="co">#&gt;     2*Cov_pi(mu0, beta):                    -0.0065  (SE = 0.0321)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Within-group sub-components:</span></span>
-<span><span class="co">#&gt;     mean(sigma0^2) * mean(f):               26.1136  (SE = 2.8073)</span></span>
-<span><span class="co">#&gt;     Cov_pi(sigma0^2, f):                     0.0526  (SE = 2.5861)</span></span></code></pre></div>
+<span><span class="co">#&gt;     mean(sigma0^2) * mean(f):               40.8272  (SE = 3.8292)</span></span>
+<span><span class="co">#&gt;     Cov_pi(sigma0^2, f):                     0.0564  (SE = 2.5767)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="manual-parameter-specification">Manual parameter specification<a class="anchor" aria-label="anchor" href="#manual-parameter-specification"></a>
 </h3>
@@ -1097,6 +1109,7 @@ other software:</p>
 <span><span class="co">#&gt; Finished.</span></span>
 <span><span class="co">#&gt; Cross-sectional causal variance decomposition</span></span>
 <span><span class="co">#&gt; Inequality measure: Var </span></span>
+<span><span class="co">#&gt; Estimand: marginal </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Treatment effect on outcome variance:</span></span>
 <span><span class="co">#&gt;     Var[Y | T = 0]:                      205600.0000</span></span>

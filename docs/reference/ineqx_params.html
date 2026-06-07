@@ -19,7 +19,7 @@ method (GAMLSS, Bayesian models, simulation, or manual specification)."><!-- Glo
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,7 @@ method (GAMLSS, Bayesian models, simulation, or manual specification).</p>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  post <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ystat <span class="op">=</span> <span class="st">"Var"</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"marginal"</span>, <span class="st">"residual"</span><span class="op">)</span>,</span>
 <span>  vcov <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  na.action <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -118,6 +119,21 @@ differences is not recommended.</p></dd>
 <dt id="arg-ystat">ystat<a class="anchor" aria-label="anchor" href="#arg-ystat"></a></dt>
 <dd><p>Character, either <code>"Var"</code> (variance) or <code>"CV2"</code>
 (squared coefficient of variation). Default: <code>"Var"</code>.</p></dd>
+
+
+<dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
+<dd><p>Character, either <code>"marginal"</code> (default) or
+<code>"residual"</code>. The <code>"marginal"</code> estimand computes each group's
+variance by the law of total variance over the covariate distribution of
+the treated (paper eqs 10, 37-38): the average conditional residual
+variance plus the dispersion of predicted conditional means across
+covariate profiles. Controls therefore contribute to within-group
+inequality. The <code>"residual"</code> variant (paper Appendix B.7) uses the
+conditional scale parameter directly and omits the predicted-mean
+dispersion term, answering a residual-inequality question instead. In the
+manual (data.frame) mode this only tags the object; the supplied
+<code>sigma0</code>/<code>lambda</code> are taken as marginal \(S\)/\(\Lambda\)
+(or residual \(\sigma\)/\(\lambda\) when <code>"residual"</code>).</p></dd>
 
 
 <dt id="arg-vcov">vcov<a class="anchor" aria-label="anchor" href="#arg-vcov"></a></dt>

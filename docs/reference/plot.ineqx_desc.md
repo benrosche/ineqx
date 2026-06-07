@@ -6,7 +6,15 @@ Plot descriptive variance decomposition
 
 ``` r
 # S3 method for class 'ineqx_desc'
-plot(x, type = "decomp", stats = NULL, ci = FALSE, style = "line", ...)
+plot(
+  x,
+  type = "decomp",
+  stats = NULL,
+  ci = FALSE,
+  style = "line",
+  share = FALSE,
+  ...
+)
 ```
 
 ## Arguments
@@ -45,6 +53,13 @@ plot(x, type = "decomp", stats = NULL, ci = FALSE, style = "line", ...)
 
   Character: `"line"` (default) for connected lines with ribbon CIs, or
   `"point"` for points with error bar CIs.
+
+- share:
+
+  Logical. For `type = "wibe"`, show Within/Between as shares of total
+  inequality (%) over time instead of in level units. The decomposition
+  is additive with a positive total, so shares are stable. Default
+  `FALSE`.
 
 - ...:
 
