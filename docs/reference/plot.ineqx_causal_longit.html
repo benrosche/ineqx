@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ineqx</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,6 +57,7 @@
 <span>  stats <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  trim <span class="op">=</span> <span class="fl">0.995</span>,</span>
+<span>  share <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -86,6 +87,12 @@
   <dt><code>"treat.params"</code></dt>
 <dd><p>Treatment effect parameters (beta/lambda)
     over time (line chart).</p></dd>
+
+  <dt><code>"effect.prop"</code></dt>
+<dd><p>Proportional treatment effect on the mean by
+    group over time: <code>beta_g / mu0_g</code> (identity fit) or
+    <code>exp(beta_g) - 1</code> (log fit). Overlapping lines indicate a
+    proportional (group-invariant) effect.</p></dd>
 
   <dt><code>"outcome"</code></dt>
 <dd><p>Predicted outcome distributions (control vs
@@ -171,6 +178,13 @@ distributions are shown across all time points.</p></dd>
 <dd><p>Numeric between 0 and 1. For distribution plots
 (<code>"treat"</code>, <code>"outcome"</code>): quantile at which to trim tails.
 Default <code>0.995</code>.</p></dd>
+
+
+<dt id="arg-share">share<a class="anchor" aria-label="anchor" href="#arg-share"></a></dt>
+<dd><p>Logical. For <code>type = "decomp"</code>, plot each component as a
+share of the total effect at that time (%) instead of in absolute units.
+Periods where the total is \(\approx 0\) are blanked, since shares are
+undefined there. Default <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

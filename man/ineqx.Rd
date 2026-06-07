@@ -15,6 +15,7 @@ ineqx(
   order = "shapley",
   formula_mu = NULL,
   formula_sigma = NULL,
+  estimand = c("marginal", "residual"),
   params = NULL,
   weights = NULL,
   se = "delta",
@@ -69,6 +70,14 @@ estimation mode). E.g., \code{~ treat * group + controls}. The outcome
 
 \item{formula_sigma}{One-sided formula for the log-SD equation (integrated
 estimation mode). E.g., \code{~ treat * group + controls}.}
+
+\item{estimand}{Character, either \code{"marginal"} (default) or
+\code{"residual"}. Selects whether within-group dispersion is the marginal
+counterfactual variance (law of total variance over the covariate
+distribution; controls contribute to within-group inequality) or the
+residual/conditional scale (paper Appendix B.7). See
+\code{\link{ineqx_params}}. Only used in the integrated- and
+blending-estimation paths.}
 
 \item{params}{A parameter object created by \code{\link{ineqx_params}}.
 Either an \code{ineqx_desc_params} (descriptive counterfactual reference)

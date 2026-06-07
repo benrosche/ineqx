@@ -12,6 +12,7 @@ ineqx_params(
   time = NULL,
   post = NULL,
   ystat = "Var",
+  estimand = c("marginal", "residual"),
   vcov = NULL,
   na.action = stats::na.omit,
   verbose = TRUE
@@ -48,6 +49,19 @@ differences is not recommended.}
 
 \item{ystat}{Character, either \code{"Var"} (variance) or \code{"CV2"}
 (squared coefficient of variation). Default: \code{"Var"}.}
+
+\item{estimand}{Character, either \code{"marginal"} (default) or
+\code{"residual"}. The \code{"marginal"} estimand computes each group's
+variance by the law of total variance over the covariate distribution of
+the treated (paper eqs 10, 37-38): the average conditional residual
+variance plus the dispersion of predicted conditional means across
+covariate profiles. Controls therefore contribute to within-group
+inequality. The \code{"residual"} variant (paper Appendix B.7) uses the
+conditional scale parameter directly and omits the predicted-mean
+dispersion term, answering a residual-inequality question instead. In the
+manual (data.frame) mode this only tags the object; the supplied
+\code{sigma0}/\code{lambda} are taken as marginal \eqn{S}/\eqn{\Lambda}
+(or residual \eqn{\sigma}/\eqn{\lambda} when \code{"residual"}).}
 
 \item{vcov}{For manual mode: an optional variance-covariance matrix (or
 named list of matrices for longitudinal data).

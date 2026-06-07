@@ -16,6 +16,7 @@ ineqx_params(
   time = NULL,
   post = NULL,
   ystat = "Var",
+  estimand = c("marginal", "residual"),
   vcov = NULL,
   na.action = stats::na.omit,
   verbose = TRUE
@@ -66,6 +67,21 @@ ineqx_params(
 
   Character, either `"Var"` (variance) or `"CV2"` (squared coefficient
   of variation). Default: `"Var"`.
+
+- estimand:
+
+  Character, either `"marginal"` (default) or `"residual"`. The
+  `"marginal"` estimand computes each group's variance by the law of
+  total variance over the covariate distribution of the treated (paper
+  eqs 10, 37-38): the average conditional residual variance plus the
+  dispersion of predicted conditional means across covariate profiles.
+  Controls therefore contribute to within-group inequality. The
+  `"residual"` variant (paper Appendix B.7) uses the conditional scale
+  parameter directly and omits the predicted-mean dispersion term,
+  answering a residual-inequality question instead. In the manual
+  (data.frame) mode this only tags the object; the supplied
+  `sigma0`/`lambda` are taken as marginal \\S\\/\\\Lambda\\ (or residual
+  \\\sigma\\/\\\lambda\\ when `"residual"`).
 
 - vcov:
 

@@ -120,6 +120,7 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
                           treat, group,
                           time = NULL, post = NULL,
                           ref = NULL, ystat = "Var",
+                          estimand = "marginal",
                           order = c("behavioral", "compositional",
                                     "pretreatment"),
                           B = 100L,
@@ -167,7 +168,7 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
     data = data,
     formula_mu = formula_mu, formula_sigma = formula_sigma,
     treat = treat, group = group, time = time, post = post,
-    ref = ref, ystat = ystat, order = order,
+    ref = ref, ystat = ystat, estimand = estimand, order = order,
     resample_ids = seq_len(nrow(data)),
     blend_params = blend_params
   )
@@ -180,7 +181,7 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
     results <- .boot_parallel(
       data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
       treat = treat, group = group, time = time, post = post,
-      ref = ref, ystat = ystat, order = order,
+      ref = ref, ystat = ystat, estimand = estimand, order = order,
       boot_indices = boot_indices, ncores = ncores,
       blend_params = blend_params, cl_type = cl_type
     )
@@ -194,7 +195,7 @@ bootstrap_se <- function(data, formula_mu, formula_sigma,
           data = data,
           formula_mu = formula_mu, formula_sigma = formula_sigma,
           treat = treat, group = group, time = time, post = post,
-          ref = ref, ystat = ystat, order = order,
+          ref = ref, ystat = ystat, estimand = estimand, order = order,
           resample_ids = boot_indices[[b]],
           blend_params = blend_params
         ),
@@ -330,6 +331,7 @@ print.ineqx_boot <- function(x, ...) {
 .boot_one_replicate <- function(data, formula_mu, formula_sigma,
                                  treat, group, time, post,
                                  ref, ystat, order, resample_ids,
+                                 estimand = "marginal",
                                  weights = NULL,
                                  blend_params = NULL,
                                  return_params = FALSE) {
@@ -337,7 +339,7 @@ print.ineqx_boot <- function(x, ...) {
   params <- .boot_fit_params(
     data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
     treat = treat, group = group, time = time, post = post,
-    ystat = ystat, resample_ids = resample_ids,
+    ystat = ystat, estimand = estimand, resample_ids = resample_ids,
     weights = weights,
     blend_params = blend_params, ref = ref
   )
@@ -362,6 +364,7 @@ print.ineqx_boot <- function(x, ...) {
 .boot_fit_params <- function(data, formula_mu, formula_sigma,
                               treat, group, time, post,
                               ystat, resample_ids,
+                              estimand = "marginal",
                               weights = NULL,
                               blend_params = NULL, ref = NULL) {
 
@@ -404,7 +407,7 @@ print.ineqx_boot <- function(x, ...) {
     model = model, data = boot_data,
     treat = treat, group = group,
     time = time, post = post,
-    ystat = ystat, vcov = FALSE, verbose = FALSE
+    ystat = ystat, estimand = estimand, vcov = FALSE, verbose = FALSE
   )
 
   # Free the fitted gamlss and resampled data — decomposition only needs params
@@ -620,6 +623,7 @@ print.ineqx_boot <- function(x, ...) {
                             treat, group, time, post,
                             ref, ystat, order,
                             boot_indices, ncores,
+                            estimand = "marginal",
                             weights = NULL,
                             blend_params = NULL,
                             return_params = FALSE,
@@ -643,6 +647,7 @@ print.ineqx_boot <- function(x, ...) {
         formula_sigma = formula_sigma,
         treat = treat, group = group, time = time,
         post = post, ref = ref, ystat = ystat,
+        estimand = estimand,
         order = order, resample_ids = ids,
         weights = weights,
         blend_params = blend_params,
@@ -668,7 +673,7 @@ print.ineqx_boot <- function(x, ...) {
 
   parallel::clusterExport(cl, c(
     "data", "formula_mu", "formula_sigma", "treat", "group",
-    "time", "post", "ref", "ystat", "order",
+    "time", "post", "ref", "ystat", "estimand", "order",
     "weights", "blend_params", "return_params"
   ), envir = environment())
 
@@ -783,6 +788,7 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
                               treat, group,
                               time = NULL, post = NULL,
                               ystat = "Var",
+                              estimand = "marginal",
                               weights = NULL,
                               B = 100L,
                               parallel = FALSE, ncores = NULL,
@@ -825,7 +831,7 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
   orig_params <- .boot_fit_params(
     data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
     treat = treat, group = group, time = time, post = post,
-    ystat = ystat, resample_ids = seq_len(nrow(data)),
+    ystat = ystat, estimand = estimand, resample_ids = seq_len(nrow(data)),
     weights = weights
   )
 
@@ -834,7 +840,7 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
     rep_params <- .boot_parallel(
       data = data, formula_mu = formula_mu, formula_sigma = formula_sigma,
       treat = treat, group = group, time = time, post = post,
-      ref = NULL, ystat = ystat, order = NULL,
+      ref = NULL, ystat = ystat, estimand = estimand, order = NULL,
       boot_indices = boot_indices, ncores = ncores,
       weights = weights,
       blend_params = NULL,
@@ -851,7 +857,7 @@ bootstrap_params <- function(data, formula_mu, formula_sigma,
           data = data,
           formula_mu = formula_mu, formula_sigma = formula_sigma,
           treat = treat, group = group, time = time, post = post,
-          ref = NULL, ystat = ystat, order = NULL,
+          ref = NULL, ystat = ystat, estimand = estimand, order = NULL,
           resample_ids = boot_indices[[b]],
           weights = weights,
           return_params = TRUE

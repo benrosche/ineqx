@@ -6,7 +6,15 @@ Plot cross-sectional causal decomposition
 
 ``` r
 # S3 method for class 'ineqx_causal_cross'
-plot(x, type = "wibe", ci = FALSE, stats = NULL, trim = 0.995, ...)
+plot(
+  x,
+  type = "wibe",
+  ci = FALSE,
+  stats = NULL,
+  trim = 0.995,
+  share = FALSE,
+  ...
+)
 ```
 
 ## Arguments
@@ -34,6 +42,12 @@ plot(x, type = "wibe", ci = FALSE, stats = NULL, trim = 0.995, ...)
   `"treat.params"`
 
   :   Treatment effect parameters (beta, lambda) by group (bar chart).
+
+  `"effect.prop"`
+
+  :   Proportional treatment effect on the mean by group (points):
+      `beta_g / mu0_g` (identity) or `exp(beta_g)-1` (log). Equal
+      heights indicate a proportional (group-invariant) effect.
 
   `"outcome"`
 
@@ -79,6 +93,12 @@ plot(x, type = "wibe", ci = FALSE, stats = NULL, trim = 0.995, ...)
   Numeric between 0 and 1. For distribution plots (`"treat"`,
   `"outcome"`): quantile at which to trim tails. Default `0.995` (trims
   0.5% from each tail).
+
+- share:
+
+  Logical. For `type = "wibe"`, show the Between/Within split as shares
+  of the total effect (%) rather than absolute units. Errors if the
+  total effect is \\\approx 0\\ (shares undefined). Default `FALSE`.
 
 - ...:
 

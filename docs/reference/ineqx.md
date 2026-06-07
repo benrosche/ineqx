@@ -20,6 +20,7 @@ ineqx(
   order = "shapley",
   formula_mu = NULL,
   formula_sigma = NULL,
+  estimand = c("marginal", "residual"),
   params = NULL,
   weights = NULL,
   se = "delta",
@@ -96,6 +97,16 @@ ineqx(
 
   One-sided formula for the log-SD equation (integrated estimation
   mode). E.g., `~ treat * group + controls`.
+
+- estimand:
+
+  Character, either `"marginal"` (default) or `"residual"`. Selects
+  whether within-group dispersion is the marginal counterfactual
+  variance (law of total variance over the covariate distribution;
+  controls contribute to within-group inequality) or the
+  residual/conditional scale (paper Appendix B.7). See
+  [`ineqx_params`](https://benrosche.github.io/ineqx/reference/ineqx_params.md).
+  Only used in the integrated- and blending-estimation paths.
 
 - params:
 
@@ -335,6 +346,7 @@ ineqx("inc", group = "group", data = incdat, params = params, se = "none")
 #> Finished.
 #> Cross-sectional causal variance decomposition
 #> Inequality measure: Var 
+#> Estimand: marginal 
 #> 
 #> Treatment effect on outcome variance:
 #>     Var[Y | T = 0]:                      162500.0000

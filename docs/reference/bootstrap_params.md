@@ -18,6 +18,7 @@ bootstrap_params(
   time = NULL,
   post = NULL,
   ystat = "Var",
+  estimand = "marginal",
   weights = NULL,
   B = 100L,
   parallel = FALSE,

@@ -52,6 +52,18 @@
 #'   differences is not recommended.
 #' @param ystat Character, either \code{"Var"} (variance) or \code{"CV2"}
 #'   (squared coefficient of variation). Default: \code{"Var"}.
+#' @param estimand Character, either \code{"marginal"} (default) or
+#'   \code{"residual"}. The \code{"marginal"} estimand computes each group's
+#'   variance by the law of total variance over the covariate distribution of
+#'   the treated (paper eqs 10, 37-38): the average conditional residual
+#'   variance plus the dispersion of predicted conditional means across
+#'   covariate profiles. Controls therefore contribute to within-group
+#'   inequality. The \code{"residual"} variant (paper Appendix B.7) uses the
+#'   conditional scale parameter directly and omits the predicted-mean
+#'   dispersion term, answering a residual-inequality question instead. In the
+#'   manual (data.frame) mode this only tags the object; the supplied
+#'   \code{sigma0}/\code{lambda} are taken as marginal \eqn{S}/\eqn{\Lambda}
+#'   (or residual \eqn{\sigma}/\eqn{\lambda} when \code{"residual"}).
 #' @param vcov For manual mode: an optional variance-covariance matrix (or
 #'   named list of matrices for longitudinal data).
 #'   For model mode: logical, whether to extract the vcov via numerical
@@ -133,9 +145,12 @@
 #' @export
 ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
                           time = NULL, post = NULL,
-                          ystat = "Var", vcov = NULL,
+                          ystat = "Var", estimand = c("marginal", "residual"),
+                          vcov = NULL,
                           na.action = stats::na.omit,
                           verbose = TRUE) {
+
+  estimand <- match.arg(estimand)
 
   if (identical(ystat, "VL")) {
     stop("ystat = 'VL' is not supported in ineqx_params(). To compute V_L ",
@@ -160,7 +175,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
       model = model, data = data,
       treat = treat, group = group,
       time = time, post = post,
-      ystat = ystat, vcov = vcov,
+      ystat = ystat, estimand = estimand, vcov = vcov,
       na.action = na.action
     )
   } else {
@@ -177,7 +192,8 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
         !any(causal_cols %in% names(data))) {
       .ineqx_desc_params_manual(data = data, ystat = ystat)
     } else {
-      .ineqx_params_manual(data = data, ystat = ystat, vcov = vcov)
+      .ineqx_params_manual(data = data, ystat = ystat, vcov = vcov,
+                           estimand = estimand)
     }
   }
 }
@@ -187,7 +203,8 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # Internal: Manual specification path
 # ---------------------------------------------------------------------------- #
 
-.ineqx_params_manual <- function(data, ystat, vcov) {
+.ineqx_params_manual <- function(data, ystat, vcov,
+                                 estimand = "marginal") {
 
   if (!is.data.frame(data)) {
     stop("'data' must be a data.frame")
@@ -282,7 +299,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     }
   }
 
-  .make_ineqx_params(data, ystat, type, vcov, has_time)
+  .make_ineqx_params(data, ystat, type, vcov, has_time, estimand)
 }
 
 
@@ -291,7 +308,8 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # ---------------------------------------------------------------------------- #
 
 .ineqx_params_from_model <- function(model, data, treat, group,
-                                      time, post, ystat, vcov,
+                                      time, post, ystat,
+                                      estimand = "marginal", vcov,
                                       na.action = stats::na.omit,
                                       verbose = TRUE) {
 
@@ -403,6 +421,29 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   }
 
   # -------------------------------------------------------------------- #
+  # Per-observation counterfactual potential outcomes m_hat_i(d), s_hat_i(d)
+  # (used by the marginal estimand). For DiD these are constructed at the
+  # individual level via the parallel-trends identity (paper eqs 45-46)
+  # BEFORE any aggregation, which the marginal law-of-total-variance
+  # aggregation (paper eqs 10, 37-38) requires.
+  # -------------------------------------------------------------------- #
+  if (estimand == "marginal") {
+    if (is_did) {
+      po_m0 <- p_D1P0$mu + (p_D0P1$mu - p_D0P0$mu)
+      po_m1 <- p_D1P1$mu
+      po_s0 <- p_D1P0$sigma * p_D0P1$sigma / p_D0P0$sigma
+      po_s1 <- p_D1P1$sigma
+      # Pre-period anchors (P=0): treated (D=1) vs untreated (D=0) outcomes,
+      # for the Figure-3 / pretrends panels.
+      pre_m1 <- p_D1P0$mu; pre_s1 <- p_D1P0$sigma
+      pre_m0 <- p_D0P0$mu; pre_s0 <- p_D0P0$sigma
+    } else {
+      po_m0 <- p_D0$mu; po_m1 <- p_D1$mu
+      po_s0 <- p_D0$sigma; po_s1 <- p_D1$sigma
+    }
+  }
+
+  # -------------------------------------------------------------------- #
   # Compute per group-time quantities
   #
   # For DiD, the canonical estimands are computed on the treated post-period
@@ -420,23 +461,48 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
       idx_cell <- data[[time_var]] == t & data[[group]] == g
       if (sum(idx_cell) == 0) next
 
+      # Target sub-population: treated post-period (DiD) or whole cell (simple).
       if (is_did) {
         idx_tp <- idx_cell & data[[treat]] != 0 & data[[post]] == 1
         if (sum(idx_tp) == 0) {
           # No treated post-period observations in this cell — fall back to
-          # whole-cell averaging so the row is still produced (with a warning
-          # surfaced via NA n_treated_post).
+          # whole-cell averaging so the row is still produced.
           idx_tp <- idx_cell
         }
-        mu_D0P0 <- mean(p_D0P0$mu[idx_tp])
-        mu_D0P1 <- mean(p_D0P1$mu[idx_tp])
-        mu_D1P0 <- mean(p_D1P0$mu[idx_tp])
-        mu_D1P1 <- mean(p_D1P1$mu[idx_tp])
+        idx_use <- which(idx_tp)
+      } else {
+        idx_use <- which(idx_cell)
+      }
+      n_treated <- sum(data[[treat]][idx_use] != 0)
 
-        lsig_D0P0 <- mean(log(p_D0P0$sigma[idx_tp]))
-        lsig_D0P1 <- mean(log(p_D0P1$sigma[idx_tp]))
-        lsig_D1P0 <- mean(log(p_D1P0$sigma[idx_tp]))
-        lsig_D1P1 <- mean(log(p_D1P1$sigma[idx_tp]))
+      if (estimand == "marginal") {
+        # ---- Marginal: law of total variance over the covariate dist. ----
+        gm <- .marginal_group_moments(po_m0, po_m1, po_s0, po_s1, idx_use)
+        mu0_g    <- gm$mu0;    mu1_g    <- gm$mu1
+        sigma0_g <- gm$sigma0; sigma1_g <- gm$sigma1
+        beta_g   <- gm$beta;   lambda_g <- gm$lambda
+
+        if (is_did) {
+          an <- .marginal_group_moments(pre_m0, pre_m1, pre_s0, pre_s1, idx_use)
+          mu0_pre_g    <- an$mu0;    mu1_pre_g    <- an$mu1
+          sigma0_pre_g <- an$sigma0; sigma1_pre_g <- an$sigma1
+        } else {
+          mu1_pre_g    <- NA_real_
+          mu0_pre_g    <- NA_real_
+          sigma1_pre_g <- NA_real_
+          sigma0_pre_g <- NA_real_
+        }
+      } else if (is_did) {
+        # ---- Residual (conditional) variant, DiD ----
+        mu_D0P0 <- mean(p_D0P0$mu[idx_use])
+        mu_D0P1 <- mean(p_D0P1$mu[idx_use])
+        mu_D1P0 <- mean(p_D1P0$mu[idx_use])
+        mu_D1P1 <- mean(p_D1P1$mu[idx_use])
+
+        lsig_D0P0 <- mean(log(p_D0P0$sigma[idx_use]))
+        lsig_D0P1 <- mean(log(p_D0P1$sigma[idx_use]))
+        lsig_D1P0 <- mean(log(p_D1P0$sigma[idx_use]))
+        lsig_D1P1 <- mean(log(p_D1P1$sigma[idx_use]))
 
         mu1_g    <- mu_D1P1
         mu0_g    <- mu_D1P0 + (mu_D0P1 - mu_D0P0)  # DiD-implied counterfactual
@@ -453,14 +519,13 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
         mu0_pre_g    <- mu_D0P0
         sigma1_pre_g <- exp(lsig_D1P0)
         sigma0_pre_g <- exp(lsig_D0P0)
-
-        n_treated <- sum(data[[treat]][idx_tp] != 0)
       } else {
-        mu0_g     <- mean(p_D0$mu[idx_cell])
-        sigma0_g  <- mean(p_D0$sigma[idx_cell])
-        beta_g    <- mean(p_D1$mu[idx_cell] - p_D0$mu[idx_cell])
-        lambda_g  <- mean(log(p_D1$sigma[idx_cell]) -
-                          log(p_D0$sigma[idx_cell]))
+        # ---- Residual (conditional) variant, simple difference ----
+        mu0_g     <- mean(p_D0$mu[idx_use])
+        sigma0_g  <- mean(p_D0$sigma[idx_use])
+        beta_g    <- mean(p_D1$mu[idx_use] - p_D0$mu[idx_use])
+        lambda_g  <- mean(log(p_D1$sigma[idx_use]) -
+                          log(p_D0$sigma[idx_use]))
 
         mu1_g    <- mu0_g + beta_g
         sigma1_g <- sigma0_g * exp(lambda_g)
@@ -469,8 +534,6 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
         mu0_pre_g    <- NA_real_
         sigma1_pre_g <- NA_real_
         sigma0_pre_g <- NA_real_
-
-        n_treated <- sum(data[[treat]][idx_cell] != 0)
       }
 
       result_list[[length(result_list) + 1]] <- data.frame(
@@ -514,7 +577,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
       model = model, treat = treat, group = group,
       time_var = time_var, data = data,
       group_levels = group_levels, time_levels = time_levels,
-      out_df = out_df,
+      out_df = out_df, estimand = estimand,
       post = if (is_did) post else NULL
     )
   }
@@ -525,7 +588,8 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
   }
 
   # Use manual path for validation and S3 construction, then attach DiD flags
-  obj <- .ineqx_params_manual(data = out_df, ystat = ystat, vcov = vcov_mat)
+  obj <- .ineqx_params_manual(data = out_df, ystat = ystat, vcov = vcov_mat,
+                              estimand = estimand)
   obj$is_did <- is_did
   obj$post   <- if (is_did) post else NULL
   # Propagate the response-scale tag set by fit_ineqx_model(). "log" tells
@@ -542,11 +606,13 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 # Internal: Construct the S3 object
 # ---------------------------------------------------------------------------- #
 
-.make_ineqx_params <- function(data, ystat, type, vcov, has_time) {
+.make_ineqx_params <- function(data, ystat, type, vcov, has_time,
+                               estimand = "marginal") {
   structure(
     list(
       data = data,
       ystat = ystat,
+      estimand = estimand,
       type = type,
       vcov = vcov,
       groups = sort(unique(data$group)),
@@ -555,6 +621,39 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
       n_times = if (has_time) length(unique(data$time)) else 1L
     ),
     class = "ineqx_params"
+  )
+}
+
+
+# ---------------------------------------------------------------------------- #
+# Internal: Marginal group moments via the law of total variance
+#
+# Aggregates per-observation counterfactual predictions into the marginal
+# group-level moments used by the decomposition (paper eqs 10, 37-38):
+#   mu_j(d)  = mean_i m_hat_i(d)
+#   S2_j(d)  = mean_i [ s_hat_i(d)^2 + m_hat_i(d)^2 ] - mu_j(d)^2
+# i.e. the average conditional residual variance PLUS the dispersion of
+# predicted conditional means across covariate profiles within the group.
+#
+#   m0, m1 : predicted conditional means  m_hat_i(0), m_hat_i(1)  (full vectors)
+#   s0, s1 : predicted conditional SDs    s_hat_i(0), s_hat_i(1)  (full vectors)
+#   idx    : integer row indices of the target sub-population in the cell
+# Returns list(mu0, mu1, sigma0, sigma1, beta, lambda).
+# ---------------------------------------------------------------------------- #
+
+.marginal_group_moments <- function(m0, m1, s0, s1, idx) {
+  m0 <- m0[idx]; m1 <- m1[idx]; s0 <- s0[idx]; s1 <- s1[idx]
+  mu0  <- mean(m0)
+  mu1  <- mean(m1)
+  S2_0 <- mean(s0^2 + m0^2) - mu0^2
+  S2_1 <- mean(s1^2 + m1^2) - mu1^2
+  list(
+    mu0    = mu0,
+    mu1    = mu1,
+    sigma0 = sqrt(S2_0),
+    sigma1 = sqrt(S2_1),
+    beta   = mu1 - mu0,
+    lambda = 0.5 * log(S2_1 / S2_0)
   )
 }
 
@@ -611,7 +710,7 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
 #' @keywords internal
 .extract_vcov_numerical <- function(model, treat, group, time_var, data,
                                      group_levels, time_levels, out_df,
-                                     post = NULL) {
+                                     estimand = "marginal", post = NULL) {
 
   # Extract the raw coefficient vcov from the model's QR decompositions.
   raw_vcov <- tryCatch(
@@ -702,40 +801,129 @@ ineqx_params <- function(data, model = NULL, treat = NULL, group = NULL,
     X_sig_lsig <- X_sig_0
   }
 
-  # Theta vector per time-group: [beta_1..J, mu0_1..J, lambda_1..J, log_sigma0_1..J]
-  # All quantities are linear in the raw coefficients, so the Jacobian is analytic.
-  # The averaging set differs by mode: simple-difference averages over the cell;
-  # DiD averages over the treated post-period subset of the cell (idx_tp).
+  # Theta vector per time-group, ordered (within each time block) as
+  # [beta_1..J, mu0_1..J, lambda_1..J, log_sigma0_1..J] to match the layout
+  # consumed by delta_method_se().
 
   J <- length(group_levels)
   n_t <- length(time_levels)
   n_theta <- 4 * J * n_t
-  jacobian <- matrix(0, n_theta, p)
 
+  # Precompute the per-(time, group) target index set: treated post-period
+  # for DiD, whole cell otherwise. This is the identical averaging set used
+  # by the point estimate in .ineqx_params_from_model().
+  cell_idx <- vector("list", n_t * J)
   for (ti in seq_along(time_levels)) {
-    t_val <- time_levels[ti]
     for (ji in seq_along(group_levels)) {
-      g <- group_levels[ji]
-      idx_cell <- which(data[[time_var]] == t_val & data[[group]] == g)
-      if (length(idx_cell) == 0) next
-
-      if (is_did) {
-        idx <- idx_cell[data[[treat]][idx_cell] != 0 &
-                         data[[post]][idx_cell] == 1]
-        if (length(idx) == 0) idx <- idx_cell
-      } else {
-        idx <- idx_cell
+      idx_cell <- which(data[[time_var]] == time_levels[ti] &
+                          data[[group]] == group_levels[ji])
+      if (is_did && length(idx_cell) > 0) {
+        idx_tp <- idx_cell[data[[treat]][idx_cell] != 0 &
+                            data[[post]][idx_cell] == 1]
+        if (length(idx_tp) > 0) idx_cell <- idx_tp
       }
-
-      offset <- (ti - 1) * 4 * J
-      jacobian[offset + ji,           1:p_mu]      <- colMeans(X_mu_beta[idx, , drop = FALSE])
-      jacobian[offset + J + ji,       1:p_mu]      <- colMeans(X_mu_mu0[idx, , drop = FALSE])
-      jacobian[offset + 2 * J + ji,   (p_mu + 1):p] <- colMeans(X_sig_lam[idx, , drop = FALSE])
-      jacobian[offset + 3 * J + ji,   (p_mu + 1):p] <- colMeans(X_sig_lsig[idx, , drop = FALSE])
+      cell_idx[[(ti - 1) * J + ji]] <- idx_cell
     }
   }
 
-  full_vcov <- jacobian %*% raw_vcov %*% t(jacobian)
+  if (estimand == "residual") {
+    # --- Fast analytical Jacobian: theta is linear in the raw coefficients ---
+    jacobian <- matrix(0, n_theta, p)
+    for (ti in seq_along(time_levels)) {
+      for (ji in seq_along(group_levels)) {
+        idx <- cell_idx[[(ti - 1) * J + ji]]
+        if (length(idx) == 0) next
+        offset <- (ti - 1) * 4 * J
+        jacobian[offset + ji,         1:p_mu]       <- colMeans(X_mu_beta[idx, , drop = FALSE])
+        jacobian[offset + J + ji,     1:p_mu]       <- colMeans(X_mu_mu0[idx, , drop = FALSE])
+        jacobian[offset + 2 * J + ji, (p_mu + 1):p] <- colMeans(X_sig_lam[idx, , drop = FALSE])
+        jacobian[offset + 3 * J + ji, (p_mu + 1):p] <- colMeans(X_sig_lsig[idx, , drop = FALSE])
+      }
+    }
+    full_vcov <- jacobian %*% raw_vcov %*% t(jacobian)
+  } else {
+    # --- Numerical Jacobian of the full marginal g-computation routine ---
+    # The marginal S0/Lambda are nonlinear in BOTH the mu- and sigma-equation
+    # coefficients (the law of total variance folds the predicted conditional
+    # means into the group variance), so the Jacobian gamma -> theta is taken by
+    # forward finite differences over the prediction + g-computation map (paper
+    # Appendix C/H). Predictions are reconstructed from the prebuilt model
+    # matrices (no predict() calls), and -- because perturbing coefficient k
+    # shifts only one equation's linear predictor by h * X[, k] -- the loop
+    # updates just the affected side incrementally (a rank-1 update of the base
+    # predictions) rather than recomputing all matvecs. This makes the FD loop
+    # O(N * p) instead of O(N * p^2).
+    mu_linkinv  <- stats::make.link(model$mu.link)$linkinv
+    sig_linkinv <- stats::make.link(model$sigma.link)$linkinv
+
+    # Per-state design matrices, keyed so a perturbation can update one state set.
+    if (is_did) {
+      Xmu  <- list(D0P0 = X_mu_D0P0,  D0P1 = X_mu_D0P1,
+                   D1P0 = X_mu_D1P0,  D1P1 = X_mu_D1P1)
+      Xsig <- list(D0P0 = X_sig_D0P0, D0P1 = X_sig_D0P1,
+                   D1P0 = X_sig_D1P0, D1P1 = X_sig_D1P1)
+    } else {
+      Xmu  <- list(`0` = X_mu_0,  `1` = X_mu_1)
+      Xsig <- list(`0` = X_sig_0, `1` = X_sig_1)
+    }
+
+    mu_c0  <- raw_coefs[1:p_mu]
+    sig_c0 <- raw_coefs[(p_mu + 1):p]
+
+    # Base linear predictors per state (the only matvecs; computed once).
+    eta_mu0  <- lapply(Xmu,  function(X) as.vector(X %*% mu_c0))
+    eta_sig0 <- lapply(Xsig, function(X) as.vector(X %*% sig_c0))
+
+    # theta from per-state mean/sd PREDICTION lists. Builds the potential
+    # outcomes (same po formulas as the point estimate) and aggregates via the
+    # shared .marginal_group_moments(), producing the 4J * n_t theta vector in
+    # the [beta, mu0, lambda, log_sigma0] layout per time block.
+    .theta_from_pred <- function(m, s) {
+      if (is_did) {
+        po_m0 <- m$D1P0 + (m$D0P1 - m$D0P0); po_m1 <- m$D1P1
+        po_s0 <- s$D1P0 * s$D0P1 / s$D0P0;   po_s1 <- s$D1P1
+      } else {
+        po_m0 <- m[["0"]]; po_m1 <- m[["1"]]
+        po_s0 <- s[["0"]]; po_s1 <- s[["1"]]
+      }
+      out <- numeric(n_theta)
+      for (ti in seq_along(time_levels)) {
+        offset <- (ti - 1) * 4 * J
+        for (ji in seq_along(group_levels)) {
+          idx <- cell_idx[[(ti - 1) * J + ji]]
+          if (length(idx) == 0) next
+          gm <- .marginal_group_moments(po_m0, po_m1, po_s0, po_s1, idx)
+          out[offset + ji]         <- gm$beta
+          out[offset + J + ji]     <- gm$mu0
+          out[offset + 2 * J + ji] <- gm$lambda
+          out[offset + 3 * J + ji] <- log(gm$sigma0)
+        }
+      }
+      out
+    }
+
+    m_pred0 <- lapply(eta_mu0,  mu_linkinv)
+    s_pred0 <- lapply(eta_sig0, sig_linkinv)
+    theta0  <- .theta_from_pred(m_pred0, s_pred0)
+
+    jacobian <- matrix(0, n_theta, p)
+    h_vec <- pmax(abs(raw_coefs) * 1e-6, 1e-7)
+    for (k in seq_len(p)) {
+      h <- h_vec[k]
+      if (k <= p_mu) {
+        # Mean coefficient: only the mu predictions shift; reuse base s_pred0.
+        m_p   <- Map(function(eta, X) mu_linkinv(eta + h * X[, k]), eta_mu0, Xmu)
+        th    <- .theta_from_pred(m_p, s_pred0)
+      } else {
+        # Scale coefficient: only the sigma predictions shift; reuse base m_pred0.
+        j     <- k - p_mu
+        s_p   <- Map(function(eta, X) sig_linkinv(eta + h * X[, j]), eta_sig0, Xsig)
+        th    <- .theta_from_pred(m_pred0, s_p)
+      }
+      jacobian[, k] <- (th - theta0) / h
+    }
+    full_vcov <- jacobian %*% raw_vcov %*% t(jacobian)
+  }
 
   if (n_t == 1) {
     return(full_vcov)
@@ -759,6 +947,7 @@ print.ineqx_params <- function(x, ...) {
   cat("ineqx_params object\n")
   cat("  Type:", x$type, "\n")
   cat("  Inequality measure:", x$ystat, "\n")
+  cat("  Estimand:", x$estimand %||% "marginal", "\n")
   cat("  Groups (", x$n_groups, "): ",
       paste(x$groups, collapse = ", "), "\n", sep = "")
   if (!is.null(x$times)) {
