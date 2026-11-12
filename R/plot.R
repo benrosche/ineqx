@@ -1945,6 +1945,7 @@ plot.ineqx_causal_longit <- function(x, type = "decomp", ci = FALSE,
     }
   }
   plot_df <- do.call(rbind, rows)
+
   plot_df$group     <- factor(plot_df$group)
   plot_df$param     <- factor(plot_df$param,
     levels = c("mu", "sigma"),

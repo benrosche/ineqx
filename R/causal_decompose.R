@@ -237,6 +237,23 @@ causal_decompose_longit <- function(params,
   ystat <- params$ystat
   d <- params$data
 
+  # Drop groups absent from any time period so row counts are consistent.
+  # Also update params so downstream SE computations (delta_method_se,
+  # .delta_method_cross) see the same reduced group set; vcov dimensions
+  # are no longer valid after a group drop, so nullify it to skip delta CIs.
+  stable_groups <- Reduce(intersect, lapply(params$times, function(t) d$group[d$time == t]))
+  dropped <- setdiff(unique(d$group), stable_groups)
+  if (length(dropped) > 0) {
+    warning(sprintf(
+      "Groups absent from at least one time period dropped from decomposition: %s",
+      paste(dropped, collapse = ", ")
+    ), call. = FALSE)
+    d <- d[d$group %in% stable_groups, ]
+    params$data     <- d
+    params$n_groups <- length(stable_groups)
+    params$vcov     <- NULL
+  }
+
   # Reference period data
   d0 <- d[d$time == ref_time, ]
 
