@@ -111,7 +111,6 @@ For the DiD estimator, add pre/post interactions: \$\$\mu\_{ij} =
 the GAMLSS fit is cached once and many decompositions (varying `ystat`
 and `ref`) are derived cheaply on top:
 
-
     model  <- fit_ineqx_model(y ~ treat * group * time + controls,
                                    ~ treat * group * time + controls,
                                data = d)

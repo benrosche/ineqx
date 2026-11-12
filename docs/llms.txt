@@ -55,21 +55,21 @@ like:
 
 ``` r
 
-data(cps_sample)
+data(earnings_panel)
 
 # Descriptive: how does CV² of women's earnings split into within/between SES?
-ineqx("earnweekf", ystat = "CV2", group = "SES",
-      time = "year", ref = 1982, weights = "earnwtf",
-      data = cps_sample)
+ineqx("earnweek", ystat = "CV2", group = "ses",
+      time = "year", ref = 1982, weights = "earnwt",
+      data = subset(earnings_panel, post == 0))
 
 # Causal: how does motherhood reshape that inequality?
-ineqx("earnweekf", ystat = "CV2",
-      treat = "mother", post = "byear",
-      group = "edu", time = "year10", ref = 1980,
-      formula_mu    = ~ mother * byear * factor(edu) * factor(year10) + age,
-      formula_sigma = ~ mother * byear * factor(edu) * factor(year10),
-      weights = "earnwtf", se = "delta",
-      data = subset(cps_sample, age >= 18 & age <= 49 & earnweekf > 0))
+ineqx("earnweek", ystat = "CV2",
+      treat = "mother", post = "post",
+      group = "educ", time = "decade", ref = 1980,
+      formula_mu    = ~ mother * post * educ * factor(decade) + age,
+      formula_sigma = ~ mother * post * educ * factor(decade),
+      weights = "earnwt", se = "delta",
+      data = subset(earnings_panel, earnweek > 0))
 ```
 
 For DiD designs with `ystat = "CV2"`, keep `y` in levels and use `post`
@@ -148,8 +148,8 @@ inside ineqx().
 
 ## Datasets
 
-- [`cps_sample`](https://benrosche.github.io/ineqx/reference/cps_sample.md)
-  : CPS sample data
+- [`earnings_panel`](https://benrosche.github.io/ineqx/reference/earnings_panel.md)
+  : Synthetic panel of women's weekly earnings
 - [`incdat`](https://benrosche.github.io/ineqx/reference/incdat.md) :
   Income data
 

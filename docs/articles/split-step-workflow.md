@@ -21,7 +21,7 @@ it matters most:
 ``` r
 
 library(ineqx)
-data("cps_sample")
+data("earnings_panel")
 ```
 
 ------------------------------------------------------------------------
@@ -37,27 +37,26 @@ already-extracted parameters).
 
 ``` r
 
-formula_mu    <- earnweekf ~ mother * SES * year
-formula_sigma <-           ~ mother * SES * year
+formula_mu    <- earnweek ~ mother * ses * year
+formula_sigma <-           ~ mother * ses * year
 
 # Step 1 — fit GAMLSS once and cache.
 model <- fit_ineqx_model(
   formula_mu    = formula_mu,
   formula_sigma = formula_sigma,
-  data    = cps_sample,
-  weights = "earnwtf"
+  data    = earnings_panel,
+  weights = "earnwt"
 )
-#> GAMLSS-RS iteration 1: Global Deviance = 7950375215 
-#> GAMLSS-RS iteration 2: Global Deviance = 7949095852 
-#> GAMLSS-RS iteration 3: Global Deviance = 7949094587 
-#> GAMLSS-RS iteration 4: Global Deviance = 7949094586 
-#> GAMLSS-RS iteration 5: Global Deviance = 7949094586
+#> GAMLSS-RS iteration 1: Global Deviance = 588218529 
+#> GAMLSS-RS iteration 2: Global Deviance = 588209568 
+#> GAMLSS-RS iteration 3: Global Deviance = 588209567 
+#> GAMLSS-RS iteration 4: Global Deviance = 588209567
 
 # Step 2 — extract counterfactual params, including the vcov needed for
 # delta-method standard errors downstream. Also cache.
 params_var <- ineqx_params(
-  model = model, data = cps_sample,
-  treat = "mother", group = "SES", time = "year",
+  model = model, data = earnings_panel,
+  treat = "mother", group = "ses", time = "year",
   ystat = "Var", vcov = TRUE
 )
 
@@ -73,8 +72,8 @@ re-use it the same way:
 ``` r
 
 params_cv2 <- ineqx_params(
-  model = model, data = cps_sample,
-  treat = "mother", group = "SES", time = "year",
+  model = model, data = earnings_panel,
+  treat = "mother", group = "ses", time = "year",
   ystat = "CV2", vcov = TRUE
 )
 fit_cv2_1982 <- ineqx(params = params_cv2, ystat = "CV2", ref = 1982)
@@ -101,21 +100,21 @@ outcome level, and can be unstable when mean changes are near zero.
 ``` r
 
 did_model <- fit_ineqx_model(
-  formula_mu    = y ~ mother * post * SES * year + age + race + married,
-  formula_sigma =   ~ mother * post * SES * year + age + race + married,
-  data    = panel_data,
-  weights = "wtfinl"
+  formula_mu    = earnweek ~ mother * post * ses * factor(decade) + age + race + married,
+  formula_sigma =          ~ mother * post * ses * factor(decade) + age + race + married,
+  data    = earnings_panel,
+  weights = "earnwt"
 )
 
 did_params <- ineqx_params(
-  model = did_model, data = panel_data,
-  treat = "mother", group = "SES", time = "year",
-  post  = "post01",        # <- DiD switch
+  model = did_model, data = earnings_panel,
+  treat = "mother", group = "ses", time = "decade",
+  post  = "post",          # <- DiD switch
   ystat = "Var", vcov = TRUE
 )
 
-fit_did_var <- ineqx(params = did_params, ystat = "Var", ref = 1982)
-fit_did_cv2 <- ineqx(params = did_params, ystat = "CV2", ref = 1982)
+fit_did_var <- ineqx(params = did_params, ystat = "Var", ref = 1980)
+fit_did_cv2 <- ineqx(params = did_params, ystat = "CV2", ref = 1980)
 ```
 
 The DiD params object carries `is_did = TRUE` and the name of the `post`
@@ -140,16 +139,16 @@ log scale.
 ``` r
 
 log_model <- fit_ineqx_model(
-  formula_mu    = earnweekf ~ mother * SES * year,
-  formula_sigma =           ~ mother * SES * year,
-  data      = cps_sample,
-  weights   = "earnwtf",
-  transform = "log"           # <- log(earnweekf) before fitting
+  formula_mu    = earnweek ~ mother * ses * year,
+  formula_sigma =           ~ mother * ses * year,
+  data      = subset(earnings_panel, earnweek > 0),
+  weights   = "earnwt",
+  transform = "log"           # <- log(earnweek) before fitting
 )
 
 log_params <- ineqx_params(
-  model = log_model, data = cps_sample,
-  treat = "mother", group = "SES", time = "year",
+  model = log_model, data = subset(earnings_panel, earnweek > 0),
+  treat = "mother", group = "ses", time = "year",
   ystat = "Var", vcov = TRUE  # ystat = "Var" because params live on log scale
 )
 
@@ -157,14 +156,14 @@ fit_vl <- ineqx(params = log_params, ystat = "VL", ref = 1982)
 ```
 
 The numbers from this call are identical to those from the integrated
-`ineqx(y = "earnweekf", data = cps_sample, ystat = "VL", ...)` call. The
-split-step advantage is that you only pay one log-scale GAMLSS fit even
-if you later want VL decompositions at multiple `ref` values.
+`ineqx(y = "earnweek", data = subset(earnings_panel, earnweek > 0), ystat = "VL", ...)`
+call. The split-step advantage is that you only pay one log-scale GAMLSS
+fit even if you later want VL decompositions at multiple `ref` values.
 
 `transform = "log"` requires the LHS of `formula_mu` to be a simple
-variable name (e.g. `earnweekf`, not `log(earnweekf)`) and that column
-to be strictly positive. Construct the log column yourself before
-fitting if either condition fails.
+variable name (e.g. `earnweek`, not `log(earnweek)`) and that column to
+be strictly positive. Construct the log column yourself before fitting
+if either condition fails.
 
 ------------------------------------------------------------------------
 
@@ -176,12 +175,12 @@ anything, the integrated call is shorter:
 ``` r
 
 ineqx(
-  y = "earnweekf", ystat = "CV2",
-  treat = "mother", group = "SES", time = "year", ref = 1982,
-  formula_mu    = ~ mother * SES * year,
-  formula_sigma = ~ mother * SES * year,
-  weights = "earnwtf",
-  data    = cps_sample
+  y = "earnweek", ystat = "CV2",
+  treat = "mother", group = "ses", time = "year", ref = 1982,
+  formula_mu    = ~ mother * ses * year,
+  formula_sigma = ~ mother * ses * year,
+  weights = "earnwt",
+  data    = earnings_panel
 )
 ```
 

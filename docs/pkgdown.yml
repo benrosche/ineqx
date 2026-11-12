@@ -1,5 +1,5 @@
-pandoc: 3.8.2.1
-pkgdown: 2.2.0
+pandoc: '3.10'
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   examples: examples.html
@@ -8,7 +8,7 @@ articles:
   model: model.html
   split-step-workflow: split-step-workflow.html
   tutorial: tutorial.html
-last_built: 2026-06-07T20:52Z
+last_built: 2026-11-12T12:32Z
 urls:
   reference: https://benrosche.github.io/ineqx/reference
   article: https://benrosche.github.io/ineqx/articles

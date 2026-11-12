@@ -43,8 +43,8 @@ inside ineqx().
 
 ## Datasets
 
-- [`cps_sample`](https://benrosche.github.io/ineqx/reference/cps_sample.md)
-  : CPS sample data
+- [`earnings_panel`](https://benrosche.github.io/ineqx/reference/earnings_panel.md)
+  : Synthetic panel of women's weekly earnings
 - [`incdat`](https://benrosche.github.io/ineqx/reference/incdat.md) :
   Income data
 

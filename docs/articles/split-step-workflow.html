@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Split-step workflow: fit once, decompose many • ineqx</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <meta property="og:title" content="Split-step workflow: fit once, decompose many">
@@ -88,7 +88,7 @@ where it matters most:</p>
 </ul>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://benrosche.github.io/ineqx/">ineqx</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"cps_sample"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"earnings_panel"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 <div class="section level3">
 <h3 id="cross-section">Cross-section: one GAMLSS fit, many decompositions<a class="anchor" aria-label="anchor" href="#cross-section"></a>
@@ -100,27 +100,26 @@ GAMLSS and extract counterfactual predictions); the third is cheap (it
 just runs the decomposition formula on the already-extracted
 parameters).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">formula_mu</span>    <span class="op">&lt;-</span> <span class="va">earnweekf</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span></span>
-<span><span class="va">formula_sigma</span> <span class="op">&lt;-</span>           <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span></span>
+<code class="sourceCode R"><span><span class="va">formula_mu</span>    <span class="op">&lt;-</span> <span class="va">earnweek</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="va">year</span></span>
+<span><span class="va">formula_sigma</span> <span class="op">&lt;-</span>           <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="va">year</span></span>
 <span></span>
 <span><span class="co"># Step 1 — fit GAMLSS once and cache.</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ineqx_model.html">fit_ineqx_model</a></span><span class="op">(</span></span>
 <span>  formula_mu    <span class="op">=</span> <span class="va">formula_mu</span>,</span>
 <span>  formula_sigma <span class="op">=</span> <span class="va">formula_sigma</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">cps_sample</span>,</span>
-<span>  weights <span class="op">=</span> <span class="st">"earnwtf"</span></span>
+<span>  data    <span class="op">=</span> <span class="va">earnings_panel</span>,</span>
+<span>  weights <span class="op">=</span> <span class="st">"earnwt"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 1: Global Deviance = 7950375215 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 2: Global Deviance = 7949095852 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 3: Global Deviance = 7949094587 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 4: Global Deviance = 7949094586 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 5: Global Deviance = 7949094586</span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 1: Global Deviance = 588218529 </span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 2: Global Deviance = 588209568 </span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 3: Global Deviance = 588209567 </span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 4: Global Deviance = 588209567</span></span>
 <span></span>
 <span><span class="co"># Step 2 — extract counterfactual params, including the vcov needed for</span></span>
 <span><span class="co"># delta-method standard errors downstream. Also cache.</span></span>
 <span><span class="va">params_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx_params.html">ineqx_params</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">model</span>, data <span class="op">=</span> <span class="va">cps_sample</span>,</span>
-<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
+<span>  model <span class="op">=</span> <span class="va">model</span>, data <span class="op">=</span> <span class="va">earnings_panel</span>,</span>
+<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"ses"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
 <span>  ystat <span class="op">=</span> <span class="st">"Var"</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -132,8 +131,8 @@ object once (this is also cheap relative to the GAMLSS step), then
 re-use it the same way:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">params_cv2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx_params.html">ineqx_params</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">model</span>, data <span class="op">=</span> <span class="va">cps_sample</span>,</span>
-<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
+<span>  model <span class="op">=</span> <span class="va">model</span>, data <span class="op">=</span> <span class="va">earnings_panel</span>,</span>
+<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"ses"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
 <span>  ystat <span class="op">=</span> <span class="st">"CV2"</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">fit_cv2_1982</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">params_cv2</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>, ref <span class="op">=</span> <span class="fl">1982</span><span class="op">)</span></span></code></pre></div>
@@ -158,21 +157,21 @@ inequality in the outcome level, and can be unstable when mean changes
 are near zero.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">did_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ineqx_model.html">fit_ineqx_model</a></span><span class="op">(</span></span>
-<span>  formula_mu    <span class="op">=</span> <span class="va">y</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span>,</span>
-<span>  formula_sigma <span class="op">=</span>   <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">panel_data</span>,</span>
-<span>  weights <span class="op">=</span> <span class="st">"wtfinl"</span></span>
+<span>  formula_mu    <span class="op">=</span> <span class="va">earnweek</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">decade</span><span class="op">)</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span>,</span>
+<span>  formula_sigma <span class="op">=</span>          <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">decade</span><span class="op">)</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span>,</span>
+<span>  data    <span class="op">=</span> <span class="va">earnings_panel</span>,</span>
+<span>  weights <span class="op">=</span> <span class="st">"earnwt"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">did_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx_params.html">ineqx_params</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">did_model</span>, data <span class="op">=</span> <span class="va">panel_data</span>,</span>
-<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
-<span>  post  <span class="op">=</span> <span class="st">"post01"</span>,        <span class="co"># &lt;- DiD switch</span></span>
+<span>  model <span class="op">=</span> <span class="va">did_model</span>, data <span class="op">=</span> <span class="va">earnings_panel</span>,</span>
+<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"ses"</span>, time <span class="op">=</span> <span class="st">"decade"</span>,</span>
+<span>  post  <span class="op">=</span> <span class="st">"post"</span>,          <span class="co"># &lt;- DiD switch</span></span>
 <span>  ystat <span class="op">=</span> <span class="st">"Var"</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_did_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">did_params</span>, ystat <span class="op">=</span> <span class="st">"Var"</span>, ref <span class="op">=</span> <span class="fl">1982</span><span class="op">)</span></span>
-<span><span class="va">fit_did_cv2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">did_params</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>, ref <span class="op">=</span> <span class="fl">1982</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">fit_did_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">did_params</span>, ystat <span class="op">=</span> <span class="st">"Var"</span>, ref <span class="op">=</span> <span class="fl">1980</span><span class="op">)</span></span>
+<span><span class="va">fit_did_cv2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">did_params</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>, ref <span class="op">=</span> <span class="fl">1980</span><span class="op">)</span></span></code></pre></div>
 <p>The DiD params object carries <code>is_did = TRUE</code> and the name
 of the <code>post</code> column, so downstream plotting and printing
 know to surface pre-period anchors.</p>
@@ -192,28 +191,28 @@ function log-transforms the response in a local copy of
 live on the log scale.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">log_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_ineqx_model.html">fit_ineqx_model</a></span><span class="op">(</span></span>
-<span>  formula_mu    <span class="op">=</span> <span class="va">earnweekf</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span>,</span>
-<span>  formula_sigma <span class="op">=</span>           <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span>,</span>
-<span>  data      <span class="op">=</span> <span class="va">cps_sample</span>,</span>
-<span>  weights   <span class="op">=</span> <span class="st">"earnwtf"</span>,</span>
-<span>  transform <span class="op">=</span> <span class="st">"log"</span>           <span class="co"># &lt;- log(earnweekf) before fitting</span></span>
+<span>  formula_mu    <span class="op">=</span> <span class="va">earnweek</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="va">year</span>,</span>
+<span>  formula_sigma <span class="op">=</span>           <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="va">year</span>,</span>
+<span>  data      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">earnings_panel</span>, <span class="va">earnweek</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  weights   <span class="op">=</span> <span class="st">"earnwt"</span>,</span>
+<span>  transform <span class="op">=</span> <span class="st">"log"</span>           <span class="co"># &lt;- log(earnweek) before fitting</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">log_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx_params.html">ineqx_params</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">log_model</span>, data <span class="op">=</span> <span class="va">cps_sample</span>,</span>
-<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
+<span>  model <span class="op">=</span> <span class="va">log_model</span>, data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">earnings_panel</span>, <span class="va">earnweek</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"ses"</span>, time <span class="op">=</span> <span class="st">"year"</span>,</span>
 <span>  ystat <span class="op">=</span> <span class="st">"Var"</span>, vcov <span class="op">=</span> <span class="cn">TRUE</span>  <span class="co"># ystat = "Var" because params live on log scale</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_vl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">log_params</span>, ystat <span class="op">=</span> <span class="st">"VL"</span>, ref <span class="op">=</span> <span class="fl">1982</span><span class="op">)</span></span></code></pre></div>
 <p>The numbers from this call are identical to those from the integrated
-<code>ineqx(y = "earnweekf", data = cps_sample, ystat = "VL", ...)</code>
+<code>ineqx(y = "earnweek", data = subset(earnings_panel, earnweek &gt; 0), ystat = "VL", ...)</code>
 call. The split-step advantage is that you only pay one log-scale GAMLSS
 fit even if you later want VL decompositions at multiple
 <code>ref</code> values.</p>
 <p><code>transform = "log"</code> requires the LHS of
 <code>formula_mu</code> to be a simple variable name
-(e.g. <code>earnweekf</code>, not <code>log(earnweekf)</code>) and that
+(e.g. <code>earnweek</code>, not <code>log(earnweek)</code>) and that
 column to be strictly positive. Construct the log column yourself before
 fitting if either condition fails.</p>
 <hr>
@@ -225,12 +224,12 @@ fitting if either condition fails.</p>
 cache anything, the integrated call is shorter:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span></span>
-<span>  y <span class="op">=</span> <span class="st">"earnweekf"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
-<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"SES"</span>, time <span class="op">=</span> <span class="st">"year"</span>, ref <span class="op">=</span> <span class="fl">1982</span>,</span>
-<span>  formula_mu    <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span>,</span>
-<span>  formula_sigma <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">SES</span> <span class="op">*</span> <span class="va">year</span>,</span>
-<span>  weights <span class="op">=</span> <span class="st">"earnwtf"</span>,</span>
-<span>  data    <span class="op">=</span> <span class="va">cps_sample</span></span>
+<span>  y <span class="op">=</span> <span class="st">"earnweek"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
+<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, group <span class="op">=</span> <span class="st">"ses"</span>, time <span class="op">=</span> <span class="st">"year"</span>, ref <span class="op">=</span> <span class="fl">1982</span>,</span>
+<span>  formula_mu    <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="va">year</span>,</span>
+<span>  formula_sigma <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">ses</span> <span class="op">*</span> <span class="va">year</span>,</span>
+<span>  weights <span class="op">=</span> <span class="st">"earnwt"</span>,</span>
+<span>  data    <span class="op">=</span> <span class="va">earnings_panel</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The integrated path also handles <code>ystat = "VL"</code>
 transparently — it log-transforms <code>data[[y]]</code> internally,
@@ -250,7 +249,7 @@ need to cache an expensive GAMLSS fit and reuse it across
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

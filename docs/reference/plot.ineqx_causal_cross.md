@@ -29,37 +29,37 @@ plot(
 
   `"wibe"`
 
-  :   Within/between treatment effects (bar chart).
+  : Within/between treatment effects (bar chart).
 
   `"wibe.group"`
 
-  :   Group-level contributions to within/between.
+  : Group-level contributions to within/between.
 
   `"treat"`
 
-  :   Predicted treatment effect distributions by group.
+  : Predicted treatment effect distributions by group.
 
   `"treat.params"`
 
-  :   Treatment effect parameters (beta, lambda) by group (bar chart).
+  : Treatment effect parameters (beta, lambda) by group (bar chart).
 
   `"effect.prop"`
 
-  :   Proportional treatment effect on the mean by group (points):
-      `beta_g / mu0_g` (identity) or `exp(beta_g)-1` (log). Equal
-      heights indicate a proportional (group-invariant) effect.
+  : Proportional treatment effect on the mean by group (points):
+    `beta_g / mu0_g` (identity) or `exp(beta_g)-1` (log). Equal heights
+    indicate a proportional (group-invariant) effect.
 
   `"outcome"`
 
-  :   Predicted outcome distributions (control vs treated) by group.
+  : Predicted outcome distributions (control vs treated) by group.
 
   `"outcome.params"`
 
-  :   Predicted means and SDs under control vs treatment. For
-      simple-difference models, a bar chart per group. For DiD models, a
-      netted-out line chart anchored at the pre-period treated level:
-      the post-period gap between observed and counterfactual lines
-      equals the DiD ATT.
+  : Predicted means and SDs under control vs treatment. For
+    simple-difference models, a bar chart per group. For DiD models, a
+    netted-out line chart anchored at the pre-period treated level: the
+    post-period gap between observed and counterfactual lines equals the
+    DiD ATT.
 
 - ci:
 

@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Examples • ineqx</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <meta property="og:title" content="Examples">
@@ -70,7 +70,8 @@
     
     
 <p>Two short worked examples. Both run on the package’s bundled
-<code>cps_sample</code> (a 65k-row CPS subsample, 1982–2021) and aim to
+<code>earnings_panel</code> (a synthetic, CPS-style two-wave panel of
+7,600 women, 1982–2020; see <code><a href="../reference/earnings_panel.html">?earnings_panel</a></code>) and aim to
 show the package’s two main modes — descriptive and causal — without
 doing a full analysis.</p>
 <ul>
@@ -81,22 +82,23 @@ penalty</a></li>
 </ul>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://benrosche.github.io/ineqx/">ineqx</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"cps_sample"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"earnings_panel"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 <div class="section level3">
 <h3 id="e1">Example 1: Descriptive within/between decomposition<a class="anchor" aria-label="anchor" href="#e1"></a>
 </h3>
-<p>Women in <code>cps_sample</code> are grouped into low/medium/high SES
-(<code>SES = 1, 2, 3</code>) based on household income. We ask: how much
-earnings inequality lies <em>within</em> each SES tier vs
-<em>between</em> tiers, and how has that changed since 1982?</p>
+<p>Women in <code>earnings_panel</code> are grouped into low/middle/high
+socioeconomic status (<code>ses</code>). We ask: how much earnings
+inequality lies <em>within</em> each SES tier vs <em>between</em> tiers,
+and how has that changed since 1982? For a clean annual cross-section we
+use each woman’s first wave (<code>post == 0</code>).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">desc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span></span>
-<span>  y <span class="op">=</span> <span class="st">"earnweekf"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"SES"</span>,</span>
+<span>  y <span class="op">=</span> <span class="st">"earnweek"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"ses"</span>,</span>
 <span>  time <span class="op">=</span> <span class="st">"year"</span>, ref <span class="op">=</span> <span class="fl">1982</span>,</span>
-<span>  weights <span class="op">=</span> <span class="st">"earnwtf"</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">cps_sample</span></span>
+<span>  weights <span class="op">=</span> <span class="st">"earnwt"</span>,</span>
+<span>  data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">earnings_panel</span>, <span class="va">post</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>We use <code>ystat = "CV2"</code> (squared coefficient of variation,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msup><mi>μ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\sigma^2/\mu^2</annotation></semantics></math>)
@@ -112,441 +114,419 @@ FAQ.</p>
 <span><span class="co">#&gt; Ordering: shapley </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Totals by time:</span></span>
-<span><span class="co">#&gt;  time  CV2W   CV2B  CV2T</span></span>
-<span><span class="co">#&gt;  1982 1.102 0.1802 1.283</span></span>
-<span><span class="co">#&gt;  1983 1.442 0.2230 1.665</span></span>
-<span><span class="co">#&gt;  1984 1.538 0.2624 1.801</span></span>
-<span><span class="co">#&gt;  1985 1.604 0.2968 1.901</span></span>
-<span><span class="co">#&gt;  1986 1.020 0.3396 1.359</span></span>
-<span><span class="co">#&gt;  1987 1.248 0.2863 1.534</span></span>
-<span><span class="co">#&gt;  1988 1.163 0.2860 1.449</span></span>
-<span><span class="co">#&gt;  1989 1.182 0.2245 1.407</span></span>
-<span><span class="co">#&gt;  1990 1.350 0.2597 1.610</span></span>
-<span><span class="co">#&gt;  1991 1.178 0.3013 1.479</span></span>
-<span><span class="co">#&gt;  1992 1.251 0.3653 1.617</span></span>
-<span><span class="co">#&gt;  1993 1.186 0.3839 1.570</span></span>
-<span><span class="co">#&gt;  1994 1.520 0.3283 1.848</span></span>
-<span><span class="co">#&gt;  1995 1.567 0.3118 1.879</span></span>
-<span><span class="co">#&gt;  1996 1.149 0.3554 1.505</span></span>
-<span><span class="co">#&gt;  1997 1.115 0.2835 1.398</span></span>
-<span><span class="co">#&gt;  1998 1.288 0.3175 1.606</span></span>
-<span><span class="co">#&gt;  1999 1.481 0.2774 1.759</span></span>
-<span><span class="co">#&gt;  2000 1.364 0.3076 1.672</span></span>
-<span><span class="co">#&gt;  2001 1.413 0.2247 1.638</span></span>
-<span><span class="co">#&gt;  2002 1.448 0.2911 1.740</span></span>
-<span><span class="co">#&gt;  2003 1.465 0.2579 1.722</span></span>
-<span><span class="co">#&gt;  2004 1.528 0.2630 1.791</span></span>
-<span><span class="co">#&gt;  2005 1.500 0.2993 1.800</span></span>
-<span><span class="co">#&gt;  2006 1.340 0.3273 1.668</span></span>
-<span><span class="co">#&gt;  2007 1.375 0.2738 1.649</span></span>
-<span><span class="co">#&gt;  2008 1.347 0.2711 1.618</span></span>
-<span><span class="co">#&gt;  2009 1.349 0.3178 1.667</span></span>
-<span><span class="co">#&gt;  2010 1.396 0.2894 1.685</span></span>
-<span><span class="co">#&gt;  2011 1.485 0.2838 1.769</span></span>
-<span><span class="co">#&gt;  2012 1.339 0.3478 1.687</span></span>
-<span><span class="co">#&gt;  2013 1.386 0.3181 1.704</span></span>
-<span><span class="co">#&gt;  2014 1.397 0.2605 1.657</span></span>
-<span><span class="co">#&gt;  2015 1.608 0.2890 1.897</span></span>
-<span><span class="co">#&gt;  2016 1.480 0.3199 1.800</span></span>
-<span><span class="co">#&gt;  2017 1.338 0.3613 1.699</span></span>
-<span><span class="co">#&gt;  2018 1.420 0.3169 1.737</span></span>
-<span><span class="co">#&gt;  2019 1.346 0.3079 1.654</span></span>
-<span><span class="co">#&gt;  2020 1.597 0.3326 1.930</span></span>
-<span><span class="co">#&gt;  2021 1.547 0.3608 1.908</span></span>
+<span><span class="co">#&gt;  time   CV2W    CV2B   CV2T</span></span>
+<span><span class="co">#&gt;  1982 0.7553 0.06219 0.8175</span></span>
+<span><span class="co">#&gt;  1983 0.7361 0.05330 0.7894</span></span>
+<span><span class="co">#&gt;  1984 0.7956 0.02597 0.8216</span></span>
+<span><span class="co">#&gt;  1985 0.7771 0.05828 0.8354</span></span>
+<span><span class="co">#&gt;  1986 0.8212 0.02440 0.8456</span></span>
+<span><span class="co">#&gt;  1987 0.8311 0.05668 0.8878</span></span>
+<span><span class="co">#&gt;  1988 0.8131 0.04695 0.8601</span></span>
+<span><span class="co">#&gt;  1989 0.8488 0.02483 0.8736</span></span>
+<span><span class="co">#&gt;  1990 0.7619 0.07605 0.8379</span></span>
+<span><span class="co">#&gt;  1991 0.8103 0.02070 0.8310</span></span>
+<span><span class="co">#&gt;  1992 0.8116 0.08374 0.8953</span></span>
+<span><span class="co">#&gt;  1993 0.8626 0.02497 0.8876</span></span>
+<span><span class="co">#&gt;  1994 0.8429 0.06463 0.9075</span></span>
+<span><span class="co">#&gt;  1995 0.9427 0.05623 0.9989</span></span>
+<span><span class="co">#&gt;  1996 0.8941 0.06791 0.9620</span></span>
+<span><span class="co">#&gt;  1997 0.8027 0.04756 0.8503</span></span>
+<span><span class="co">#&gt;  1998 0.9505 0.03630 0.9868</span></span>
+<span><span class="co">#&gt;  1999 0.9138 0.04623 0.9600</span></span>
+<span><span class="co">#&gt;  2000 0.9207 0.04921 0.9699</span></span>
+<span><span class="co">#&gt;  2001 0.8375 0.09134 0.9289</span></span>
+<span><span class="co">#&gt;  2002 0.9295 0.02917 0.9586</span></span>
+<span><span class="co">#&gt;  2003 0.8332 0.06864 0.9019</span></span>
+<span><span class="co">#&gt;  2004 0.9221 0.06098 0.9831</span></span>
+<span><span class="co">#&gt;  2005 0.9643 0.08440 1.0487</span></span>
+<span><span class="co">#&gt;  2006 0.9302 0.11880 1.0490</span></span>
+<span><span class="co">#&gt;  2007 1.0038 0.08653 1.0903</span></span>
+<span><span class="co">#&gt;  2008 0.9209 0.08580 1.0067</span></span>
+<span><span class="co">#&gt;  2009 0.9396 0.03734 0.9769</span></span>
+<span><span class="co">#&gt;  2010 0.9145 0.09964 1.0142</span></span>
+<span><span class="co">#&gt;  2011 0.8687 0.09387 0.9625</span></span>
+<span><span class="co">#&gt;  2012 0.9456 0.08618 1.0318</span></span>
+<span><span class="co">#&gt;  2013 1.0752 0.05817 1.1334</span></span>
+<span><span class="co">#&gt;  2014 1.0311 0.09023 1.1213</span></span>
+<span><span class="co">#&gt;  2015 0.9955 0.05132 1.0469</span></span>
+<span><span class="co">#&gt;  2016 0.9893 0.08531 1.0747</span></span>
+<span><span class="co">#&gt;  2017 0.9697 0.06438 1.0341</span></span>
+<span><span class="co">#&gt;  2018 0.9715 0.06029 1.0317</span></span>
+<span><span class="co">#&gt;  2019 1.0878 0.07269 1.1605</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Decomposition of changes in CV2 relative to ref = 1982:</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1982: (reference)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1983:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                    0.3242</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0187</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.3055</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.0300</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0284</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0241</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0043</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3825</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.0362</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0082</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0279</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.0094</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0013</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0006</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0007</span></span>
+<span><span class="co">#&gt;     Total:                                      -0.0281</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1984:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                    0.2669</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0302</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.2367</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.1388</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1125</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0520</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0604</span></span>
-<span><span class="co">#&gt;     Total:                                       0.5181</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.0482</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0367</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0115</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.0523</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0000</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0004</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0004</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0041</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1985:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                    0.1145</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0356</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0789</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2754</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.2282</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0810</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.1472</span></span>
-<span><span class="co">#&gt;     Total:                                       0.6181</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.0312</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0037</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0275</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.0501</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0011</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0003</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0008</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0179</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1986:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.2263</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0905</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.3168</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.1551</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1478</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0689</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0790</span></span>
-<span><span class="co">#&gt;     Total:                                       0.0766</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1202</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0382</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0820</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.1485</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0001</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0004</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0005</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0281</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1987:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1496</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0744</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2240</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.3015</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0997</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0317</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0680</span></span>
-<span><span class="co">#&gt;     Total:                                       0.2516</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1307</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0063</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.1244</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2054</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0044</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0008</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0051</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0703</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1988:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1656</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0691</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2347</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2389</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0928</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0366</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0561</span></span>
-<span><span class="co">#&gt;     Total:                                       0.1661</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1733</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0162</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.1571</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2172</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0014</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0010</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0023</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0426</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1989:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.3214</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0230</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.3444</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4070</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0386</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0213</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0173</span></span>
-<span><span class="co">#&gt;     Total:                                       0.1243</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.2568</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0385</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.2183</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.3155</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0027</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0012</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0038</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0561</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1990:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1754</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0614</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2369</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4797</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0233</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0181</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0052</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3275</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1460</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0128</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.1588</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.1737</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0073</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0011</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0083</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0204</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1991:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.0642</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0920</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.1562</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2537</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0070</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0291</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0221</span></span>
-<span><span class="co">#&gt;     Total:                                       0.1964</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.2746</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0428</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.2319</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2911</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0030</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0013</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0042</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0135</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1992:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1353</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1465</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2818</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4312</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0382</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0386</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0004</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3341</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.2507</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0224</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.2730</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.3381</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0097</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0008</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0088</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0778</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1993:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.2333</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1576</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.3909</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4271</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0935</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0461</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0475</span></span>
-<span><span class="co">#&gt;     Total:                                       0.2873</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.3704</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0379</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.3325</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4476</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0071</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0006</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0078</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0701</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1994:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.0680</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0852</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.1532</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4865</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1473</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0629</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0845</span></span>
-<span><span class="co">#&gt;     Total:                                       0.5659</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.3290</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0018</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.3308</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4274</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0084</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0006</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0090</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0900</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1995:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1974</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0513</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2488</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.5700</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.2239</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0803</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.1436</span></span>
-<span><span class="co">#&gt;     Total:                                       0.5964</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.3899</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0066</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.3834</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.5736</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0023</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0006</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0029</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1814</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1996:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1719</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1218</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2937</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.3001</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0938</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0534</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0404</span></span>
-<span><span class="co">#&gt;     Total:                                       0.2220</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4476</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0036</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.4512</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.5920</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0001</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0022</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0020</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1445</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1997:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.1966</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0710</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.2676</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.2754</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0367</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0323</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0044</span></span>
-<span><span class="co">#&gt;     Total:                                       0.1155</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4375</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0154</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.4221</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.4781</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0078</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0008</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0086</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0328</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1998:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4586</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1011</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5596</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.6926</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0890</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0362</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0528</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3231</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.5976</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0281</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.5695</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.7743</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0074</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0022</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0096</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1693</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 1999:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6443</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0453</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.6895</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0023</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1183</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0519</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0664</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4763</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.5398</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0182</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.5216</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.6884</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0061</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0022</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0083</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1425</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2000:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4592</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0780</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5373</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.7606</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0882</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0493</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0388</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3895</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6074</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0159</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.5915</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.7844</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0245</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0029</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0274</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1524</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2001:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7600</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0080</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7681</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0428</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0727</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0364</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0363</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3555</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.5468</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0272</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.5739</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.6862</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0281</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0020</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0301</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1114</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2002:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7083</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0741</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7824</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0574</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1079</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0369</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0711</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4570</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6744</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0312</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.6432</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.8250</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0095</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0018</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0077</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1411</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2003:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6458</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0471</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.6929</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9981</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0877</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0305</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0571</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4399</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6811</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0038</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.6849</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.7772</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0117</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0026</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0143</span></span>
+<span><span class="co">#&gt;     Total:                                       0.0844</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2004:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6762</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0365</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7127</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0857</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0993</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0463</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0529</span></span>
-<span><span class="co">#&gt;     Total:                                       0.5087</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7542</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0030</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.7512</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9361</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0163</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0018</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0181</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1656</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2005:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.8191</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0443</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8634</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.1826</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1535</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0748</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0787</span></span>
-<span><span class="co">#&gt;     Total:                                       0.5170</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.8486</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0236</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.8722</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0934</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0135</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0014</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0121</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2312</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2006:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7400</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0700</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8099</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9788</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1461</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0771</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0690</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3850</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.8279</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0565</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.8844</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0744</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0151</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0001</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0152</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2315</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2007:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7233</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0326</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7558</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9683</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1211</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0611</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0601</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3661</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.0027</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0231</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.0259</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.2853</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0098</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0012</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0110</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2728</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2008:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6848</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0341</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7189</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9402</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0803</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0567</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0236</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3357</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.0059</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0218</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.0277</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.2052</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0100</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0018</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0118</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1892</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2009:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4939</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0833</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5772</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.8065</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0720</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0542</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0177</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3846</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.0757</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0255</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.0503</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.2514</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0162</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0006</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0168</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1594</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2010:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4765</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0618</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5383</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.8199</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0594</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0474</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0120</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4028</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.0930</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0356</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.1286</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.3259</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0362</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0019</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0381</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1967</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2011:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4991</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0622</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5613</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9512</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0340</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0414</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0074</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4861</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.0014</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0322</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.0336</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.1789</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0325</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0005</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0320</span></span>
+<span><span class="co">#&gt;     Total:                                       0.1450</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2012:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4220</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1190</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5410</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.7901</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0362</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0486</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0124</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4043</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.2001</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0271</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.2272</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.4492</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0348</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0031</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0317</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2143</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2013:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.4851</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0871</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.5722</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.8777</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0293</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0508</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0215</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4219</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.4192</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0023</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.4169</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.7679</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0328</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0017</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0311</span></span>
+<span><span class="co">#&gt;     Total:                                       0.3159</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2014:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6674</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0374</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7048</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  0.9583</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0836</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0429</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0407</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3745</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.3919</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0356</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.4275</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.6990</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0033</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0076</span></span>
+<span><span class="co">#&gt;       Within-group:                              0.0043</span></span>
+<span><span class="co">#&gt;     Total:                                       0.3038</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2015:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7966</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0779</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8744</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.2956</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.1154</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0309</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0845</span></span>
-<span><span class="co">#&gt;     Total:                                       0.6144</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.4968</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0066</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.4902</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.7506</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0245</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0043</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0202</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2294</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2016:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7514</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1163</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8678</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.2006</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0683</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0234</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0450</span></span>
-<span><span class="co">#&gt;     Total:                                       0.5175</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.6100</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0266</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.6366</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.9080</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0408</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0035</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0373</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2571</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2017:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6956</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1633</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8589</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0611</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0509</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0177</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0332</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4165</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.6863</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0043</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.6907</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.9463</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0434</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0021</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0412</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2166</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2018:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7777</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1059</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8836</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.1674</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0646</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0308</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0337</span></span>
-<span><span class="co">#&gt;     Total:                                       0.4542</span></span>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.7163</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0019</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.7144</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.9638</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0333</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0000</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0332</span></span>
+<span><span class="co">#&gt;     Total:                                       0.2142</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   time 2019:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.7686</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0875</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8561</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.0697</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                    0.0702</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0402</span></span>
-<span><span class="co">#&gt;       Within-group:                              0.0300</span></span>
-<span><span class="co">#&gt;     Total:                                       0.3713</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   time 2020:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.6783</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1364</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.8147</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.3261</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0004</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.0159</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0163</span></span>
-<span><span class="co">#&gt;     Total:                                       0.6473</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   time 2021:</span></span>
-<span><span class="co">#&gt;     Between-group (delta_mu):                   -0.5099</span></span>
-<span><span class="co">#&gt;       Between-group:                             0.1920</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.7020</span></span>
-<span><span class="co">#&gt;     Within-group (delta_sigma):                  1.2261</span></span>
-<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0905</span></span>
-<span><span class="co">#&gt;       Between-group:                            -0.0114</span></span>
-<span><span class="co">#&gt;       Within-group:                             -0.0791</span></span>
-<span><span class="co">#&gt;     Total:                                       0.6256</span></span></code></pre></div>
+<span><span class="co">#&gt;     Between-group (delta_mu):                   -1.9868</span></span>
+<span><span class="co">#&gt;       Between-group:                             0.0109</span></span>
+<span><span class="co">#&gt;       Within-group:                             -1.9977</span></span>
+<span><span class="co">#&gt;     Within-group (delta_sigma):                  2.3896</span></span>
+<span><span class="co">#&gt;     Compositional (delta_pi):                   -0.0598</span></span>
+<span><span class="co">#&gt;       Between-group:                            -0.0005</span></span>
+<span><span class="co">#&gt;       Within-group:                             -0.0594</span></span>
+<span><span class="co">#&gt;     Total:                                       0.3430</span></span></code></pre></div>
 <p>Within- vs between-group inequality over time:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">desc</span>, type <span class="op">=</span> <span class="st">"wibe"</span><span class="op">)</span></span></code></pre></div>
@@ -561,12 +541,18 @@ and changing group shares
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">desc</span>, type <span class="op">=</span> <span class="st">"decomp"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="examples_files/figure-html/fig2-1.png" class="r-plt" alt="" width="85%" style="display: block; margin: auto;"></p>
-<p>Most of the increase in
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">CV^2</annotation></semantics></math>
+rises from about 0.8 in 1982 to about 1.2 in 2019, and almost all of
+that inequality — and its growth — lies <em>within</em> SES tiers. The
+increase traces to growing within-group dispersion
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub><annotation encoding="application/x-tex">\Delta_\sigma</annotation></semantics></math>),
+partly offset by rising mean earnings
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>μ</mi></msub><annotation encoding="application/x-tex">\Delta_\mu</annotation></semantics></math>),
+which lower
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">CV^2</annotation></semantics></math>
-since 1982 traces to changes in within-group dispersion
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub><annotation encoding="application/x-tex">\Delta_\sigma</annotation></semantics></math>)
-— earnings inequality has grown <em>within</em> SES tiers, not just
-<em>between</em> them. This is the basic motivation for taking
+for a given standard deviation. Shifts in the SES composition
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>π</mi></msub><annotation encoding="application/x-tex">\Delta_\pi</annotation></semantics></math>)
+play almost no role. This is the basic motivation for taking
 within-group inequality seriously.</p>
 <hr>
 </div>
@@ -576,34 +562,31 @@ within-group inequality seriously.</p>
 <p>Same dataset, now asking a causal question: how does motherhood
 affect earnings inequality among women, and how has that effect
 changed?</p>
-<p>We restrict the sample to women of childbearing age and fit a
-difference-in- differences model (treatment = <code>mother</code>,
-post-period = <code>byear</code>) with education-by-decade interactions
+<p>We restrict the sample to women with positive earnings and fit a
+difference-in-differences model (treatment = <code>mother</code>,
+post-period = <code>post</code>) with education-by-decade interactions
 for both the mean and log-SD of earnings. GAMLSS does the heavy lifting
 internally. For <code>ystat = "CV2"</code>, keep the outcome in levels
 and use <code>post</code> for the DiD contrast; applying
 <code>CV2</code> to first-differenced outcomes is not recommended.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">cps_sample</span>,</span>
-<span>             <span class="va">age</span> <span class="op">&gt;=</span> <span class="fl">18</span> <span class="op">&amp;</span> <span class="va">age</span> <span class="op">&lt;=</span> <span class="fl">49</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">earnweekf</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">earnweekf</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">earnings_panel</span>, <span class="va">earnweek</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">causal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ineqx.html">ineqx</a></span><span class="op">(</span></span>
-<span>  y <span class="op">=</span> <span class="st">"earnweekf"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
-<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, post <span class="op">=</span> <span class="st">"byear"</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"edu"</span>,</span>
-<span>  time <span class="op">=</span> <span class="st">"year10"</span>, ref <span class="op">=</span> <span class="fl">1980</span>,</span>
-<span>  formula_mu    <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">byear</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">edu</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">year10</span><span class="op">)</span> <span class="op">+</span> <span class="va">age</span>,</span>
-<span>  formula_sigma <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">byear</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">edu</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">year10</span><span class="op">)</span>,</span>
-<span>  weights <span class="op">=</span> <span class="st">"earnwtf"</span>,</span>
+<span>  y <span class="op">=</span> <span class="st">"earnweek"</span>, ystat <span class="op">=</span> <span class="st">"CV2"</span>,</span>
+<span>  treat <span class="op">=</span> <span class="st">"mother"</span>, post <span class="op">=</span> <span class="st">"post"</span>,</span>
+<span>  group <span class="op">=</span> <span class="st">"educ"</span>,</span>
+<span>  time <span class="op">=</span> <span class="st">"decade"</span>, ref <span class="op">=</span> <span class="fl">1980</span>,</span>
+<span>  formula_mu    <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">educ</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">decade</span><span class="op">)</span> <span class="op">+</span> <span class="va">age</span>,</span>
+<span>  formula_sigma <span class="op">=</span> <span class="op">~</span> <span class="va">mother</span> <span class="op">*</span> <span class="va">post</span> <span class="op">*</span> <span class="va">educ</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">decade</span><span class="op">)</span>,</span>
+<span>  weights <span class="op">=</span> <span class="st">"earnwt"</span>,</span>
 <span>  se <span class="op">=</span> <span class="st">"delta"</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">df</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 1: Global Deviance = 3535424937 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 2: Global Deviance = 3534988768 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 3: Global Deviance = 3534986071 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 4: Global Deviance = 3534986056 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 5: Global Deviance = 3534986056 </span></span>
-<span><span class="co">#&gt; GAMLSS-RS iteration 6: Global Deviance = 3534986056</span></span></code></pre></div>
+<span><span class="co">#&gt; GAMLSS-RS iteration 1: Global Deviance = 397555473 </span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 2: Global Deviance = 397532171 </span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 3: Global Deviance = 397532169 </span></span>
+<span><span class="co">#&gt; GAMLSS-RS iteration 4: Global Deviance = 397532169</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="cross-sectional-split-het-and-cov-sub-components">Cross-sectional split: het and cov sub-components<a class="anchor" aria-label="anchor" href="#cross-sectional-split-het-and-cov-sub-components"></a>
 </h4>
@@ -623,13 +606,16 @@ at once:</p>
 <p>The dominant series here is <strong><code>het_W</code></strong> — the
 within-group component driven by the average treatment effect on log-SD
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>λ</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar\lambda</annotation></semantics></math>).
-It is negative and large: motherhood compresses within-education
-earnings dispersion. The between-group
-<strong><code>cov_B</code></strong> term (sorting of mean effects
+It is positive and large: motherhood widens within-education earnings
+dispersion, though less so in later decades. The within-group
+<strong><code>cov_W</code></strong> term is negative and the
+between-group <strong><code>cov_B</code></strong> term (sorting of mean
+effects
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
-across education groups) is small and runs in the opposite direction.
-Note this is exactly the kind of pattern that mean-based methods
-miss.</p>
+across education groups) is small and positive: the motherhood penalty
+is largest in the lowest-earning education group, which widens
+between-group gaps. Note this is exactly the kind of pattern that
+mean-based methods miss.</p>
 </div>
 <div class="section level4">
 <h4 id="longitudinal-behavioral-compositional-pre-treatment">Longitudinal: behavioral / compositional / pre-treatment<a class="anchor" aria-label="anchor" href="#longitudinal-behavioral-compositional-pre-treatment"></a>
@@ -641,21 +627,25 @@ orderings:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">causal</span>, type <span class="op">=</span> <span class="st">"shapley"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="examples_files/figure-html/fig4-1.png" class="r-plt" alt="" width="90%" style="display: block; margin: auto;"></p>
-<p>The <strong>compositional</strong> channel
+<p>The <strong>behavioral</strong> channel
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>β</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mi>λ</mi></msub></mrow><annotation encoding="application/x-tex">\Delta_\beta + \Delta_\lambda</annotation></semantics></math>,
+how motherhood’s per-group effects have changed) is the largest and
+negative — the motherhood penalties on both the mean and the dispersion
+of earnings have shrunk since 1980, so motherhood adds less to
+inequality than it used to. The <strong>compositional</strong> channel
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>π</mi></msub><annotation encoding="application/x-tex">\Delta_\pi</annotation></semantics></math>)
-is large and negative — the share of childbearing-age women who are
-mothers has dropped substantially since 1980, and that compositional
-shift on its own reduces the contribution of motherhood to overall
-inequality. Behavioral changes
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>β</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mi>λ</mi></msub></mrow><annotation encoding="application/x-tex">\Delta_\beta +
-\Delta_\lambda</annotation></semantics></math>, how motherhood’s
-per-group effects have changed) are smaller, and pre-treatment shifts
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>μ</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub></mrow><annotation encoding="application/x-tex">\Delta_\mu + \Delta_\sigma</annotation></semantics></math>,
-baseline inequality changes) contribute a modest negative term.</p>
+is also negative: the share of women who become mothers has fallen.
+<strong>Pre-treatment</strong> shifts
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>μ</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Δ</mi><mi>σ</mi></msub></mrow><annotation encoding="application/x-tex">\Delta_\mu +
+\Delta_\sigma</annotation></semantics></math>, changes in baseline
+inequality) push in the opposite direction: because baseline earnings
+have become more unequal, the same treatment effects now contribute more
+to inequality.</p>
 <p>A more thorough analysis would add controls for race, marital status,
-age splines, and family size; would model the pre-trends formally; and
-would use bootstrap rather than delta-method SEs. See
-<code><a href="../reference/ineqx.html">?ineqx</a></code>, <code><a href="../reference/boot_config.html">?boot_config</a></code>, and the <a href="tutorial.html">Tutorial</a> for the full toolbox.</p>
+and age splines; would model the pre-trends formally; and would use
+bootstrap rather than delta-method SEs. See <code><a href="../reference/ineqx.html">?ineqx</a></code>,
+<code><a href="../reference/boot_config.html">?boot_config</a></code>, and the <a href="tutorial.html">Tutorial</a>
+for the full toolbox.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -669,7 +659,7 @@ would use bootstrap rather than delta-method SEs. See
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

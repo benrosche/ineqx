@@ -33,8 +33,8 @@ Returns a ggplot2 object
 
 The y-axis can be scaled in two ways:
 
-`yscale=1` (default): absolute points of Var or CV2.  
-`yscale=2`: % of the value of Var or CV2 at reference time.  
+`yscale=1` (default): absolute points of Var or CV2.\
+`yscale=2`: % of the value of Var or CV2 at reference time.\
 (Total Var or CV2 with `type="dT"` and within-group & between-group Var
 or CV2 with `type="dW"` & `type="dB"`, respectively.)
 
