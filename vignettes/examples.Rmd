@@ -11,33 +11,35 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
-Two short worked examples. Both run on the package's bundled `cps_sample`
-(a 65k-row CPS subsample, 1982–2021) and aim to show the package's two main
-modes — descriptive and causal — without doing a full analysis.
+Two short worked examples. Both run on the package's bundled `earnings_panel`
+(a synthetic, CPS-style two-wave panel of 7,600 women, 1982–2020; see
+`?earnings_panel`) and aim to show the package's two main modes — descriptive
+and causal — without doing a full analysis.
 
 * [Example 1: Descriptive within/between decomposition](#e1)
 * [Example 2: Causal decomposition — the motherhood penalty](#e2)
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(ineqx)
-data("cps_sample")
+data("earnings_panel")
 ```
 
 ---
 
 ### Example 1: Descriptive within/between decomposition {#e1}
 
-Women in `cps_sample` are grouped into low/medium/high SES (`SES = 1, 2, 3`)
-based on household income. We ask: how much earnings inequality lies *within*
-each SES tier vs *between* tiers, and how has that changed since 1982?
+Women in `earnings_panel` are grouped into low/middle/high socioeconomic
+status (`ses`). We ask: how much earnings inequality lies *within* each SES
+tier vs *between* tiers, and how has that changed since 1982? For a clean
+annual cross-section we use each woman's first wave (`post == 0`).
 
 ```{r, message = FALSE}
 desc <- ineqx(
-  y = "earnweekf", ystat = "CV2",
-  group = "SES",
+  y = "earnweek", ystat = "CV2",
+  group = "ses",
   time = "year", ref = 1982,
-  weights = "earnwtf",
-  data = cps_sample
+  weights = "earnwt",
+  data = subset(earnings_panel, post == 0)
 )
 ```
 
@@ -64,10 +66,12 @@ shares ($\Delta_\pi$):
 plot(desc, type = "decomp")
 ```
 
-Most of the increase in $CV^2$ since 1982 traces to changes in within-group
-dispersion ($\Delta_\sigma$) — earnings inequality has grown *within* SES
-tiers, not just *between* them. This is the basic motivation for taking
-within-group inequality seriously.
+$CV^2$ rises from about 0.8 in 1982 to about 1.2 in 2019, and almost all of
+that inequality — and its growth — lies *within* SES tiers. The increase
+traces to growing within-group dispersion ($\Delta_\sigma$), partly offset by
+rising mean earnings ($\Delta_\mu$), which lower $CV^2$ for a given standard
+deviation. Shifts in the SES composition ($\Delta_\pi$) play almost no role.
+This is the basic motivation for taking within-group inequality seriously.
 
 ---
 
@@ -76,25 +80,24 @@ within-group inequality seriously.
 Same dataset, now asking a causal question: how does motherhood affect
 earnings inequality among women, and how has that effect changed?
 
-We restrict the sample to women of childbearing age and fit a difference-in-
-differences model (treatment = `mother`, post-period = `byear`) with
-education-by-decade interactions for both the mean and log-SD of earnings.
-GAMLSS does the heavy lifting internally. For `ystat = "CV2"`, keep the
-outcome in levels and use `post` for the DiD contrast; applying `CV2` to
+We restrict the sample to women with positive earnings and fit a
+difference-in-differences model (treatment = `mother`, post-period = `post`)
+with education-by-decade interactions for both the mean and log-SD of
+earnings. GAMLSS does the heavy lifting internally. For `ystat = "CV2"`, keep
+the outcome in levels and use `post` for the DiD contrast; applying `CV2` to
 first-differenced outcomes is not recommended.
 
 ```{r, message = FALSE, warning = FALSE}
-df <- subset(cps_sample,
-             age >= 18 & age <= 49 & !is.na(earnweekf) & earnweekf > 0)
+df <- subset(earnings_panel, earnweek > 0)
 
 causal <- ineqx(
-  y = "earnweekf", ystat = "CV2",
-  treat = "mother", post = "byear",
-  group = "edu",
-  time = "year10", ref = 1980,
-  formula_mu    = ~ mother * byear * factor(edu) * factor(year10) + age,
-  formula_sigma = ~ mother * byear * factor(edu) * factor(year10),
-  weights = "earnwtf",
+  y = "earnweek", ystat = "CV2",
+  treat = "mother", post = "post",
+  group = "educ",
+  time = "decade", ref = 1980,
+  formula_mu    = ~ mother * post * educ * factor(decade) + age,
+  formula_sigma = ~ mother * post * educ * factor(decade),
+  weights = "earnwt",
   se = "delta",
   data = df
 )
@@ -115,11 +118,13 @@ plot(causal, type = "wibe",
 ```
 
 The dominant series here is **`het_W`** — the within-group component driven
-by the average treatment effect on log-SD ($\bar\lambda$). It is negative and
-large: motherhood compresses within-education earnings dispersion. The
+by the average treatment effect on log-SD ($\bar\lambda$). It is positive and
+large: motherhood widens within-education earnings dispersion, though less so
+in later decades. The within-group **`cov_W`** term is negative and the
 between-group **`cov_B`** term (sorting of mean effects $\beta$ across
-education groups) is small and runs in the opposite direction. Note this is
-exactly the kind of pattern that mean-based methods miss.
+education groups) is small and positive: the motherhood penalty is largest in
+the lowest-earning education group, which widens between-group gaps. Note
+this is exactly the kind of pattern that mean-based methods miss.
 
 #### Longitudinal: behavioral / compositional / pre-treatment
 
@@ -131,15 +136,17 @@ range across the six possible orderings:
 plot(causal, type = "shapley")
 ```
 
-The **compositional** channel ($\Delta_\pi$) is large and negative — the
-share of childbearing-age women who are mothers has dropped substantially
-since 1980, and that compositional shift on its own reduces the contribution
-of motherhood to overall inequality. Behavioral changes ($\Delta_\beta +
-\Delta_\lambda$, how motherhood's per-group effects have changed) are
-smaller, and pre-treatment shifts ($\Delta_\mu + \Delta_\sigma$, baseline
-inequality changes) contribute a modest negative term.
+The **behavioral** channel ($\Delta_\beta + \Delta_\lambda$, how
+motherhood's per-group effects have changed) is the largest and negative —
+the motherhood penalties on both the mean and the dispersion of earnings have
+shrunk since 1980, so motherhood adds less to inequality than it used to. The
+**compositional** channel ($\Delta_\pi$) is also negative: the share of women
+who become mothers has fallen. **Pre-treatment** shifts ($\Delta_\mu +
+\Delta_\sigma$, changes in baseline inequality) push in the opposite
+direction: because baseline earnings have become more unequal, the same
+treatment effects now contribute more to inequality.
 
-A more thorough analysis would add controls for race, marital status, age
-splines, and family size; would model the pre-trends formally; and would use
+A more thorough analysis would add controls for race, marital status, and
+age splines; would model the pre-trends formally; and would use
 bootstrap rather than delta-method SEs. See `?ineqx`, `?boot_config`, and the
 [Tutorial](tutorial.html) for the full toolbox.

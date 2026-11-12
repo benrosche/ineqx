@@ -517,10 +517,10 @@ test_that(".blend_causal_params validates group mismatch", {
 
 test_that("causal blending: single CS counterfactual + model estimation", {
   skip_if_not_installed("gamlss")
-  data(cps_sample)
-  cps_sample <- na.omit(cps_sample[, c("earnweek", "mother", "edu")])
+  data(earnings_panel)
+  dat <- earnings_panel[, c("earnweek", "mother", "educ")]
 
-  groups <- sort(unique(cps_sample[["mother"]]))
+  groups <- sort(unique(dat[["mother"]]))
 
   # Counterfactual: zero treatment effect baseline
   ref_params <- ineqx_params(
@@ -535,9 +535,9 @@ test_that("causal blending: single CS counterfactual + model estimation", {
   )
 
   result <- ineqx("earnweek", treat = "mother", group = "mother",
-                   params = ref_params, data = cps_sample,
-                   formula_mu = ~ mother * factor(edu),
-                   formula_sigma = ~ mother * factor(edu),
+                   params = ref_params, data = dat,
+                   formula_mu = ~ mother * educ,
+                   formula_sigma = ~ mother * educ,
                    se = "none")
 
   # Should be longitudinal (blended creates 2 periods: 0 + observed)
@@ -548,10 +548,10 @@ test_that("causal blending: single CS counterfactual + model estimation", {
 
 test_that("causal blending: se='delta' falls back to 'none'", {
   skip_if_not_installed("gamlss")
-  data(cps_sample)
-  cps_sample <- na.omit(cps_sample[, c("earnweek", "mother", "edu")])
+  data(earnings_panel)
+  dat <- earnings_panel[, c("earnweek", "mother", "educ")]
 
-  groups <- sort(unique(cps_sample[["mother"]]))
+  groups <- sort(unique(dat[["mother"]]))
 
   ref_params <- ineqx_params(
     data = data.frame(
@@ -566,9 +566,9 @@ test_that("causal blending: se='delta' falls back to 'none'", {
 
   expect_message(
     result <- ineqx("earnweek", treat = "mother", group = "mother",
-                     params = ref_params, data = cps_sample,
-                     formula_mu = ~ mother * factor(edu),
-                     formula_sigma = ~ mother * factor(edu),
+                     params = ref_params, data = dat,
+                     formula_mu = ~ mother * educ,
+                     formula_sigma = ~ mother * educ,
                      se = "delta"),
     "Delta method SEs not available"
   )
@@ -578,10 +578,10 @@ test_that("causal blending: se='delta' falls back to 'none'", {
 
 test_that("causal blending: multi-period user params require ref", {
   skip_if_not_installed("gamlss")
-  data(cps_sample)
-  cps_sample <- na.omit(cps_sample[, c("earnweek", "mother", "edu")])
+  data(earnings_panel)
+  dat <- earnings_panel[, c("earnweek", "mother", "educ")]
 
-  groups <- sort(unique(cps_sample[["mother"]]))
+  groups <- sort(unique(dat[["mother"]]))
 
   ref_params <- ineqx_params(
     data = data.frame(
@@ -597,9 +597,9 @@ test_that("causal blending: multi-period user params require ref", {
 
   expect_error(
     ineqx("earnweek", treat = "mother", group = "mother",
-           params = ref_params, data = cps_sample,
-           formula_mu = ~ mother * factor(edu),
-           formula_sigma = ~ mother * factor(edu),
+           params = ref_params, data = dat,
+           formula_mu = ~ mother * educ,
+           formula_sigma = ~ mother * educ,
            se = "none"),
     "ref.*required.*multiple time"
   )

@@ -2,6 +2,13 @@
 
 ## Breaking changes
 
+* The bundled `cps_sample` dataset (real CPS microdata) is replaced by
+  `earnings_panel`, a smaller synthetic two-wave panel with CPS-style variables
+  (`earnweek`, `earnwt`, `educ`, `ses`, `mother`, `post`, `decade`, ...). Its
+  data-generating process is documented in `create/create_earnings_panel.R` and
+  uses stratified draws so that the examples give smooth, interpretable results.
+  README, vignettes, and tests now use `earnings_panel`.
+
 * The causal decomposition now targets **marginal** counterfactual inequality by
   default, rather than residual (conditional) inequality. Within-group variance
   is computed by the law of total variance over the covariate distribution of the

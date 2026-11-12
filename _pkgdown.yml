@@ -70,7 +70,7 @@ reference:
       - starts_with("summary.")
   - title: "Datasets"
     contents:
-      - cps_sample
+      - earnings_panel
       - incdat
   - title: "Shiny demo"
     contents:
